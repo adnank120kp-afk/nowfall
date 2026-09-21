@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Syne', sans-serif;
+    --font-body: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-malayalam: 'Noto Sans Malayalam', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: #050b08;
+    color: #dee4e0;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+.font-heading { font-family: 'Syne', sans-serif; }
+.font-body { font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif; }
+.font-malayalam { font-family: 'Noto Sans Malayalam', sans-serif; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Ultra-Crisp 2K HUD Panels */
+.hud-panel {
+  background: rgba(11, 22, 17, 0.88);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(149, 212, 172, 0.28);
+  box-shadow: 0 24px 50px -15px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.hud-panel-amber {
+  background: rgba(30, 19, 11, 0.9);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  border: 1px solid rgba(255, 186, 56, 0.45);
+  box-shadow: 0 25px 55px -15px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 222, 172, 0.25);
+}
+
+.hud-panel-mosque {
+  background: rgba(10, 26, 20, 0.92);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.9);
+}
+
+/* Scanlines overlay */
+.scanlines-2k {
+  background: linear-gradient(rgba(10, 14, 12, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+  background-size: 100% 3px;
+  pointer-events: none;
+}
+
+/* Circular Radar Sweep */
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.radar-sweep {
+  animation: radarSweep 3.2s linear infinite;
+  transform-origin: center center;
+}
+
+/* Floating UI bob */
+@keyframes subtleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.animate-subtle-bob {
+  animation: subtleBob 3s ease-in-out infinite;
+}
