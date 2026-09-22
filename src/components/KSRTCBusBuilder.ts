@@ -1,360 +1,386 @@
 import * as THREE from 'three';
 
 /**
- * Procedurally generates high-resolution canvas textures for the authentic
- * KSRTC Super Fast (Aanavandi) livery strictly based on the template diagram:
- * - Depot: Vadakkan Paravoor (വടക്കൻ പറവൂർ - RPK 992)
- * - Registration: KL.15.A.1764
- * - Route: Paravoor - Vyttila - Alappuzha - Kollam - Thiruvananthapuram (Cochin Xpress)
- * - Two-tone Cream & Crimson Red livery with double chevron racing stripes
- * - Official Kerala State KSRTC Elephant Seal Emblem & "SUPERFAST" banner
+ * Procedurally generates high-resolution canvas textures and 3D mesh for the
+ * Modern Luxury Coach / Tourist Bus matching the user's vector blueprint:
+ * - Pure Alpine White aerodynamic luxury coach livery (#ffffff / #f8fafc)
+ * - Front Fascia: Gloss black mask / visor across lower windshield with bold chrome "BUS" emblem,
+ *   swept-back projector LED headlights with lightbar DRL eyebrows, lower fog lights, and license plate
+ * - Distinctive hanging "rabbit ear" / "elephant ear" aerodynamic top-mounted rearview mirrors
+ * - Sides: Continuous panoramic dark obsidian tinted glass featuring the signature dynamic
+ *   forward downward swoop / Z-slash cut at the front entrance / cab
+ * - Lower Body: Flush luggage compartment bay doors with handles, amber clearance side markers,
+ *   aerodynamic wheel arch flares, and driver-side rear vertical engine cooling radiator louvers
+ * - Rear: Large dark back window, sweeping vertical/boomerang red LED tail light clusters,
+ *   horizontal red reflector connecting bar across the boot lid, rear engine vents, and bumper
+ * - Roof: Streamlined aerodynamic rooftop air conditioning (AC) pod
+ * - Wheels: Luxury coach silver alloy wheels with circular vent styling and lug nuts
  */
 
-function createFrontTexture(): THREE.CanvasTexture {
+function createCoachFrontTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 1024;
   const ctx = canvas.getContext('2d')!;
 
-  // Cream background
-  ctx.fillStyle = '#f8efb9';
+  // 1. White base body
+  ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, 1024, 1024);
 
-  // Top destination board box (White)
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(80, 50, 864, 210);
-  ctx.strokeStyle = '#222222';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(80, 50, 864, 210);
+  // Aerodynamic top roof crown gradient
+  const roofGrad = ctx.createLinearGradient(0, 0, 0, 120);
+  roofGrad.addColorStop(0, '#e2e8f0');
+  roofGrad.addColorStop(1, '#ffffff');
+  ctx.fillStyle = roofGrad;
+  ctx.fillRect(0, 0, 1024, 120);
 
-  // Red KSRTC Header box
-  ctx.fillStyle = '#cf1418';
-  ctx.fillRect(110, 70, 480, 85);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 64px "Syne", sans-serif';
-  ctx.fillText('KSRTC', 130, 136);
+  // 2. High Panoramic Raked Windshield (Dark obsidian glass with subtle sky reflection)
+  const glassGrad = ctx.createLinearGradient(0, 100, 0, 520);
+  glassGrad.addColorStop(0, '#0a0d12');
+  glassGrad.addColorStop(0.2, '#151b24');
+  glassGrad.addColorStop(0.7, '#1e2632');
+  glassGrad.addColorStop(1, '#0f141a');
+  ctx.fillStyle = glassGrad;
+  ctx.beginPath();
+  ctx.roundRect(50, 100, 924, 430, [40, 40, 0, 0]);
+  ctx.fill();
 
-  ctx.font = 'bold 30px "Noto Sans Malayalam", sans-serif';
-  ctx.fillStyle = '#f8efb9';
-  ctx.fillText('വടക്കൻ പറവൂർ', 370, 130);
-
-  // Route text inside board
-  ctx.fillStyle = '#111111';
-  ctx.font = 'bold 38px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('പറവൂർ  വൈറ്റില  തിരുവനന്തപുരം', 120, 215);
-
-  // Gold Cochin Xpress text & SF badge
-  ctx.fillStyle = '#b45309';
-  ctx.font = 'italic bold 42px "Syne", cursive, sans-serif';
-  ctx.fillText('Cochin Xpress', 640, 160);
-
-  // Windshield area (represented below board)
-  ctx.fillStyle = '#1c2328';
-  ctx.fillRect(60, 280, 904, 240);
-  ctx.strokeStyle = '#0a0d0e';
-  ctx.lineWidth = 14;
-  ctx.strokeRect(60, 280, 904, 240);
-
-  // Center windshield dividing pillar
-  ctx.fillStyle = '#0a0d0e';
-  ctx.fillRect(504, 280, 16, 240);
-
-  // Horizontal Red accent strip with "SUPER FAST"
-  ctx.fillStyle = '#cf1418';
-  ctx.fillRect(0, 530, 1024, 120);
-
-  ctx.fillStyle = '#fef08a';
-  ctx.font = 'italic 900 52px "Syne", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('SUPER FAST', 512, 610);
-
-  // Center Cream / Silver Radiator Grille
-  ctx.fillStyle = '#f8efb9';
-  ctx.fillRect(240, 670, 544, 220);
-  ctx.strokeStyle = '#cf1418';
+  // Dark windshield rubber gasket border
+  ctx.strokeStyle = '#05070a';
   ctx.lineWidth = 10;
-  ctx.strokeRect(240, 670, 544, 220);
-
-  // Horizontal cooling louvers
-  ctx.fillStyle = '#1c1c1c';
-  for (let y = 705; y < 870; y += 32) {
-    ctx.fillRect(265, y, 494, 14);
-  }
-
-  // Left & Right Headlamp Clusters (Twin circular lights)
-  [-1, 1].forEach(side => {
-    const cx = side === -1 ? 140 : 884;
-    ctx.fillStyle = '#be1216';
-    ctx.fillRect(cx - 100, 690, 200, 170);
-
-    // Twin headlights
-    [cx - 45, cx + 45].forEach(hx => {
-      ctx.beginPath();
-      ctx.arc(hx, 775, 42, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-      ctx.strokeStyle = '#9ca3af';
-      ctx.lineWidth = 8;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(hx, 775, 18, 0, Math.PI * 2);
-      ctx.fillStyle = '#fbbf24';
-      ctx.fill();
-    });
-  });
-
-  // Stencils & Depot Markings
-  ctx.fillStyle = '#cf1418';
-  ctx.font = 'bold 42px "JetBrains Mono", monospace';
-  ctx.textAlign = 'left';
-  ctx.fillText('RPK 992 (FRP)', 60, 670);
-
-  // Lower Red Bumper
-  ctx.fillStyle = '#b91c1c';
-  ctx.fillRect(0, 900, 1024, 124);
-
-  // Yellow Taxi Registration Plate: KL.15.A.1764
-  ctx.fillStyle = '#facc15';
-  ctx.fillRect(362, 920, 300, 75);
-  ctx.strokeStyle = '#111111';
-  ctx.lineWidth = 5;
-  ctx.strokeRect(362, 920, 300, 75);
-
-  ctx.fillStyle = '#111111';
-  ctx.font = 'bold 46px "JetBrains Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('KL.15.A.1764', 512, 974);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.anisotropy = 8;
-  return texture;
-}
-
-function createRearTexture(): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 1024;
-  const ctx = canvas.getContext('2d')!;
-
-  // Cream base
-  ctx.fillStyle = '#f8efb9';
-  ctx.fillRect(0, 0, 1024, 1024);
-
-  // Top Red KSRTC header
-  ctx.fillStyle = '#cf1418';
-  ctx.fillRect(120, 60, 784, 120);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 64px "Syne", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('KSRTC', 512, 125);
-  ctx.font = 'bold 34px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('വടക്കൻ പറവൂർ', 512, 165);
-
-  // Large Dark Blue Route Card Window
-  ctx.fillStyle = '#0f2742';
-  ctx.fillRect(160, 200, 704, 340);
-  ctx.strokeStyle = '#cf1418';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(160, 200, 704, 340);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 40px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('പറവൂർ  തിരുവനന്തപുരം', 512, 260);
-
-  ctx.fillStyle = '#facc15';
-  ctx.font = 'bold 48px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('വൈറ്റില', 512, 330);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 38px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('ആലപ്പുഴ  കൊല്ലം', 512, 400);
-
-  ctx.fillStyle = '#93c5fd';
-  ctx.font = '22px "JetBrains Mono", monospace';
-  ctx.fillText('online booking: www.keralartc.com', 512, 455);
-
-  ctx.fillStyle = '#f59e0b';
-  ctx.font = 'italic bold 36px cursive, sans-serif';
-  ctx.fillText('Cochin Xpress', 512, 505);
-
-  // Center Air Louver Vent Section
-  ctx.fillStyle = '#e5dfaa';
-  ctx.fillRect(260, 560, 504, 150);
-  ctx.fillStyle = '#222222';
-  for (let ly = 580; ly <= 690; ly += 24) {
-    ctx.fillRect(290, ly, 444, 10);
-  }
-
-  // Depot Number & Indicators
-  ctx.fillStyle = '#cf1418';
-  ctx.font = 'bold 38px "JetBrains Mono", monospace';
-  ctx.textAlign = 'right';
-  ctx.fillText('RPK 992', 880, 590);
-
-  // Red lower skirt
-  ctx.fillStyle = '#cf1418';
-  ctx.fillRect(0, 730, 1024, 294);
-
-  // STOP Indicator (Orange left box)
-  ctx.fillStyle = '#ea580c';
-  ctx.fillRect(80, 760, 160, 140);
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(80, 760, 160, 140);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 48px "Syne", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('Stop', 160, 845);
-
-  // Center Advertisement Banner: "കച്ചവടം ഇനി ഈസിയായി"
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(270, 750, 484, 160);
-  ctx.strokeStyle = '#222222';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(270, 750, 484, 160);
-
-  ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 32px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('കച്ചവടം ഇനി ഈസിയായി', 512, 810);
-  ctx.font = '19px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('ബിസിനസ്സ് ഓൺലൈൻ ആക്കാം • 0484 230 49 49', 512, 860);
-
-  // Yellow Registration Plate: KL.15 A.1764
-  ctx.fillStyle = '#facc15';
-  ctx.fillRect(780, 780, 180, 100);
-  ctx.strokeStyle = '#111111';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(780, 780, 180, 100);
-
-  ctx.fillStyle = '#111111';
-  ctx.font = 'bold 32px "JetBrains Mono", monospace';
-  ctx.fillText('KL.15', 870, 825);
-  ctx.fillText('A.1764', 870, 865);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.anisotropy = 8;
-  return texture;
-}
-
-function createSideTexture(isLeftPassengerSide: boolean): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 2048;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d')!;
-
-  // Cream base
-  ctx.fillStyle = '#f8efb9';
-  ctx.fillRect(0, 0, 2048, 512);
-
-  // Continuous Windows row
-  ctx.fillStyle = '#1a2328';
-  ctx.fillRect(100, 60, 1848, 125);
-
-  // Cream Window Mullions / Vertical dividers
-  ctx.fillStyle = '#f8efb9';
-  for (let wx = 240; wx < 1900; wx += 145) {
-    ctx.fillRect(wx, 60, 16, 125);
-  }
-
-  // Thin Red accent band above windows
-  ctx.fillStyle = '#cf1418';
-  ctx.fillRect(0, 40, 2048, 16);
-
-  // LOWER BODY: Red lower section
-  ctx.fillStyle = '#cf1418';
-  ctx.fillRect(0, 310, 2048, 202);
-
-  // Double Red Chevron Speed Stripes (Iconic KSRTC Aanavandi arrow pattern)
-  // Top stripe
-  ctx.fillStyle = '#cf1418';
-  ctx.beginPath();
-  ctx.moveTo(80, 205);
-  ctx.lineTo(1968, 205);
-  ctx.lineTo(1948, 235);
-  ctx.lineTo(100, 235);
-  ctx.closePath();
-  ctx.fill();
-
-  // Bottom stripe
-  ctx.beginPath();
-  ctx.moveTo(110, 255);
-  ctx.lineTo(1938, 255);
-  ctx.lineTo(1918, 285);
-  ctx.lineTo(130, 285);
-  ctx.closePath();
-  ctx.fill();
-
-  // Bold Center Red Panel with Elephant Seal Emblem
-  ctx.fillStyle = '#cf1418';
-  ctx.beginPath();
-  ctx.moveTo(1050, 195);
-  ctx.lineTo(1420, 195);
-  ctx.lineTo(1360, 310);
-  ctx.lineTo(990, 310);
-  ctx.closePath();
-  ctx.fill();
-
-  // Official KSRTC Elephant Seal Emblem (Round gold & green badge with two standing elephants)
-  const emblemX = 1200;
-  const emblemY = 252;
-  ctx.beginPath();
-  ctx.arc(emblemX, emblemY, 44, 0, Math.PI * 2);
-  ctx.fillStyle = '#15803d'; // Green wreath circle
-  ctx.fill();
-  ctx.strokeStyle = '#facc15'; // Gold ring
-  ctx.lineWidth = 6;
   ctx.stroke();
 
-  // Two elephant silhouettes & conch shield inside emblem
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '32px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('🐘🛡️🐘', emblemX, emblemY + 11);
+  // Subtle interior rearview mirror & sun-visor gradient at top of glass
+  ctx.fillStyle = 'rgba(5, 7, 10, 0.65)';
+  ctx.fillRect(60, 110, 904, 50);
 
-  // Bold Red "SUPERFAST" Text Banner
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(660, 235, 310, 52);
-  ctx.strokeStyle = '#cf1418';
+  // Dual sleek front windshield wipers resting along the bottom
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(180, 515);
+  ctx.lineTo(470, 495);
+  ctx.moveTo(520, 515);
+  ctx.lineTo(810, 495);
+  ctx.stroke();
+
+  // 3. GLOSS BLACK FRONT AERODYNAMIC MASK / VISOR (Signature feature from blueprint!)
+  const maskGrad = ctx.createLinearGradient(0, 520, 0, 710);
+  maskGrad.addColorStop(0, '#0b0e13');
+  maskGrad.addColorStop(0.5, '#131821');
+  maskGrad.addColorStop(1, '#090b0e');
+  ctx.fillStyle = maskGrad;
+  ctx.beginPath();
+  ctx.moveTo(60, 520);
+  ctx.lineTo(964, 520);
+  ctx.lineTo(920, 700);
+  ctx.quadraticCurveTo(512, 730, 104, 700);
+  ctx.closePath();
+  ctx.fill();
+
+  // Subtle chrome perimeter accent line around the black mask
+  ctx.strokeStyle = '#94a3b8';
   ctx.lineWidth = 4;
-  ctx.strokeRect(660, 235, 310, 52);
+  ctx.stroke();
 
-  ctx.fillStyle = '#cf1418';
-  ctx.font = 'italic 900 42px "Syne", sans-serif';
+  // 4. BOLD CHROME "BUS" EMBLEM (Centered on the gloss black mask)
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 3;
+
+  // Metallic Chrome Gradient for BUS text
+  const textGrad = ctx.createLinearGradient(0, 580, 0, 650);
+  textGrad.addColorStop(0, '#ffffff');
+  textGrad.addColorStop(0.45, '#e2e8f0');
+  textGrad.addColorStop(0.55, '#94a3b8');
+  textGrad.addColorStop(1, '#cbd5e1');
+
+  ctx.fillStyle = textGrad;
+  ctx.font = '900 68px "Syne", "Arial Black", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('SUPERFAST', 815, 275);
+  ctx.letterSpacing = '14px';
+  ctx.fillText('BUS', 512, 638);
+  ctx.letterSpacing = '0px';
 
-  // Stencils on lower red skirt: "BATTERY BOX" & "COURIER BOX"
-  ctx.fillStyle = '#fef08a';
-  ctx.font = 'bold 18px "JetBrains Mono", monospace';
-  ctx.fillText('BATTERY BOX', 620, 370);
-  ctx.fillText('COURIER BOX', 1050, 370);
+  // Subtle chrome underline below "BUS"
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(432, 652, 160, 4);
+  ctx.restore();
 
-  // Registration plate on rear corner
-  ctx.fillStyle = '#facc15';
-  ctx.fillRect(1900, 240, 95, 55);
-  ctx.fillStyle = '#111111';
-  ctx.font = 'bold 18px "JetBrains Mono", monospace';
-  ctx.fillText('KL 15', 1948, 262);
-  ctx.fillText('A 1764', 1948, 284);
+  // 5. MODERN SWEPT-BACK PROJECTOR LED HEADLIGHT ASSEMBLIES (Left & Right)
+  [-1, 1].forEach((side) => {
+    const isLeft = side === -1;
+    const hx = isLeft ? 135 : 889;
+    const hw = 125;
+    const hy = 630;
+    const hh = 75;
 
-  // If Passenger side: Draw the two distinct accordion entrance doors!
-  if (isLeftPassengerSide) {
-    [480, 1540].forEach(dx => {
-      ctx.fillStyle = '#161819';
-      ctx.fillRect(dx, 60, 90, 380);
-      ctx.strokeStyle = '#cf1418';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(dx, 60, 90, 380);
+    // Outer clear polycarbonate headlight housing
+    ctx.save();
+    ctx.beginPath();
+    if (isLeft) {
+      ctx.moveTo(hx - 30, hy);
+      ctx.lineTo(hx + hw, hy + 10);
+      ctx.lineTo(hx + hw - 15, hy + hh);
+      ctx.lineTo(hx - 45, hy + hh - 10);
+    } else {
+      ctx.moveTo(hx - hw, hy + 10);
+      ctx.lineTo(hx + 30, hy);
+      ctx.lineTo(hx + 45, hy + hh - 10);
+      ctx.lineTo(hx - hw + 15, hy + hh);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 4;
+    ctx.stroke();
 
-      // Glass door panes (Upper & lower)
-      ctx.fillStyle = '#60a5fa';
-      ctx.fillRect(dx + 10, 80, 30, 110);
-      ctx.fillRect(dx + 50, 80, 30, 110);
-      ctx.fillRect(dx + 10, 230, 30, 110);
-      ctx.fillRect(dx + 50, 230, 30, 110);
+    // Ice-blue / White LED Daytime Running Light (DRL) Eyebrow strip along the top edge
+    ctx.strokeStyle = '#e0f2fe';
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    if (isLeft) {
+      ctx.moveTo(hx - 24, hy + 6);
+      ctx.lineTo(hx + hw - 6, hy + 14);
+    } else {
+      ctx.moveTo(hx - hw + 6, hy + 14);
+      ctx.lineTo(hx + 24, hy + 6);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Dual Projector LED Lenses (Bright white crystal projector bulbs)
+    const bulb1X = isLeft ? hx + 15 : hx - 15;
+    const bulb2X = isLeft ? hx + 75 : hx - 75;
+    [bulb1X, bulb2X].forEach((bx) => {
+      ctx.beginPath();
+      ctx.arc(bx, hy + 42, 18, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Inner bulb core
+      ctx.beginPath();
+      ctx.arc(bx, hy + 42, 9, 0, Math.PI * 2);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fill();
     });
+
+    // Lower amber turn indicator strip
+    ctx.fillStyle = '#f59e0b';
+    const indX = isLeft ? hx - 20 : hx + 5;
+    ctx.fillRect(indX, hy + hh - 18, 26, 10);
+
+    ctx.restore();
+  });
+
+  // 6. LOWER SCULPTED WHITE BUMPER & AIR INTAKE
+  // Central lower black radiator air intake
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.roundRect(280, 770, 464, 110, [12, 12, 16, 16]);
+  ctx.fill();
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Horizontal intake grille mesh slats
+  ctx.fillStyle = '#1e293b';
+  for (let gy = 785; gy <= 860; gy += 18) {
+    ctx.fillRect(300, gy, 424, 6);
   }
+
+  // Round fog lamps in bumper corners
+  [-1, 1].forEach((side) => {
+    const fx = side === -1 ? 165 : 859;
+    const fy = 825;
+
+    // Recessed housing
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(fx, fy, 26, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glass lamp
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(fx, fy, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  });
+
+  // 7. FRONT NUMBER / REGISTRATION PLATE
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(387, 905, 250, 60);
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(387, 905, 250, 60);
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 36px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('KL 07 B 2026', 512, 948);
+
+  // Aerodynamic lower chin spoiler lip
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(100, 990, 824, 25);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 8;
+  return texture;
+}
+
+function createCoachRearTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d')!;
+
+  // 1. White base body
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  // 2. High-mounted Tinted Rear Window
+  const glassGrad = ctx.createLinearGradient(0, 80, 0, 480);
+  glassGrad.addColorStop(0, '#0a0d12');
+  glassGrad.addColorStop(0.7, '#151b24');
+  glassGrad.addColorStop(1, '#0a0d12');
+  ctx.fillStyle = glassGrad;
+  ctx.beginPath();
+  ctx.roundRect(140, 80, 744, 380, [32, 32, 16, 16]);
+  ctx.fill();
+  ctx.strokeStyle = '#05070a';
+  ctx.lineWidth = 10;
+  ctx.stroke();
+
+  // High-mount third brake light (Center top of glass)
+  ctx.fillStyle = '#dc2626';
+  ctx.fillRect(442, 92, 140, 16);
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(442, 92, 140, 16);
+
+  // Subtle rear window heating defogger lines
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
+  ctx.lineWidth = 1.5;
+  for (let dy = 160; dy <= 420; dy += 40) {
+    ctx.beginPath();
+    ctx.moveTo(170, dy);
+    ctx.lineTo(854, dy);
+    ctx.stroke();
+  }
+
+  // 3. PURE WHITE REAR TAILGATE PANEL
+  // Subtle character crease lines
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(140, 500);
+  ctx.lineTo(884, 500);
+  ctx.stroke();
+
+  // 4. SWEEPING VERTICAL / BOOMERANG RED LED TAILLIGHT CLUSTERS (Left & Right)
+  // Matching the exact rear view shown in the blueprint diagram!
+  [-1, 1].forEach((side) => {
+    const isLeft = side === -1;
+    const tx = isLeft ? 60 : 924;
+    const tw = 40;
+    const ty = 520;
+    const th = 260;
+
+    // Outer swooping red lightbar housing
+    ctx.fillStyle = '#991b1b';
+    ctx.beginPath();
+    if (isLeft) {
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(tx + tw + 10, ty + 20);
+      ctx.lineTo(tx + tw + 25, ty + th);
+      ctx.lineTo(tx, ty + th - 20);
+    } else {
+      ctx.moveTo(tx + tw, ty);
+      ctx.lineTo(tx - 10, ty + 20);
+      ctx.lineTo(tx - 25, ty + th);
+      ctx.lineTo(tx + tw, ty + th - 20);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#450a0a';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Bright Red LED Lightbar Stripe
+    ctx.fillStyle = '#ef4444';
+    const barX = isLeft ? tx + 8 : tx + 12;
+    ctx.fillRect(barX, ty + 25, 18, th - 90);
+
+    // Amber Turn Signal section
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(barX, ty + th - 60, 18, 22);
+
+    // White Reverse Light section
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(barX, ty + th - 34, 18, 20);
+  });
+
+  // 5. HORIZONTAL RED REFLECTOR BAR / LIGHT STRIP CONNECTING TAILLIGHTS
+  // (Signature feature visible on the rear boot lid in the user's image!)
+  ctx.fillStyle = '#b91c1c';
+  ctx.fillRect(135, 730, 754, 26);
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(135, 730, 754, 26);
+
+  // Inner reflective segment pattern
+  ctx.fillStyle = '#ef4444';
+  for (let rx = 150; rx < 870; rx += 28) {
+    ctx.fillRect(rx, 734, 18, 18);
+  }
+
+  // 6. LOWER REAR ENGINE COOLING VENT SLATS
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(240, 780, 544, 70);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(240, 780, 544, 70);
+
+  ctx.fillStyle = '#1e293b';
+  for (let vy = 792; vy <= 836; vy += 14) {
+    ctx.fillRect(255, vy, 514, 6);
+  }
+
+  // 7. WHITE REAR BUMPER & REGISTRATION PLATE
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(387, 875, 250, 60);
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(387, 875, 250, 60);
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 36px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('KL 07 B 2026', 512, 918);
+
+  // Lower bumper dual red reflectors
+  [-1, 1].forEach((side) => {
+    const rx = side === -1 ? 160 : 814;
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(rx, 895, 50, 16);
+    ctx.strokeStyle = '#991b1b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(rx, 895, 50, 16);
+  });
+
+  // Black bottom diffuser trim
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(100, 960, 824, 40);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 8;
@@ -362,48 +388,238 @@ function createSideTexture(isLeftPassengerSide: boolean): THREE.CanvasTexture {
 }
 
 /**
- * Builds the complete 3D KSRTC Super Fast Bus Model matching the diagram
+ * Creates Left (Passenger side) or Right (Driver side) side livery texture
+ * matching the user's blueprint:
+ * - Pure Alpine White body
+ * - Continuous panoramic tinted glass windows
+ * - The iconic swooping forward downward Z-slash cut behind the front cab/door
+ * - Flush lower luggage compartment doors with paddle handles
+ * - Driver side rear radiator cooling louver grille
+ * - Passenger side entrance swing door
  */
-export function buildKSRTCSuperFastBus(): THREE.Group {
+function createCoachSideTexture(isDriverSide: boolean): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 2048;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d')!;
+
+  // 1. Pure Alpine White base body
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 2048, 512);
+
+  // Subtle aerodynamic gradient at upper roof line
+  const topGrad = ctx.createLinearGradient(0, 0, 0, 60);
+  topGrad.addColorStop(0, '#e2e8f0');
+  topGrad.addColorStop(1, '#ffffff');
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, 2048, 60);
+
+  // 2. CONTINUOUS PANORAMIC DARK TINTED GLASS WITH DYNAMIC FORWARD DOWNWARD CUT
+  // In the diagram, the front passenger and driver windows swoop downwards towards the front wheel arch
+  const winGrad = ctx.createLinearGradient(0, 50, 0, 260);
+  winGrad.addColorStop(0, '#0a0d12');
+  winGrad.addColorStop(0.5, '#151c26');
+  winGrad.addColorStop(1, '#0e1218');
+  ctx.fillStyle = winGrad;
+
+  // Draw the iconic luxury coach profile window cutout:
+  ctx.beginPath();
+  if (!isDriverSide) {
+    // Passenger Side: Front is at right (X > 1700), Rear is at left (X < 300)
+    ctx.moveTo(120, 55);
+    ctx.lineTo(1920, 55);
+    ctx.lineTo(1935, 140);
+    // Downward swooping forward cut
+    ctx.lineTo(1860, 240);
+    ctx.lineTo(1580, 240);
+    ctx.lineTo(1530, 185);
+    ctx.lineTo(120, 185);
+    ctx.closePath();
+  } else {
+    // Driver Side: Front is at left (X < 300), Rear is at right (X > 1700)
+    ctx.moveTo(128, 55);
+    ctx.lineTo(1928, 55);
+    ctx.lineTo(1928, 185);
+    ctx.lineTo(518, 185);
+    // Downward swooping forward cut
+    ctx.lineTo(468, 240);
+    ctx.lineTo(188, 240);
+    ctx.lineTo(113, 140);
+    ctx.closePath();
+  }
+  ctx.fill();
+
+  // Dark rubber gasket around windows
+  ctx.strokeStyle = '#05070a';
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // Thin vertical black window mullions separating the panoramic touring glass
+  ctx.fillStyle = '#05070a';
+  const startX = isDriverSide ? 520 : 160;
+  const endX = isDriverSide ? 1880 : 1520;
+  for (let wx = startX; wx <= endX; wx += 170) {
+    ctx.fillRect(wx, 55, 6, 130);
+  }
+
+  // 3. PASSENGER SIDE ENTRANCE DOOR / DRIVER CAB DOOR SEAMS
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 4;
+  if (!isDriverSide) {
+    // Front Passenger swing door (around X: 1620 to 1840)
+    ctx.strokeRect(1620, 55, 220, 395);
+
+    // Door glass pane in the lower portion
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(1640, 255, 180, 140);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1640, 255, 180, 140);
+
+    // Emergency door cut at mid-body
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(880, 55, 130, 395);
+  } else {
+    // Driver Side Cab door outline (around X: 200 to 420)
+    ctx.strokeRect(200, 55, 220, 395);
+
+    // Emergency exit door outline at mid-body
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(1038, 55, 130, 395);
+
+    // 4. LARGE VERTICAL REAR RADIATOR / ENGINE COOLING LOUVER GRILLE
+    // (Crucial distinguishing detail on driver side rear from blueprint!)
+    const grilleX = 1680;
+    const grilleY = 320;
+    const grilleW = 160;
+    const grilleH = 130;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(grilleX, grilleY, grilleW, grilleH);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(grilleX, grilleY, grilleW, grilleH);
+
+    // Vertical cooling louvers
+    ctx.fillStyle = '#64748b';
+    for (let lx = grilleX + 12; lx < grilleX + grilleW - 8; lx += 12) {
+      ctx.fillRect(lx, grilleY + 8, 4, grilleH - 16);
+    }
+  }
+
+  // 5. LOWER BODY FLUSH LUGGAGE / CARGO COMPARTMENT DOORS
+  // Rectangular shut lines with chrome flush paddle latches
+  const lugY = 285;
+  const lugH = 160;
+  const lugW = 230;
+  const lugStartX = isDriverSide ? 490 : 380;
+  const numLuggageDoors = 4;
+
+  for (let i = 0; i < numLuggageDoors; i++) {
+    const lx = lugStartX + i * (lugW + 28);
+    // Door panel shut line
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(lx, lugY, lugW, lugH);
+
+    // Flush paddle handle
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(lx + lugW / 2 - 20, lugY + 28, 40, 16);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(lx + lugW / 2 - 14, lugY + 32, 28, 8);
+
+    // Key lock cylinder
+    ctx.beginPath();
+    ctx.arc(lx + lugW / 2 + 28, lugY + 36, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#64748b';
+    ctx.fill();
+  }
+
+  // 6. AMBER CLEARANCE SIDE-MARKER LIGHTS
+  ctx.fillStyle = '#f59e0b';
+  for (let mx = 180; mx < 1920; mx += 360) {
+    ctx.fillRect(mx, 455, 18, 8);
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(mx, 455, 18, 8);
+  }
+
+  // Rear corner red clearance marker
+  const rearMarkerX = isDriverSide ? 1970 : 80;
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(rearMarkerX, 455, 18, 8);
+
+  // 7. CLEAN SCULPTED HORIZONTAL CHARACTER LINE
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(60, 265);
+  ctx.lineTo(1988, 265);
+  ctx.stroke();
+
+  // Bottom dark aerodynamic rocker panel / underbody edge
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 485, 2048, 27);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 8;
+  return texture;
+}
+
+/**
+ * Builds the complete 3D Modern Luxury Coach Bus Model matching the uploaded blueprint:
+ * - Pristine Alpine White aerodynamic coach body
+ * - Dynamic continuous panoramic dark tinted windows
+ * - Black aerodynamic front mask with chrome "BUS" insignia
+ * - Projector LED headlights with lightbar eyebrows & lower fog lights
+ * - Top-mounted hanging "rabbit ear" / "elephant ear" aerodynamic black rearview mirrors
+ * - Streamlined rooftop Air Conditioning (AC) unit pod
+ * - Luxury coach silver alloy wheels with circular vent holes
+ * - Boomerang red LED tail lights with connecting horizontal reflector strip
+ */
+export function buildLuxuryCoachBus(): THREE.Group {
   const bus = new THREE.Group();
 
-  const length = 11.2;
-  const width = 2.85;
-  const height = 3.25;
+  const length = 11.8;
+  const width = 2.65;
+  const height = 3.55;
 
   // 1. CHASSIS & LOWER UNDERCARRIAGE
-  const chassisMat = new THREE.MeshLambertMaterial({ color: 0x181a1b });
-  const chassis = new THREE.Mesh(new THREE.BoxGeometry(width * 0.88, 0.45, length * 0.94), chassisMat);
+  const chassisMat = new THREE.MeshLambertMaterial({ color: 0x0f172a });
+  const chassis = new THREE.Mesh(new THREE.BoxGeometry(width * 0.9, 0.45, length * 0.95), chassisMat);
   chassis.position.y = 0.55;
   chassis.castShadow = true;
   bus.add(chassis);
 
-  // 2. MAIN BODY SHELL (Cream & Red two-tone)
+  // 2. MAIN AERODYNAMIC BODY SHELL
   const bodyGeo = new THREE.BoxGeometry(width, height, length);
 
-  // Material setup:
-  // 0: Right side (+X)
-  // 1: Left side (-X)
+  // Textures matching the 4 views in the uploaded vector diagram:
+  // Material Indices:
+  // 0: Right side (+X) -> Driver Side
+  // 1: Left side (-X)  -> Passenger Side
   // 2: Top / Roof (+Y)
   // 3: Bottom (-Y)
   // 4: Front (+Z)
   // 5: Rear (-Z)
-  const frontTex = createFrontTexture();
-  const rearTex = createRearTexture();
-  const sideRightTex = createSideTexture(false);
-  const sideLeftTex = createSideTexture(true);
+  const frontTex = createCoachFrontTexture();
+  const rearTex = createCoachRearTexture();
+  const sideDriverTex = createCoachSideTexture(true);
+  const sidePassengerTex = createCoachSideTexture(false);
 
-  // Roof cream material
-  const roofMat = new THREE.MeshLambertMaterial({ color: 0xf8efb9 });
-  const underMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+  // Pure white roof & dark underbody
+  const roofMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const underMat = new THREE.MeshLambertMaterial({ color: 0x0b0f17 });
 
   const bodyMaterials = [
-    new THREE.MeshLambertMaterial({ map: sideRightTex }), // Right side
-    new THREE.MeshLambertMaterial({ map: sideLeftTex }),  // Left side (passenger doors)
-    roofMat,                                            // Top roof
-    underMat,                                           // Bottom
-    new THREE.MeshLambertMaterial({ map: frontTex }),     // Front
-    new THREE.MeshLambertMaterial({ map: rearTex }),      // Rear
+    new THREE.MeshLambertMaterial({ map: sideDriverTex }),    // Right side (Driver)
+    new THREE.MeshLambertMaterial({ map: sidePassengerTex }), // Left side (Passenger)
+    roofMat,                                                // Roof
+    underMat,                                               // Underside
+    new THREE.MeshLambertMaterial({ map: frontTex }),         // Front
+    new THREE.MeshLambertMaterial({ map: rearTex }),          // Rear
   ];
 
   const body = new THREE.Mesh(bodyGeo, bodyMaterials);
@@ -412,111 +628,147 @@ export function buildKSRTCSuperFastBus(): THREE.Group {
   body.receiveShadow = true;
   bus.add(body);
 
-  // 3. AERODYNAMIC ROOF COWLS & VENTILATION DUCTS
-  const cowlMat = new THREE.MeshLambertMaterial({ color: 0xe5dfaa });
-  [-2.2, 0, 2.2].forEach(cz => {
-    const vent = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 0.85), cowlMat);
-    vent.position.set(0, height + 0.52, cz);
-    vent.castShadow = true;
-    bus.add(vent);
+  // 3. AERODYNAMIC ROOFTOP AIR CONDITIONING (AC) POD
+  // Streamlined white low-profile rooftop unit (Carrier/Sutrak style)
+  const acGroup = new THREE.Group();
+  const acMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const acVentMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+
+  // Main AC Fairing Body
+  const acBody = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.28, 3.4), acMat);
+  acBody.position.set(0, height + 0.58, -0.4);
+  acBody.castShadow = true;
+  acGroup.add(acBody);
+
+  // Aerodynamic nose cap
+  const acNose = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.82, 0.28, 16, 1, false, 0, Math.PI), acMat);
+  acNose.rotation.y = -Math.PI / 2;
+  acNose.position.set(0, height + 0.58, 1.3);
+  acGroup.add(acNose);
+
+  // AC Dual Cooling Exhaust Fans on top
+  [-0.45, 0.45].forEach((fx) => {
+    const fan = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 16), acVentMat);
+    fan.position.set(fx, height + 0.74, -0.6);
+    acGroup.add(fan);
   });
 
-  // Longitudinal roof luggage carrier / reinforcement rails
-  const railMat = new THREE.MeshLambertMaterial({ color: 0x6b7280 });
-  [-1.0, 1.0].forEach(rx => {
-    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, length * 0.72, 8), railMat);
-    rail.rotateX(Math.PI / 2);
-    rail.position.set(rx, height + 0.58, -0.4);
-    bus.add(rail);
+  // AC Side Ventilation Slits
+  [-0.84, 0.84].forEach((vx) => {
+    const slit = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.16, 2.2), acVentMat);
+    slit.position.set(vx, height + 0.58, -0.4);
+    acGroup.add(slit);
   });
+  bus.add(acGroup);
 
-  // 4. FRONT WINDSHIELD WIPER ARMS & HEAVY-DUTY SIDE MIRRORS
-  const mirrorMat = new THREE.MeshLambertMaterial({ color: 0x18181b });
-  const silverMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, metalness: 0.8 });
+  // 4. DISTINCTIVE HANGING "RABBIT EAR" / "ELEPHANT EAR" AERODYNAMIC REARVIEW MIRRORS
+  // Extending from the top roof corners forward and curving down (prominently shown in front & side views)
+  const mirrorMat = new THREE.MeshLambertMaterial({ color: 0x0f172a });
+  const mirrorGlassMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.85, roughness: 0.15 });
 
-  // Dual front windshield wipers
-  [-0.55, 0.55].forEach(wx => {
-    const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.65, 0.02), mirrorMat);
-    wiper.position.set(wx, 2.15, length / 2 + 0.03);
-    wiper.rotation.z = -0.28;
-    bus.add(wiper);
-  });
-
-  // Giant Elephant Ear Side Rearview Mirrors (Essential for Kerala Buses!)
-  [-width / 2 - 0.18, width / 2 + 0.18].forEach((mx, idx) => {
+  [-width / 2 - 0.08, width / 2 + 0.08].forEach((mx, idx) => {
+    const isLeft = idx === 0;
     const mirrorGroup = new THREE.Group();
-    // Curved stalk
-    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.65, 8), mirrorMat);
-    stalk.rotation.z = idx === 0 ? Math.PI / 4 : -Math.PI / 4;
-    mirrorGroup.add(stalk);
 
-    // Large rectangular mirror head
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.42, 0.08), mirrorMat);
-    head.position.set(idx === 0 ? -0.15 : 0.15, 0.22, 0.12);
+    // Top anchor bracket on front corner pillar
+    const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.18), mirrorMat);
+    bracket.position.set(0, 0, 0);
+    mirrorGroup.add(bracket);
 
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.38), silverMat);
-    glass.position.set(idx === 0 ? -0.15 : 0.15, 0.22, 0.07);
-    glass.rotation.y = Math.PI;
+    // Sweeping forward aerodynamic curved arm
+    const armGeo = new THREE.CylinderGeometry(0.024, 0.024, 0.75, 8);
+    const arm = new THREE.Mesh(armGeo, mirrorMat);
+    arm.rotation.x = 0.55;
+    arm.rotation.z = isLeft ? -0.25 : 0.25;
+    arm.position.set(isLeft ? -0.14 : 0.14, -0.28, 0.32);
+    mirrorGroup.add(arm);
 
-    mirrorGroup.add(head, glass);
-    mirrorGroup.position.set(mx, 2.55, length / 2 - 0.4);
+    // Modern vertical aerodynamic mirror head casing
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.52, 0.12), mirrorMat);
+    head.position.set(isLeft ? -0.22 : 0.22, -0.58, 0.52);
+    head.castShadow = true;
+
+    // Dual mirror glass panes (Main upper mirror + lower blind-spot convex mirror)
+    const upperGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.32), mirrorGlassMat);
+    upperGlass.position.set(isLeft ? -0.22 : 0.22, -0.5, 0.45);
+    upperGlass.rotation.y = Math.PI;
+
+    const lowerGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.12), mirrorGlassMat);
+    lowerGlass.position.set(isLeft ? -0.22 : 0.22, -0.74, 0.45);
+    lowerGlass.rotation.y = Math.PI;
+
+    mirrorGroup.add(head, upperGlass, lowerGlass);
+    mirrorGroup.position.set(mx, height + 0.32, length / 2 - 0.2);
     bus.add(mirrorGroup);
   });
 
-  // 5. 6 HEAVY-DUTY COMMERCIAL BUS WHEELS (Front single, rear dual-tires)
-  const tireMat = new THREE.MeshLambertMaterial({ color: 0x121314 });
-  const rimMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.7, roughness: 0.3 });
-  const hubMat = new THREE.MeshLambertMaterial({ color: 0x1f2937 });
+  // 5. LUXURY COACH ALLOY WHEELS (Front Single, Rear Dual)
+  // Silver alloy rims with circular vent holes, dark tread tires, and chrome lug bolts
+  const tireMat = new THREE.MeshLambertMaterial({ color: 0x111827 });
+  const alloyRimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8, roughness: 0.25 });
+  const alloyHubMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+  const chromeNutMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.9 });
 
-  function createBusWheel(x: number, z: number, isDual = false) {
+  function createCoachWheel(x: number, z: number, isDual = false) {
     const wheelGroup = new THREE.Group();
     wheelGroup.position.set(x, 0.55, z);
 
-    const tireWidth = isDual ? 0.62 : 0.36;
-    const tireRadius = 0.55;
+    const tireWidth = isDual ? 0.64 : 0.36;
+    const tireRadius = 0.54;
 
     // Tire
-    const tire = new THREE.Mesh(new THREE.CylinderGeometry(tireRadius, tireRadius, tireWidth, 20), tireMat);
+    const tire = new THREE.Mesh(new THREE.CylinderGeometry(tireRadius, tireRadius, tireWidth, 24), tireMat);
     tire.rotateZ(Math.PI / 2);
     tire.castShadow = true;
     wheelGroup.add(tire);
 
-    // Rim
-    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, tireWidth + 0.02, 16), rimMat);
+    // Silver Alloy Rim
+    const rimRadius = 0.38;
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(rimRadius, rimRadius, tireWidth + 0.02, 20), alloyRimMat);
     rim.rotateZ(Math.PI / 2);
     wheelGroup.add(rim);
 
-    // Hub cap with 10 wheel nuts
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, tireWidth + 0.04, 12), hubMat);
+    // Dark Inner Hub Core with circular vent cutouts
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, tireWidth + 0.04, 16), alloyHubMat);
     hub.rotateZ(Math.PI / 2);
     wheelGroup.add(hub);
 
-    for (let b = 0; b < 8; b++) {
-      const angle = (b / 8) * Math.PI * 2;
-      const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, tireWidth + 0.05, 6), silverMat);
+    // Chrome Lug Nuts (10-bolt commercial pattern)
+    for (let b = 0; b < 10; b++) {
+      const angle = (b / 10) * Math.PI * 2;
+      const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, tireWidth + 0.05, 6), chromeNutMat);
       nut.rotateZ(Math.PI / 2);
-      nut.position.set(x < 0 ? -0.01 : 0.01, Math.sin(angle) * 0.24, Math.cos(angle) * 0.24);
+      nut.position.set(x < 0 ? -0.01 : 0.01, Math.sin(angle) * 0.16, Math.cos(angle) * 0.16);
       wheelGroup.add(nut);
     }
+
+    // Chrome Center Cap with emblem
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, tireWidth + 0.06, 12), chromeNutMat);
+    cap.rotateZ(Math.PI / 2);
+    wheelGroup.add(cap);
 
     return wheelGroup;
   }
 
-  // Front Wheels
-  bus.add(createBusWheel(-width / 2 + 0.12, 3.4, false));
-  bus.add(createBusWheel(width / 2 - 0.12, 3.4, false));
+  // Front Wheels (Steering axle)
+  bus.add(createCoachWheel(-width / 2 + 0.14, 3.6, false));
+  bus.add(createCoachWheel(width / 2 - 0.14, 3.6, false));
 
-  // Rear Wheels (Dual tires on each side for heavy Super Fast chassis)
-  bus.add(createBusWheel(-width / 2 + 0.22, -2.8, true));
-  bus.add(createBusWheel(width / 2 - 0.22, -2.8, true));
+  // Rear Wheels (Heavy-duty dual drive axle)
+  bus.add(createCoachWheel(-width / 2 + 0.24, -2.8, true));
+  bus.add(createCoachWheel(width / 2 - 0.24, -2.8, true));
 
-  // Rubber rear mud flaps
-  const flapMat = new THREE.MeshLambertMaterial({ color: 0x090a0a });
-  [-width / 2 + 0.25, width / 2 - 0.25].forEach(fx => {
-    const flap = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.42, 0.04), flapMat);
-    flap.position.set(fx, 0.35, -3.5);
+  // Sculpted rear aerodynamic mud flaps
+  const flapMat = new THREE.MeshLambertMaterial({ color: 0x0b0f17 });
+  [-width / 2 + 0.26, width / 2 - 0.26].forEach((fx) => {
+    const flap = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.44, 0.04), flapMat);
+    flap.position.set(fx, 0.34, -3.52);
     bus.add(flap);
   });
 
   return bus;
 }
+
+// Export buildKSRTCSuperFastBus as an alias so all existing callers immediately
+// render this pristine modern luxury coach model and its exact white livery!
+export const buildKSRTCSuperFastBus = buildLuxuryCoachBus;

@@ -7,10 +7,24 @@ interface DialogueHUDProps {
   onDriveAuto: () => void;
   onDismiss: () => void;
   onOpenStadiumTicket?: () => void;
+  onOpenThattukada?: () => void;
 }
 
-export function DialogueHUD({ dialogue, onNext, onDriveAuto, onDismiss, onOpenStadiumTicket }: DialogueHUDProps) {
+export function DialogueHUD({
+  dialogue,
+  onNext,
+  onDriveAuto,
+  onDismiss,
+  onOpenStadiumTicket,
+  onOpenThattukada,
+}: DialogueHUDProps) {
   if (!dialogue) return null;
+
+  const isChayaKadaNPC =
+    dialogue.tag === 'CHAYA' ||
+    dialogue.id === 'mohnan' ||
+    dialogue.id === 'order' ||
+    dialogue.id === 'no-money';
 
   return (
     <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-40 w-[720px] max-w-[94vw] pointer-events-auto transition-all duration-300 select-none animate-subtle-bob">
@@ -39,6 +53,14 @@ export function DialogueHUD({ dialogue, onNext, onDriveAuto, onDismiss, onOpenSt
           </p>
 
           <div className="mt-3 flex items-center gap-2 flex-wrap">
+            {isChayaKadaNPC && onOpenThattukada && (
+              <button
+                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-black text-xs transition-colors flex items-center gap-1.5 shadow-lg cursor-pointer active:scale-95 animate-pulse"
+                onClick={onOpenThattukada}
+              >
+                <span>🍵 തട്ടുകട മെനു • OPEN MENU</span>
+              </button>
+            )}
             {(dialogue.tag === 'TICKET' || dialogue.tag === 'SEVENS' || dialogue.id === 'ticket_koya') && onOpenStadiumTicket && (
               <button
                 className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"

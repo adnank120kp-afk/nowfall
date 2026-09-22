@@ -5,12 +5,16 @@ import { WeatherMode } from '../types';
 interface HeaderHUDProps {
   weather: WeatherMode;
   onCycleWeather: () => void;
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
+  onCycleTimeOfDay?: () => void;
   wallet: number;
   isMuted: boolean;
   onToggleMute: () => void;
   onOpenDistrictModal: () => void;
   onToggleVehicle: () => void;
+  onToggleBus?: () => void;
   inVehicle: boolean;
+  vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat';
   isMapOpen: boolean;
   onToggleMap: () => void;
   isMessagesOpen: boolean;
@@ -22,23 +26,36 @@ interface HeaderHUDProps {
   isBigMapOpen?: boolean;
   playerModel?: 'unni' | 'babu';
   onTogglePlayerModel?: () => void;
+  onOpenMissions?: () => void;
+  activeMissionCount?: number;
+  onTriggerRandomScene?: () => void;
+  onOpenBusinesses?: () => void;
+  onOpenPhotoMode?: () => void;
+  onSelectVehicle?: (type: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => void;
 }
 
 const WEATHER_LABELS: Record<WeatherMode, { label: string; icon: string }> = {
   monsoon: { label: 'കേരള മൺസൂൺ (Monsoon Active)', icon: '🌧️' },
   morning: { label: 'മൂടൽമഞ്ഞുള്ള പ്രഭാതം (Misty Sunrise)', icon: '🌫️' },
   evening: { label: 'സന്ധ്യാ സൂര്യൻ (Golden Evening)', icon: '🌅' },
+  sunny: { label: 'തിളങ്ങുന്ന വെയിൽ (Tropical Sunshine)', icon: '☀️' },
+  thunderstorm: { label: 'ഇടിമിന്നലോടുകൂടിയ മഴ (Thunderstorm)', icon: '⚡' },
+  fog: { label: 'മലയോര മൂടൽമഞ്ഞ് (Hill Fog)', icon: '🌁' },
 };
 
 export function HeaderHUD({
   weather,
   onCycleWeather,
+  timeOfDay = 'afternoon',
+  onCycleTimeOfDay,
   wallet,
   isMuted,
   onToggleMute,
   onOpenDistrictModal,
   onToggleVehicle,
+  onToggleBus,
   inVehicle,
+  vehicleType = 'auto',
   isMapOpen,
   onToggleMap,
   isMessagesOpen,
@@ -50,8 +67,21 @@ export function HeaderHUD({
   isBigMapOpen = false,
   playerModel = 'babu',
   onTogglePlayerModel,
+  onOpenMissions,
+  activeMissionCount = 0,
+  onTriggerRandomScene,
+  onOpenBusinesses,
+  onOpenPhotoMode,
+  onSelectVehicle,
 }: HeaderHUDProps) {
   const currentWeatherData = WEATHER_LABELS[weather];
+
+  const timeIcons: Record<string, string> = {
+    morning: '🌅',
+    afternoon: '☀️',
+    evening: '🌇',
+    night: '🌙',
+  };
 
   return (
     <header className="relative z-50 flex items-center justify-between px-3 sm:px-6 py-2.5 border-b border-emerald-800/40 bg-[#06140ee8] backdrop-blur-xl shadow-xl select-none">
@@ -96,6 +126,62 @@ export function HeaderHUD({
 
       {/* Center: TOP ICONS FOR BIG MAP, RADAR, MESSAGES & KSRTC BOARDING */}
       <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* 🎯 NAATTILE MISSIONS BUTTON */}
+        {onOpenMissions && (
+          <button
+            onClick={onOpenMissions}
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-black transition-all border border-amber-400/80 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-md"
+            title="Naattile Missions & Errands (നാട്ടിലെ മിഷനുകൾ)"
+          >
+            <span className="text-sm animate-spin">🎯</span>
+            <span className="font-extrabold uppercase hidden sm:inline">MISSIONS</span>
+            <span className="font-malayalam font-bold sm:hidden">മിഷൻ</span>
+            {activeMissionCount > 0 && (
+              <span className="w-4 h-4 rounded-full bg-red-600 text-white font-mono text-[9px] flex items-center justify-center font-black animate-pulse">
+                {activeMissionCount}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* 🌴 NAATTILE SCENE RANDOM EVENT TRIGGER */}
+        {onTriggerRandomScene && (
+          <button
+            onClick={onTriggerRandomScene}
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-black transition-all border border-emerald-400/70 bg-[#0c2f21] hover:bg-[#124230] text-emerald-200 flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-md"
+            title="Trigger Random Naattile Scene (നാട്ടിലെ ഒരു സീൻ കാണുക!)"
+          >
+            <span className="text-sm">🌴</span>
+            <span className="font-malayalam text-amber-300 font-bold hidden sm:inline">നാട്ടിലെ സീൻ!</span>
+            <span className="font-malayalam text-amber-300 font-bold sm:hidden">സീൻ</span>
+          </button>
+        )}
+
+        {/* 🏪 BAZAAR & SHOPS BUTTON */}
+        {onOpenBusinesses && (
+          <button
+            onClick={onOpenBusinesses}
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border border-amber-500/50 bg-[#291708]/90 hover:bg-[#38200d] text-amber-300 flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-md"
+            title="Village Bazaar, Chaya Kada, Petrol Pump, Garage & Outfits"
+          >
+            <span className="text-sm">🏪</span>
+            <span className="font-malayalam font-bold hidden md:inline">ചന്ത &amp; കടകൾ</span>
+            <span className="text-[10px] font-mono hidden sm:inline">(Shop)</span>
+          </button>
+        )}
+
+        {/* 📸 PHOTO MODE BUTTON */}
+        {onOpenPhotoMode && (
+          <button
+            onClick={onOpenPhotoMode}
+            className="px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border border-emerald-500/50 bg-black/60 hover:bg-zinc-800 text-white flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-md"
+            title="Open Kerala Photo Mode (ഫോട്ടോ മോഡ്)"
+          >
+            <span className="text-sm">📸</span>
+            <span className="hidden lg:inline text-[10px] font-mono">Photo</span>
+          </button>
+        )}
+
         {/* 🗺️ BIG MAP (12 DISTRICTS) BUTTON */}
         {onOpenBigMap && (
           <button
@@ -109,16 +195,13 @@ export function HeaderHUD({
           >
             <span className="text-sm">🗺️</span>
             <span className="font-extrabold text-amber-300">BIG MAP</span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-400 text-black font-mono font-black hidden sm:inline">
-              12
-            </span>
           </button>
         )}
 
         {/* 🧭 RADAR MINI-MAP TOGGLE ICON */}
         <button
           onClick={onToggleMap}
-          className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-md ${
+          className={`px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border flex items-center gap-1 active:scale-95 cursor-pointer shadow-md ${
             isMapOpen
               ? 'bg-emerald-700/80 text-white border-emerald-400 shadow-emerald-950/80'
               : 'bg-[#0a2318]/90 hover:bg-[#0f3424] text-emerald-300 border-emerald-700/40'
@@ -126,11 +209,7 @@ export function HeaderHUD({
           title="Toggle GPS Radar Map"
         >
           <span className="text-sm">🧭</span>
-          <span className="hidden md:inline font-malayalam">റഡാർ</span>
-          <span className="hidden sm:inline text-[10px] font-mono opacity-80">(Radar)</span>
-          {isMapOpen && (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-          )}
+          <span className="hidden xl:inline font-malayalam">റഡാർ</span>
         </button>
 
         {/* 💬 MESSAGES / DISPATCHES TOGGLE ICON */}
@@ -208,6 +287,18 @@ export function HeaderHUD({
 
       {/* Right: Audio Action Buttons & Audio Toggle */}
       <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* ☀️ Day/Night Cycle Button */}
+        {onCycleTimeOfDay && (
+          <button
+            onClick={onCycleTimeOfDay}
+            className="px-2.5 py-1 rounded-xl bg-[#092218] hover:bg-[#0e3124] text-amber-300 border border-emerald-500/40 text-xs font-mono font-bold transition-transform active:scale-95 flex items-center gap-1 cursor-pointer shadow-md"
+            title="Cycle 24h Day/Night: Morning, Afternoon, Evening, Night"
+          >
+            <span>{timeIcons[timeOfDay] || '☀️'}</span>
+            <span className="capitalize hidden lg:inline">{timeOfDay}</span>
+          </button>
+        )}
+
         {/* Center: Live Weather Status (Hidden on smaller screens) */}
         <div className="hidden xl:flex items-center gap-2 hud-panel px-3 py-1 rounded-full border border-emerald-500/30">
           <div className="flex items-center gap-1.5 text-xs font-mono">
@@ -233,17 +324,59 @@ export function HeaderHUD({
           >
             <span>🎺 Horn</span>
           </button>
+
+          {/* Drive Luxury Coach Bus Mode */}
+          {onToggleBus && (
+            <button
+              className={`px-2 py-1 rounded-lg text-xs font-mono font-bold transition-transform active:scale-95 flex items-center gap-1 cursor-pointer ${
+                inVehicle && vehicleType === 'bus'
+                  ? 'bg-gradient-to-r from-zinc-100 to-white text-black border border-white shadow-[0_0_12px_rgba(255,255,255,0.7)] animate-pulse'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-500/50'
+              }`}
+              onClick={onToggleBus}
+              title="Drive Modern Luxury Coach Bus [V]"
+            >
+              <span>🚌 {inVehicle && vehicleType === 'bus' ? 'Exit Bus' : 'Bus [V]'}</span>
+            </button>
+          )}
+
+          {/* Drive Babu Auto Rickshaw */}
           <button
             className={`px-2 py-1 rounded-lg text-xs font-mono font-bold transition-transform active:scale-95 flex items-center gap-1 cursor-pointer ${
-              inVehicle
+              inVehicle && vehicleType === 'auto'
                 ? 'bg-amber-500 text-black border border-amber-300 animate-pulse'
                 : 'bg-emerald-950/80 hover:bg-[#0f5132] text-yellow-300 border border-yellow-500/30'
             }`}
             onClick={onToggleVehicle}
             title="Babu Auto Horn / Ride [F]"
           >
-            <span>🛺 {inVehicle ? 'Exit Auto' : 'Auto [F]'}</span>
+            <span>🛺 {inVehicle && vehicleType === 'auto' ? 'Exit Auto' : 'Auto [F]'}</span>
           </button>
+
+          {/* Expanded Vehicle Selector Dropdown / Buttons */}
+          {onSelectVehicle && (
+            <div className="flex items-center gap-1 pl-1 border-l border-emerald-800/40">
+              {[
+                { type: 'tractor', icon: '🚜', title: 'Paddy Tractor' },
+                { type: 'jeep', icon: '🚙', title: 'Mountain Jeep' },
+                { type: 'bullet', icon: '🏍️', title: 'Bullet Cruiser' },
+                { type: 'boat', icon: '🚤', title: 'Backwater Boat' },
+              ].map((v) => (
+                <button
+                  key={v.type}
+                  onClick={() => onSelectVehicle(v.type as typeof vehicleType)}
+                  className={`p-1 px-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                    inVehicle && vehicleType === v.type
+                      ? 'bg-amber-400 text-black font-black scale-110 shadow'
+                      : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200'
+                  }`}
+                  title={v.title}
+                >
+                  {v.icon}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Mobile quick toggle sky */}

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { soundSynth } from '../audio';
 import { WeatherMode, NPCEntity } from '../types';
 import { buildDetailedAutoRickshaw } from './AutoRickshawBuilder';
-import { buildKSRTCSuperFastBus } from './KSRTCBusBuilder';
+import { buildKSRTCSuperFastBus, buildLuxuryCoachBus } from './KSRTCBusBuilder';
 import { buildKeralaPrivateBus } from './KeralaPrivateBusBuilder';
 import { buildKSRTCBusStand } from './KSRTCStandBuilder';
 import { buildRiggedBabuCharacter, buildBabuDiagramCharacter, HumanRig } from './BabuCharacterBuilder';
@@ -12,12 +12,22 @@ import { buildFootballGround } from './FootballGroundBuilder';
 import { buildBeautifulLotusPond, getOrganicPondRadius } from './LotusPondBuilder';
 import { buildBigKizhakkumpuramMap } from './BigMapBuilder';
 import { buildLivingTrafficAndFauna } from './TrafficAndFaunaBuilder';
+import {
+  buildKeralaTractor,
+  buildKeralaJeep,
+  buildKeralaBullet,
+  buildKeralaBoat,
+} from './VehiclesBuilder';
+import { buildAuthenticKeralaThattukada } from './ThattukadaBuilder';
 
 interface ThreeKeralaWorldProps {
   weather: WeatherMode;
+  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
   inVehicle: boolean;
-  onVehicleToggle: (inVehicle: boolean) => void;
+  vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat';
+  onVehicleToggle: (inVehicle: boolean, vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => void;
   onInteractNPC: (npc: NPCEntity) => void;
+  onOpenThattukada?: () => void;
   focusTarget: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond' | null;
   onClearFocus: () => void;
   teleportTarget?: { x: number; z: number } | null;
@@ -27,9 +37,12 @@ interface ThreeKeralaWorldProps {
 
 export function ThreeKeralaWorld({
   weather,
+  timeOfDay = 'afternoon',
   inVehicle,
+  vehicleType = 'auto',
   onVehicleToggle,
   onInteractNPC,
+  onOpenThattukada,
   focusTarget,
   onClearFocus,
   teleportTarget,
@@ -39,7 +52,8 @@ export function ThreeKeralaWorld({
   const containerRef = useRef<HTMLDivElement>(null);
   const worldApiRef = useRef<{
     setWeather: (w: WeatherMode) => void;
-    toggleVehicle: () => void;
+    setTimeOfDay: (t: 'morning' | 'afternoon' | 'evening' | 'night') => void;
+    toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => void;
     focusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond') => void;
     teleportTo: (x: number, z: number) => void;
     triggerInteract: () => void;
@@ -52,6 +66,13 @@ export function ThreeKeralaWorld({
       worldApiRef.current.setWeather(weather);
     }
   }, [weather]);
+
+  // Sync time of day changes
+  useEffect(() => {
+    if (worldApiRef.current) {
+      worldApiRef.current.setTimeOfDay(timeOfDay);
+    }
+  }, [timeOfDay]);
 
   // Sync player skin changes
   useEffect(() => {
@@ -515,55 +536,18 @@ export function ThreeKeralaWorld({
     createFruitTree(65, -80, false, 1.1);
 
     // 6. BUILDINGS & VILLAGE INFRASTRUCTURE
-    // Chaya Kada
-    const ckGroup = new THREE.Group();
-    const ckW = 11, ckH = 4.4, ckD = 8.5;
-    const ckWall = new THREE.Mesh(new THREE.BoxGeometry(ckW, ckH, ckD), new THREE.MeshLambertMaterial({ color: 0xdfc187 }));
-    ckWall.position.y = ckH / 2;
-    ckWall.castShadow = true;
-    ckGroup.add(ckWall);
-
-    const ckRoofGeo = new THREE.ConeGeometry(9.5, 2.7, 4);
-    ckRoofGeo.rotateY(Math.PI / 4);
-    const ckRoof = new THREE.Mesh(ckRoofGeo, new THREE.MeshLambertMaterial({ color: 0x9b321c }));
-    ckRoof.position.y = ckH + 1.25;
-    ckRoof.castShadow = true;
-    ckGroup.add(ckRoof);
-
-    // Wooden Veranda Bench
-    const ckBench = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.45, 0.8), new THREE.MeshLambertMaterial({ color: 0x5a391e }));
-    ckBench.position.set(-1.8, 0.45, ckD / 2 + 0.9);
-    ckGroup.add(ckBench);
-
-    // Red Plastic Chair
-    const ckChair = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.85, 0.8), new THREE.MeshLambertMaterial({ color: 0xbf2a1d }));
-    ckChair.position.set(2.4, 0.45, ckD / 2 + 0.9);
-    ckGroup.add(ckChair);
-
-    // Glass Snack Cabinet
-    const ckGlass = new THREE.Mesh(
-      new THREE.BoxGeometry(1.6, 1.2, 0.9),
-      new THREE.MeshPhongMaterial({ color: 0xd8eaf0, transparent: true, opacity: 0.65 })
-    );
-    ckGlass.position.set(2.2, 1.5, ckD / 2 + 0.2);
-    ckGroup.add(ckGlass);
-
-    // Banana Bunch
-    const ckWaazha = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.2, 0.25, 0.9, 5),
-      new THREE.MeshLambertMaterial({ color: 0xe5b824 })
-    );
-    ckWaazha.position.set(3.5, ckH - 0.5, ckD / 2 + 0.6);
-    ckGroup.add(ckWaazha);
-
-    // Signboard
-    const ckSign = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.9, 0.15), new THREE.MeshLambertMaterial({ color: 0x12402e }));
-    ckSign.position.set(0, ckH - 0.2, ckD / 2 + 0.4);
-    ckGroup.add(ckSign);
-
-    ckGroup.position.set(-24, 0, -16);
-    worldGroup.add(ckGroup);
-    colliders.push({ minX: -30.5, maxX: -17.5, minZ: -21.5, maxZ: -10.5 });
+    // Authentic Kerala Roadside Thattukada & Produce Stall (Faithfully recreated after Image 2)
+    const thattukada = buildAuthenticKeralaThattukada();
+    thattukada.group.position.set(-24, 0, -16);
+    worldGroup.add(thattukada.group);
+    thattukada.colliders.forEach((c) => {
+      colliders.push({
+        minX: c.minX - 24,
+        maxX: c.maxX - 24,
+        minZ: c.minZ - 16,
+        maxZ: c.maxZ - 16,
+      });
+    });
 
     // Mosque
     const mGroup = new THREE.Group();
@@ -699,10 +683,10 @@ export function ThreeKeralaWorld({
     bsGroup.position.set(16, 0, 9.5);
     worldGroup.add(bsGroup);
 
-    // 8. VEHICLES (Auto Rickshaw & Buses)
+    // 8. VEHICLES (Auto, Bus, Tractor, Jeep, Bullet, Boat)
     interface VehicleData {
       mesh: THREE.Group;
-      type: 'auto' | 'ksrtc' | 'private_bus';
+      type: 'auto' | 'ksrtc' | 'private_bus' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat';
       isPlayerVehicle: boolean;
       speed: number;
       bounds: [number, number];
@@ -727,7 +711,7 @@ export function ThreeKeralaWorld({
     }
 
     function createKeralaBus(x: number, z: number, angle = 0, isKSRTC = true) {
-      const bus = buildKSRTCSuperFastBus();
+      const bus = buildLuxuryCoachBus();
       bus.position.set(x, 0, z);
       bus.rotation.y = angle;
       worldGroup.add(bus);
@@ -761,18 +745,83 @@ export function ThreeKeralaWorld({
     const playerAuto = createAutoRickshaw(-6, 8, 0, true);
     createAutoRickshaw(25, -4.5, -Math.PI / 2);
 
-    // Cruising Buses on Highway SH-17:
-    // Eastbound: KSRTC Super Fast (Aanavandi)
-    createKeralaBus(45, -4, Math.PI / 2, true);
-    // Westbound: Hot Pink Kerala Private Bus ("ERANHIKKAL - 2020 Club Edition")
-    createPrivateBus(-65, 4, -Math.PI / 2, 0.22);
+    // DRIVABLE MODERN LUXURY COACH BUS (BUS MODE)
+    const playerBusMesh = buildLuxuryCoachBus();
+    playerBusMesh.position.set(24, 0, 14.5);
+    playerBusMesh.rotation.y = -Math.PI / 2;
+    worldGroup.add(playerBusMesh);
 
-    // Parked Kerala Private Bus at the Village Bus Shelter Bay for close-up viewing
-    const shelterPrivateBus = buildKeralaPrivateBus();
-    shelterPrivateBus.position.set(24, 0, 14.5);
-    shelterPrivateBus.rotation.y = -Math.PI / 2;
-    worldGroup.add(shelterPrivateBus);
+    const playerBusData: VehicleData = {
+      mesh: playerBusMesh,
+      type: 'bus',
+      isPlayerVehicle: true,
+      speed: 0,
+      bounds: [-115, 115],
+    };
+    vehicles.push(playerBusData);
     colliders.push({ minX: 24 - 6.0, maxX: 24 + 6.0, minZ: 14.5 - 2.0, maxZ: 14.5 + 2.0 });
+
+    // DRIVABLE KERALA PADDY TRACTOR (TRACTOR MODE)
+    const playerTractorMesh = buildKeralaTractor();
+    playerTractorMesh.position.set(-36, 0, -18);
+    playerTractorMesh.rotation.y = Math.PI / 4;
+    worldGroup.add(playerTractorMesh);
+    const playerTractorData: VehicleData = {
+      mesh: playerTractorMesh,
+      type: 'tractor',
+      isPlayerVehicle: true,
+      speed: 0,
+      bounds: [-115, 115],
+    };
+    vehicles.push(playerTractorData);
+
+    // DRIVABLE KERALA 4x4 MOUNTAIN JEEP (JEEP MODE)
+    const playerJeepMesh = buildKeralaJeep();
+    playerJeepMesh.position.set(-16, 0, 18);
+    playerJeepMesh.rotation.y = -Math.PI / 3;
+    worldGroup.add(playerJeepMesh);
+    const playerJeepData: VehicleData = {
+      mesh: playerJeepMesh,
+      type: 'jeep',
+      isPlayerVehicle: true,
+      speed: 0,
+      bounds: [-115, 115],
+    };
+    vehicles.push(playerJeepData);
+
+    // DRIVABLE KERALA CLASSIC BULLET MOTORCYCLE (BULLET MODE)
+    const playerBulletMesh = buildKeralaBullet();
+    playerBulletMesh.position.set(-12, 0, -8);
+    playerBulletMesh.rotation.y = Math.PI / 2;
+    worldGroup.add(playerBulletMesh);
+    const playerBulletData: VehicleData = {
+      mesh: playerBulletMesh,
+      type: 'bullet',
+      isPlayerVehicle: true,
+      speed: 0,
+      bounds: [-115, 115],
+    };
+    vehicles.push(playerBulletData);
+
+    // DRIVABLE BACKWATER BOAT (BOAT MODE)
+    const playerBoatMesh = buildKeralaBoat();
+    playerBoatMesh.position.set(-62, 0.2, -75);
+    playerBoatMesh.rotation.y = 0;
+    worldGroup.add(playerBoatMesh);
+    const playerBoatData: VehicleData = {
+      mesh: playerBoatMesh,
+      type: 'boat',
+      isPlayerVehicle: true,
+      speed: 0,
+      bounds: [-115, 115],
+    };
+    vehicles.push(playerBoatData);
+
+    // Cruising Luxury Coach Buses on Highway SH-17:
+    // Eastbound: White Luxury Coach
+    createKeralaBus(45, -4, Math.PI / 2, true);
+    // Westbound: Luxury Intercity Coach
+    createKeralaBus(-65, 4, -Math.PI / 2, true);
 
     // 8B. KERALA SEVENS FOOTBALL GROUND (സെവൻസ് ഫുട്ബോൾ ഗ്രൗണ്ട്)
     // Modeled exactly after the striped turf pitch diagram with white regulation markings & 3D goals
@@ -895,12 +944,12 @@ export function ThreeKeralaWorld({
         id: 'mohnan',
         name: "Mohanan Nair (നായർ ചേട്ടൻ)",
         malayalamName: "നായർ ചേട്ടൻ",
-        role: "Tea Master",
-        dialogue: "“മഴ കനക്കുകയാണ്! കടത്തിണ്ണയിൽ ഇരുന്ന് മനോരമ പത്രം വായിക്കൂ, ചൂട് പരിപ്പുവടയും പഴംപൊരിയും റെഡിയാണ്!”",
+        role: "Thattukada Master",
+        dialogue: "“എന്താ വേണ്ടത് ചേട്ടാ? ചൂട് കട്ടൻ ചായയോ, സുലൈമാനിയോ, പൊറോട്ട & ബീഫ് കറിയോ, നല്ല ആവി പറക്കുന്ന പഴംപൊരിയോ എടുക്കട്ടെ? [🍵 തട്ടുകട മെനു] നോക്കൂ!”",
         avatar: "☕",
         tag: "CHAYA"
       },
-      -25, -11, 0xeeeeee, 0x1f4e5b
+      -22.6, -15.2, 0xeeeeee, 0x1f4e5b
     );
 
     createNPC(
@@ -1183,6 +1232,7 @@ export function ThreeKeralaWorld({
       sprintMultiplier: 1.8,
       isGrounded: true,
       inVehicle: false,
+      vehicleType: 'auto' as 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat',
     };
 
     // 11. MONSOON RAIN SYSTEM
@@ -1241,7 +1291,37 @@ export function ThreeKeralaWorld({
       }
     }
 
+    function applyTimeOfDay(time: 'morning' | 'afternoon' | 'evening' | 'night') {
+      if (time === 'night') {
+        scene.fog = new THREE.FogExp2(0x060f17, 0.012);
+        scene.background = new THREE.Color(0x060f17);
+        sunLight.intensity = 0.22;
+        sunLight.color.setHex(0x7ea0d6); // cold moonlight
+        ambientLight.color.setHex(0x1a2e40);
+      } else if (time === 'morning') {
+        scene.fog = new THREE.FogExp2(0xb6dbe2, 0.009);
+        scene.background = new THREE.Color(0xaad3dc);
+        sunLight.intensity = 1.1;
+        sunLight.color.setHex(0xfff3d1);
+        ambientLight.color.setHex(0xdbeef8);
+      } else if (time === 'evening') {
+        scene.fog = new THREE.FogExp2(0x8a4b2a, 0.008);
+        scene.background = new THREE.Color(0xc96a3b);
+        sunLight.intensity = 1.25;
+        sunLight.color.setHex(0xff7733);
+        ambientLight.color.setHex(0xffa873);
+      } else {
+        // afternoon
+        scene.fog = new THREE.FogExp2(0x9fc8b5, 0.006);
+        scene.background = new THREE.Color(0x82b89f);
+        sunLight.intensity = 1.4;
+        sunLight.color.setHex(0xffffff);
+        ambientLight.color.setHex(0xd0e8dc);
+      }
+    }
+
     applyWeather(weather);
+    applyTimeOfDay(timeOfDay);
 
     // 12. CONTROLLER
     const keys: Record<string, boolean> = {};
@@ -1254,8 +1334,11 @@ export function ThreeKeralaWorld({
         checkInteractions();
       } else if (k === 'f') {
         toggleVehicleState();
+      } else if (k === 'v') {
+        // Toggle vehicle between Auto and Luxury Coach Bus
+        toggleVehicleState(playerState.inVehicle ? (playerState.vehicleType === 'bus' ? 'auto' : 'bus') : 'bus');
       } else if (k === 'h') {
-        if (playerState.inVehicle) soundSynth.playSound('autohorn');
+        if (playerState.inVehicle && playerState.vehicleType === 'auto') soundSynth.playSound('autohorn');
         else soundSynth.playSound('airhorn');
       } else if (k === 't') {
         soundSynth.playSound('teaglass');
@@ -1273,24 +1356,51 @@ export function ThreeKeralaWorld({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    function toggleVehicleState() {
+    function toggleVehicleState(preferredType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') {
       if (playerState.inVehicle) {
         playerState.inVehicle = false;
         player.visible = true;
-        player.position.set(playerAuto.mesh.position.x + 2.5, 0, playerAuto.mesh.position.z);
-        onVehicleToggle(false);
-      } else {
-        const dist = player.position.distanceTo(playerAuto.mesh.position);
-        if (dist < 7.0) {
-          playerState.inVehicle = true;
-          player.visible = false;
-          soundSynth.playSound('autohorn');
-          onVehicleToggle(true);
+        const currentV = vehicles.find(v => v.isPlayerVehicle && v.type === playerState.vehicleType);
+        if (currentV) {
+          player.position.set(currentV.mesh.position.x + 2.2, 0, currentV.mesh.position.z + 1.0);
         }
+        onVehicleToggle(false, playerState.vehicleType);
+      } else {
+        const chosenType = preferredType || 'auto';
+        playerState.inVehicle = true;
+        playerState.vehicleType = chosenType;
+        player.visible = false;
+
+        if (chosenType === 'bus') soundSynth.playSound('airhorn');
+        else if (chosenType === 'auto') soundSynth.playSound('autohorn');
+        else if (chosenType === 'tractor') soundSynth.playSound('tractor');
+        else if (chosenType === 'jeep') soundSynth.playSound('airhorn');
+        else if (chosenType === 'bullet') soundSynth.playSound('bullet');
+        else if (chosenType === 'boat') soundSynth.playSound('splash');
+
+        // Teleport player vehicle to player if too far
+        const targetV = vehicles.find(v => v.isPlayerVehicle && v.type === chosenType);
+        if (targetV && targetV.mesh.position.distanceTo(player.position) > 35) {
+          targetV.mesh.position.set(player.position.x, 0, player.position.z);
+        }
+
+        onVehicleToggle(true, chosenType);
       }
     }
 
     function checkInteractions() {
+      // Check if near thattukada counter (-22.6, 0, -13.5)
+      const distToThattukada = player.position.distanceTo(new THREE.Vector3(-22.6, 0, -13.5));
+      if (distToThattukada < 6.5) {
+        soundSynth.playSound('teaglass');
+        onOpenThattukada?.();
+        const mohanNPC = npcs.find((n) => n.entity.id === 'mohnan');
+        if (mohanNPC) {
+          onInteractNPC(mohanNPC.entity);
+        }
+        return;
+      }
+
       let nearestNPC: NPCData | null = null;
       let minDist = 7.0;
 
@@ -1305,17 +1415,24 @@ export function ThreeKeralaWorld({
       if (nearestNPC) {
         soundSynth.playSound('teaglass');
         onInteractNPC((nearestNPC as NPCData).entity);
+        if ((nearestNPC as NPCData).entity.id === 'mohnan') {
+          onOpenThattukada?.();
+        }
       }
     }
 
     // World API Exposure
     worldApiRef.current = {
       setWeather: applyWeather,
-      toggleVehicle: toggleVehicleState,
+      setTimeOfDay: applyTimeOfDay,
+      toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => toggleVehicleState(type),
       focusPOI: (poi) => {
         if (poi === 'chaya') {
-          player.position.set(-22, 0, -10);
+          player.position.set(-22.6, 0, -12.0);
+          camera.position.set(-22.6, 2.2, -7.5);
+          camera.lookAt(-22.6, 1.6, -15.5);
           checkInteractions();
+          onOpenThattukada?.();
         } else if (poi === 'mosque') {
           player.position.set(52, 0, -56);
           checkInteractions();
@@ -1379,6 +1496,9 @@ export function ThreeKeralaWorld({
       // Big Map coastal lighthouse beacon beam & water waves
       bigMap.updateAnimation(now);
 
+      // Thattukada tea samovar steam puffs & swaying hanging packets
+      thattukada.updateAnimation(now * 0.001);
+
       // Moving highway traffic & living animal behaviors (cows, dogs, chickens)
       livingWorld.update(now, dt);
 
@@ -1409,19 +1529,53 @@ export function ThreeKeralaWorld({
         rainParticles.geometry.attributes.position.needsUpdate = true;
       }
 
-      // Vehicles
+      // Vehicles (Player Auto / Luxury Coach Bus & Traffic)
       vehicles.forEach(v => {
         if (v.isPlayerVehicle && playerState.inVehicle) {
-          let vSpeed = 0;
-          let turn = 0;
-          if (keys['w'] || keys['arrowup']) vSpeed = 0.44;
-          if (keys['s'] || keys['arrowdown']) vSpeed = -0.2;
-          if (keys['a'] || keys['arrowleft']) turn = 0.045;
-          if (keys['d'] || keys['arrowright']) turn = -0.045;
-          v.mesh.rotation.y += turn;
-          v.mesh.translateZ(vSpeed);
-          player.position.copy(v.mesh.position);
-        } else {
+          const isCurrentActive = (v.type === playerState.vehicleType);
+          if (isCurrentActive) {
+            let vSpeed = 0;
+            let turn = 0;
+            let maxFwd = 0.44;
+            let maxRev = -0.20;
+            let turnRate = 0.045;
+
+            if (v.type === 'bus') {
+              maxFwd = 0.48;
+              maxRev = -0.22;
+              turnRate = 0.032;
+            } else if (v.type === 'auto') {
+              maxFwd = 0.44;
+              maxRev = -0.20;
+              turnRate = 0.048;
+            } else if (v.type === 'tractor') {
+              maxFwd = 0.36;
+              maxRev = -0.16;
+              turnRate = 0.038;
+            } else if (v.type === 'jeep') {
+              maxFwd = 0.52;
+              maxRev = -0.24;
+              turnRate = 0.044;
+            } else if (v.type === 'bullet') {
+              maxFwd = 0.62;
+              maxRev = -0.15;
+              turnRate = 0.054;
+            } else if (v.type === 'boat') {
+              maxFwd = 0.38;
+              maxRev = -0.15;
+              turnRate = 0.028;
+            }
+
+            if (keys['w'] || keys['arrowup']) vSpeed = maxFwd;
+            if (keys['s'] || keys['arrowdown']) vSpeed = maxRev;
+            if (keys['a'] || keys['arrowleft']) turn = turnRate;
+            if (keys['d'] || keys['arrowright']) turn = -turnRate;
+
+            v.mesh.rotation.y += turn;
+            v.mesh.translateZ(vSpeed);
+            player.position.copy(v.mesh.position);
+          }
+        } else if (!v.isPlayerVehicle) {
           v.mesh.translateZ(v.speed);
           if (v.mesh.position.x > v.bounds[1]) v.mesh.position.x = v.bounds[0];
           if (v.mesh.position.x < v.bounds[0]) v.mesh.position.x = v.bounds[1];
@@ -1540,11 +1694,21 @@ export function ThreeKeralaWorld({
         }
       }
 
-      // Camera follow
-      const focusPos = playerState.inVehicle ? playerAuto.mesh.position : player.position;
-      const targetCam = focusPos.clone().add(new THREE.Vector3(0, 11, 18));
+      // Camera follow (Dynamic framing for Walking vs Auto Rickshaw vs 12m Luxury Coach Bus)
+      let focusPos = player.position;
+      let camOffset = new THREE.Vector3(0, 11, 18);
+      if (playerState.inVehicle) {
+        if (playerState.vehicleType === 'bus') {
+          focusPos = playerBusMesh.position;
+          camOffset = new THREE.Vector3(0, 16, 26);
+        } else {
+          focusPos = playerAuto.mesh.position;
+          camOffset = new THREE.Vector3(0, 11, 18);
+        }
+      }
+      const targetCam = focusPos.clone().add(camOffset);
       camera.position.lerp(targetCam, 0.08);
-      camera.lookAt(focusPos.x, focusPos.y + 2, focusPos.z);
+      camera.lookAt(focusPos.x, focusPos.y + (playerState.vehicleType === 'bus' && playerState.inVehicle ? 3.2 : 2.0), focusPos.z);
 
       renderer.render(scene, camera);
     }

@@ -9,9 +9,24 @@ import { KSRTCTicketModal, BusDestination } from './components/KSRTCTicketModal'
 import { StadiumTicketModal } from './components/StadiumTicketModal';
 import { MessagesModal } from './components/MessagesModal';
 import { BigMapModal } from './components/BigMapModal';
+import { MissionsModal } from './components/MissionsModal';
+import { BusinessesModal } from './components/BusinessesModal';
+import { RandomSceneModal } from './components/RandomSceneModal';
+import { PhotoModeModal } from './components/PhotoModeModal';
+import { INITIAL_KERALA_MISSIONS } from './components/MissionsSystem';
+import { RANDOM_NAATTILE_SCENES } from './components/RandomScenesData';
 import { ThreeKeralaWorld } from './components/ThreeKeralaWorld';
 import { soundSynth } from './audio';
-import { WeatherMode, NPCEntity } from './types';
+import {
+  WeatherMode,
+  NPCEntity,
+  Mission,
+  RandomSceneEvent,
+  PlayerOutfit,
+  TimeOfDay,
+  VehicleType,
+  WaypointDestination,
+} from './types';
 
 const DIALOGUE_SEQUENCE: NPCEntity[] = [
   {
@@ -57,7 +72,9 @@ const WEATHER_MODES: WeatherMode[] = ['monsoon', 'morning', 'evening'];
 export default function App() {
   const [wallet, setWallet] = useState<number>(420);
   const [weather, setWeather] = useState<WeatherMode>('monsoon');
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('afternoon');
   const [inVehicle, setInVehicle] = useState<boolean>(false);
+  const [vehicleType, setVehicleType] = useState<VehicleType>('auto');
   const [activeDialogue, setActiveDialogue] = useState<NPCEntity | null>(null);
   const [dialogueIndex, setDialogueIndex] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -76,6 +93,110 @@ export default function App() {
     '“ഇന്ന് ഇടവപ്പാതി കനക്കും! അനന്തപുരി സൂപ്പർ ഫാസ്റ്റ് ബസ്സിന്റെ പുതിയ എയർ ഹോൺ നാട്ടിൽ ചർച്ചയായി!”'
   );
   const [playerModel, setPlayerModel] = useState<'unni' | 'babu'>('babu');
+  const [playerOutfit, setPlayerOutfit] = useState<PlayerOutfit>('babu');
+
+  // Naattile Scene System Modals & State
+  const [isMissionsOpen, setIsMissionsOpen] = useState<boolean>(false);
+  const [missions, setMissions] = useState<Mission[]>(INITIAL_KERALA_MISSIONS);
+  const [activeMission, setActiveMission] = useState<Mission | null>(null);
+  const [activeWaypoint, setActiveWaypoint] = useState<WaypointDestination | null>(null);
+
+  const [isSceneOpen, setIsSceneOpen] = useState<boolean>(false);
+  const [currentSceneEvent, setCurrentSceneEvent] = useState<RandomSceneEvent | null>(null);
+  const [sceneIndex, setSceneIndex] = useState<number>(0);
+
+  const [isBusinessesOpen, setIsBusinessesOpen] = useState<boolean>(false);
+  const [isPhotoModeOpen, setIsPhotoModeOpen] = useState<boolean>(false);
+
+  const TIME_CYCLES: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'night'];
+
+  const handleCycleTimeOfDay = useCallback(() => {
+    setTimeOfDay((prev) => {
+      const idx = TIME_CYCLES.indexOf(prev);
+      const nextTime = TIME_CYCLES[(idx + 1) % TIME_CYCLES.length];
+      soundSynth.playSound('bell');
+      return nextTime;
+    });
+  }, []);
+
+  const handleSelectVehicle = useCallback((type: VehicleType) => {
+    setVehicleType(type);
+    setInVehicle(true);
+    if (type === 'bus') soundSynth.playSound('airhorn');
+    else if (type === 'auto') soundSynth.playSound('autohorn');
+    else if (type === 'tractor') soundSynth.playSound('tractor');
+    else if (type === 'bullet') soundSynth.playSound('bullet');
+    else if (type === 'jeep') soundSynth.playSound('airhorn');
+    else if (type === 'boat') soundSynth.playSound('splash');
+  }, []);
+
+  const handleStartMission = useCallback((missionId: string) => {
+    setMissions((prev) =>
+      prev.map((m) => {
+        if (m.id === missionId) {
+          const updated = { ...m, isActive: true };
+          setActiveMission(updated);
+          // Set waypoint to first step if any
+          if (updated.steps[0]?.targetCoords) {
+            setActiveWaypoint({
+              id: updated.steps[0].id,
+              name: updated.title,
+              malayalamName: updated.malayalamTitle,
+              icon: updated.icon,
+              coords: updated.steps[0].targetCoords,
+              category: 'Mission',
+            });
+          }
+          return updated;
+        }
+        return { ...m, isActive: false };
+      })
+    );
+    soundSynth.playSound('bell');
+  }, []);
+
+  const handleCancelMission = useCallback(() => {
+    setMissions((prev) => prev.map((m) => ({ ...m, isActive: false })));
+    setActiveMission(null);
+    setActiveWaypoint(null);
+    soundSynth.playSound('teaglass');
+  }, []);
+
+  const handleTriggerRandomScene = useCallback(() => {
+    const nextEvent = RANDOM_NAATTILE_SCENES[sceneIndex % RANDOM_NAATTILE_SCENES.length];
+    setSceneIndex((i) => i + 1);
+    setCurrentSceneEvent(nextEvent);
+    setIsSceneOpen(true);
+    soundSynth.playSound('chenda');
+  }, [sceneIndex]);
+
+  const handleDeductMoney = useCallback((amount: number): boolean => {
+    if (wallet >= amount) {
+      setWallet((w) => w - amount);
+      return true;
+    }
+    return false;
+  }, [wallet]);
+
+  const handleAddMoney = useCallback((amount: number) => {
+    setWallet((w) => w + amount);
+    soundSynth.playSound('coin');
+  }, []);
+
+  const handleRefuelVehicle = useCallback(() => {
+    soundSynth.playSound('refuel');
+  }, []);
+
+  const handleRepairVehicle = useCallback(() => {
+    soundSynth.playSound('workshop');
+  }, []);
+
+  const handleChangeOutfit = useCallback((outfit: PlayerOutfit) => {
+    setPlayerOutfit(outfit);
+    if (outfit === 'babu') setPlayerModel('babu');
+    else setPlayerModel('unni');
+    soundSynth.playSound('bell');
+  }, []);
 
   const handleFastTravel = useCallback((coords: { x: number; z: number }, districtName: string) => {
     setTeleportTarget(coords);
@@ -289,6 +410,12 @@ export default function App() {
     window.dispatchEvent(event);
   }, []);
 
+  const handleDriveBus = useCallback(() => {
+    // Trigger [V] event
+    const event = new KeyboardEvent('keydown', { key: 'v' });
+    window.dispatchEvent(event);
+  }, []);
+
   const handleHonk = useCallback(() => {
     soundSynth.playSound('airhorn');
   }, []);
@@ -301,7 +428,7 @@ export default function App() {
     );
   }, []);
 
-  // Keyboard shortcut listener for Big Map [M], KSRTC [B], Stadium Ticket [T], Radar [R], and Chaya Kada Spots [C]
+  // Keyboard shortcut listener for Big Map [M], KSRTC [B], Stadium Ticket [T], Radar [R], Chaya Kada Spots [C], Missions [J], Scenes [N], Bazaar [X], Photo [P], Time [O]
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const k = e.key.toLowerCase();
@@ -315,11 +442,21 @@ export default function App() {
         setIsStadiumTicketOpen((prev) => !prev);
       } else if (k === 'c') {
         setIsSpotsOpen((prev) => !prev);
+      } else if (k === 'j') {
+        setIsMissionsOpen((prev) => !prev);
+      } else if (k === 'n') {
+        handleTriggerRandomScene();
+      } else if (k === 'x') {
+        setIsBusinessesOpen((prev) => !prev);
+      } else if (k === 'p') {
+        setIsPhotoModeOpen((prev) => !prev);
+      } else if (k === 'o') {
+        handleCycleTimeOfDay();
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleTriggerRandomScene, handleCycleTimeOfDay]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#050c09] relative overflow-hidden font-body select-none">
@@ -330,8 +467,13 @@ export default function App() {
       {/* 3D EMBEDDED THREE.JS VIEWPORT */}
       <ThreeKeralaWorld
         weather={weather}
+        timeOfDay={timeOfDay}
         inVehicle={inVehicle}
-        onVehicleToggle={setInVehicle}
+        vehicleType={vehicleType}
+        onVehicleToggle={(active, type) => {
+          setInVehicle(active);
+          if (type) setVehicleType(type);
+        }}
         onInteractNPC={(npc) => {
           setActiveDialogue(npc);
           if (npc.tag === 'TICKET' || npc.id === 'ticket_koya') {
@@ -349,12 +491,17 @@ export default function App() {
       <HeaderHUD
         weather={weather}
         onCycleWeather={cycleWeather}
+        timeOfDay={timeOfDay}
+        onCycleTimeOfDay={handleCycleTimeOfDay}
         wallet={wallet}
         isMuted={isMuted}
         onToggleMute={handleToggleMute}
         onOpenDistrictModal={() => setDistrictModalOpen(true)}
         onToggleVehicle={handleDriveAuto}
+        onToggleBus={handleDriveBus}
         inVehicle={inVehicle}
+        vehicleType={vehicleType}
+        onSelectVehicle={handleSelectVehicle}
         isMapOpen={isMapOpen}
         onToggleMap={() => setIsMapOpen((prev) => !prev)}
         isMessagesOpen={isMessagesOpen}
@@ -366,6 +513,11 @@ export default function App() {
         isBigMapOpen={isBigMapOpen}
         playerModel={playerModel}
         onTogglePlayerModel={() => setPlayerModel((prev) => (prev === 'babu' ? 'unni' : 'babu'))}
+        onOpenMissions={() => setIsMissionsOpen(true)}
+        activeMissionCount={activeMission ? 1 : 0}
+        onTriggerRandomScene={handleTriggerRandomScene}
+        onOpenBusinesses={() => setIsBusinessesOpen(true)}
+        onOpenPhotoMode={() => setIsPhotoModeOpen(true)}
       />
 
       {/* MAIN GAME UI OVERLAY WRAPPER */}
@@ -426,10 +578,12 @@ export default function App() {
         <ControlsHUD
           onHonk={handleHonk}
           onAutoToggle={handleDriveAuto}
+          onBusToggle={handleDriveBus}
           onInteract={() => handleFocusPOI('chaya')}
           onOpenKSRTC={() => setIsKSRTCOpen(true)}
           onOpenStadiumTicket={() => setIsStadiumTicketOpen(true)}
           inVehicle={inVehicle}
+          vehicleType={vehicleType}
         />
       </main>
 
@@ -471,6 +625,43 @@ export default function App() {
         isOpen={isBigMapOpen}
         onClose={() => setIsBigMapOpen(false)}
         onFastTravel={handleFastTravel}
+      />
+
+      {/* MODAL: NAATTILE MISSIONS */}
+      <MissionsModal
+        isOpen={isMissionsOpen}
+        onClose={() => setIsMissionsOpen(false)}
+        missions={missions}
+        activeMission={activeMission}
+        onStartMission={handleStartMission}
+        onCancelMission={handleCancelMission}
+        onSetWaypoint={(wp) => setActiveWaypoint(wp)}
+      />
+
+      {/* MODAL: RANDOM NAATTILE SCENE EVENT */}
+      <RandomSceneModal
+        event={isSceneOpen ? currentSceneEvent : null}
+        onClose={() => setIsSceneOpen(false)}
+        onAddMoney={handleAddMoney}
+      />
+
+      {/* MODAL: KERALA BAZAAR & LOCAL BUSINESSES */}
+      <BusinessesModal
+        isOpen={isBusinessesOpen}
+        onClose={() => setIsBusinessesOpen(false)}
+        wallet={wallet}
+        onDeductMoney={handleDeductMoney}
+        onRefuelVehicle={handleRefuelVehicle}
+        onRepairVehicle={handleRepairVehicle}
+        playerOutfit={playerOutfit}
+        onChangeOutfit={handleChangeOutfit}
+        vehicleType={vehicleType}
+      />
+
+      {/* MODAL: KERALA LANDSCAPE PHOTO MODE */}
+      <PhotoModeModal
+        isOpen={isPhotoModeOpen}
+        onClose={() => setIsPhotoModeOpen(false)}
       />
     </div>
   );

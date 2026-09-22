@@ -1245,10 +1245,10 @@ export function buildFootballGround(
   turfBase.position.set(centerX, 0.07, centerZ);
   groundGroup.add(turfBase);
 
-  // 3. Perimeter red gravel path around the outside of the turf (strictly lower than the pitch)
+  // 3. Perimeter red gravel path around the outside of the turf (spacious side concourse)
   const pathMat = new THREE.MeshLambertMaterial({ color: 0x824928 });
   const pathSlab = new THREE.Mesh(
-    new THREE.BoxGeometry(pitchWidth + 6.0, 0.06, pitchLength + 6.0),
+    new THREE.BoxGeometry(pitchWidth + 14.0, 0.06, pitchLength + 6.0),
     pathMat
   );
   pathSlab.position.set(centerX, 0.03, centerZ);
@@ -1340,8 +1340,8 @@ export function buildFootballGround(
     '★ KIZHAKKUMPURAM SEVENS FOOTBALL CLUB • EAST SIDE GRANDSTAND • മഞ്ഞപ്പട ★',
     0xffffff // white accent seats
   );
-  // Positioned strictly along the East side of the pitch, outside the turf and red gravel path
-  const eastStandX = centerX + halfW + 3.2;
+  // Positioned strictly along the East side of the pitch, generously outside the turf
+  const eastStandX = centerX + halfW + 6.0;
   eastStand.group.position.set(eastStandX, 0, centerZ);
   eastStand.group.rotation.y = 0; // Length runs North-South along Z; seats face West (-X) directly into pitch!
   groundGroup.add(eastStand.group);
@@ -1362,8 +1362,8 @@ export function buildFootballGround(
     1.05,
     0.62
   );
-  // Positioned strictly along the West side of the pitch, outside the turf and red gravel path
-  const westStandX = centerX - halfW - 3.2;
+  // Positioned strictly along the West side of the pitch, generously outside the turf
+  const westStandX = centerX - halfW - 6.0;
   westPavilion.group.position.set(westStandX, 0, centerZ);
   westPavilion.group.rotation.y = Math.PI; // Length runs North-South along Z; seats face East (+X) directly into pitch!
   groundGroup.add(westPavilion.group);
@@ -1376,24 +1376,24 @@ export function buildFootballGround(
 
   // 6C. Team Technical Dugouts (Home & Away) along West sideline in front of VIP Pavilion
   const dugoutHome = buildTeamDugout('HOME: KIZHAKKUMPURAM FC', true);
-  dugoutHome.position.set(centerX - halfW - 1.2, 0, centerZ - 8.5);
+  dugoutHome.position.set(centerX - halfW - 2.8, 0, centerZ - 8.5);
   dugoutHome.rotation.y = Math.PI; // Open front faces East (+X) directly toward the pitch!
   groundGroup.add(dugoutHome);
 
   const dugoutAway = buildTeamDugout('AWAY: MALAPPURAM SEVENS', false);
-  dugoutAway.position.set(centerX - halfW - 1.2, 0, centerZ + 8.5);
+  dugoutAway.position.set(centerX - halfW - 2.8, 0, centerZ + 8.5);
   dugoutAway.rotation.y = Math.PI; // Open front faces East (+X) directly toward the pitch!
   groundGroup.add(dugoutAway);
 
   colliders.push({
-    minX: centerX - halfW - 2.8,
-    maxX: centerX - halfW - 0.4,
+    minX: centerX - halfW - 4.4,
+    maxX: centerX - halfW - 1.2,
     minZ: centerZ - 11.2,
     maxZ: centerZ - 5.8,
   });
   colliders.push({
-    minX: centerX - halfW - 2.8,
-    maxX: centerX - halfW - 0.4,
+    minX: centerX - halfW - 4.4,
+    maxX: centerX - halfW - 1.2,
     minZ: centerZ + 5.8,
     maxZ: centerZ + 11.2,
   });
