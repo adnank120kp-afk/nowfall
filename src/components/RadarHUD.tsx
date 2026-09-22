@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface RadarHUDProps {
-  onFocusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque') => void;
+  onFocusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond') => void;
   onClose?: () => void;
 }
 
@@ -98,10 +98,40 @@ export function RadarHUD({ onFocusPOI, onClose }: RadarHUDProps) {
               🕌 Masjid
             </span>
           </div>
+
+          {/* 6. Sevens Football Ground (Cyan/Green blip) */}
+          <div
+            className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 flex flex-col items-center cursor-pointer group"
+            onClick={() => onFocusPOI('football')}
+            title="Sevens Football Ground (സെവൻസ് ഗ്രൗണ്ട്)"
+          >
+            <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse border border-white"></div>
+            <span className="text-[8px] font-mono text-cyan-200 bg-black/90 px-1 rounded -mt-2 font-bold whitespace-nowrap">
+              ⚽ Sevens
+            </span>
+          </div>
+
+          {/* 7. Beautiful Lotus Pond (Cyan/Pink blip at top-left) */}
+          <div
+            className="absolute top-6 left-5 flex flex-col items-center cursor-pointer group"
+            onClick={() => onFocusPOI('pond')}
+            title="Lotus Pond & Water Lilies (ആമ്പൽക്കുളം / താമരക്കുളം)"
+          >
+            <div className="w-3 h-3 rounded-full bg-pink-400 animate-ping"></div>
+            <span className="text-[8px] font-mono text-pink-200 bg-black/90 px-1 rounded -mt-2.5 font-bold whitespace-nowrap">
+              🌸 Pond
+            </span>
+          </div>
         </div>
 
         {/* Quick Fast-Travel / POI Buttons */}
         <div className="grid grid-cols-2 gap-1.5 mt-2.5 pt-2 border-t border-emerald-900/50 text-[10px] font-mono">
+          <button
+            className="col-span-2 py-1 px-1.5 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-200 border border-cyan-500/50 text-center font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+            onClick={() => onFocusPOI('pond')}
+          >
+            <span>🌸</span> Lotus Pond (ആമ്പൽക്കുളം)
+          </button>
           <button
             className="py-1 px-1.5 rounded bg-emerald-950/70 hover:bg-[#0f5132] text-emerald-200 border border-emerald-700/40 text-left truncate flex items-center gap-1 cursor-pointer transition-colors"
             onClick={() => onFocusPOI('chaya')}
@@ -125,6 +155,18 @@ export function RadarHUD({ onFocusPOI, onClose }: RadarHUDProps) {
             onClick={() => onFocusPOI('bus')}
           >
             <span>🚌</span> KSRTC Stand
+          </button>
+          <button
+            className="py-1 px-1.5 rounded bg-emerald-800/60 hover:bg-emerald-700 text-white border border-emerald-400/50 text-center font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-sm"
+            onClick={() => onFocusPOI('football')}
+          >
+            <span>⚽</span> Stadium Pitch
+          </button>
+          <button
+            className="py-1 px-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/50 text-center font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-sm"
+            onClick={() => onFocusPOI('ticket')}
+          >
+            <span>🎫</span> Ticket Counter (₹50)
           </button>
         </div>
       </div>

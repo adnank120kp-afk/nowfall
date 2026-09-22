@@ -8,13 +8,15 @@ import { buildKeralaPrivateBus } from './KeralaPrivateBusBuilder';
 import { buildKSRTCBusStand } from './KSRTCStandBuilder';
 import { buildRiggedBabuCharacter, buildBabuDiagramCharacter, HumanRig } from './BabuCharacterBuilder';
 import { buildRiggedTraditionalCharacter } from './TraditionalCharacterBuilder';
+import { buildFootballGround } from './FootballGroundBuilder';
+import { buildBeautifulLotusPond, getOrganicPondRadius } from './LotusPondBuilder';
 
 interface ThreeKeralaWorldProps {
   weather: WeatherMode;
   inVehicle: boolean;
   onVehicleToggle: (inVehicle: boolean) => void;
   onInteractNPC: (npc: NPCEntity) => void;
-  focusTarget: 'auto' | 'bus' | 'chaya' | 'mosque' | null;
+  focusTarget: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond' | null;
   onClearFocus: () => void;
   teleportTarget?: { x: number; z: number } | null;
   onClearTeleport?: () => void;
@@ -36,7 +38,7 @@ export function ThreeKeralaWorld({
   const worldApiRef = useRef<{
     setWeather: (w: WeatherMode) => void;
     toggleVehicle: () => void;
-    focusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque') => void;
+    focusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond') => void;
     teleportTo: (x: number, z: number) => void;
     triggerInteract: () => void;
     setPlayerSkin: (model: 'unni' | 'babu') => void;
@@ -144,10 +146,16 @@ export function ThreeKeralaWorld({
       if (vx > 65 && vx < 95 && vz > -50 && vz < 130) {
         vy = -2.6;
       }
-      // Pond hollow near temple
-      const pondDist = Math.hypot(vx - -80, vz - -75);
-      if (pondDist < 16) {
-        vy = -1.8 * Math.cos((pondDist / 16) * (Math.PI / 2));
+      // Organic Lotus Pond Hollow (smoothly carved in the natural lagoon shape)
+      const pDx = vx - -80;
+      const pDz = vz - -75;
+      const pDist = Math.hypot(pDx, pDz);
+      if (pDist < 20) {
+        const pAngle = Math.atan2(pDz, pDx);
+        const pBound = getOrganicPondRadius(pAngle, 12.0);
+        if (pDist < pBound * 1.05) {
+          vy = -0.75 * Math.cos((pDist / (pBound * 1.05)) * (Math.PI / 2));
+        }
       }
       posAttr.setY(i, vy);
     }
@@ -172,22 +180,21 @@ export function ThreeKeralaWorld({
     canalMesh.position.set(80, -0.6, 40);
     worldGroup.add(canalMesh);
 
-    // Traditional Temple Pond (കുളം) with stone steps
-    const pondWaterGeo = new THREE.CircleGeometry(14, 20);
-    pondWaterGeo.rotateX(-Math.PI / 2);
-    const pondWaterMat = new THREE.MeshPhongMaterial({ color: 0x226858, shininess: 90, transparent: true, opacity: 0.85 });
-    const pWater = new THREE.Mesh(pondWaterGeo, pondWaterMat);
-    pWater.position.set(-80, -0.4, -75);
-    worldGroup.add(pWater);
-
-    const stepMat = new THREE.MeshLambertMaterial({ color: 0x8a4b2d });
-    for (let r = 0; r < 4; r++) {
-      const stepGeo = new THREE.RingGeometry(14 + r * 0.8, 14.8 + r * 0.8, 24);
-      stepGeo.rotateX(-Math.PI / 2);
-      const step = new THREE.Mesh(stepGeo, stepMat);
-      step.position.set(-80, -0.3 + r * 0.15, -75);
-      worldGroup.add(step);
+    // Colliders list for world boundaries and obstacle collision detection
+    interface Collider {
+      minX: number;
+      maxX: number;
+      minZ: number;
+      maxZ: number;
     }
+    const colliders: Collider[] = [];
+
+    // 3B. AUTHENTIC KERALA LOTUS POND (ആമ്പൽക്കുളം / താമരക്കുളം)
+    // Curvilinear lagoon basin, layered river boulders, crystal clear turquoise water,
+    // floating notched lily pads (താമരയില), blooming lotus blossoms, and swimming koi fish
+    const lotusPond = buildBeautifulLotusPond(-80, -75);
+    worldGroup.add(lotusPond.group);
+    colliders.push(...lotusPond.colliders);
 
     // Wooden bridges over canal
     function createBridge(zPos: number) {
@@ -465,7 +472,7 @@ export function ThreeKeralaWorld({
       [22, -22], [42, -24], [62, -20],
       [72, -15], [74, 12], [73, 35], [71, 62], [74, 90], [72, 115],
       [90, -18], [91, 18], [88, 50], [92, 82], [90, 110],
-      [-88, 58], [-115, 75], [-48, 98], [-22, 84],
+      [-90, 65], [-115, 75], [-48, 105], [-22, 84],
       [18, -65], [38, -85], [48, -105], [-32, -72]
     ];
     palmCoordinates.forEach(([px, pz]) => {
@@ -473,7 +480,7 @@ export function ThreeKeralaWorld({
     });
 
     for (let a = 0; a < 14; a++) {
-      createArecanutTree(-50 + (a % 4) * 4, 30 + Math.floor(a / 4) * 4.5, 0.85 + Math.random() * 0.3);
+      createArecanutTree(-75 + (a % 7) * 5, 23 + Math.floor(a / 7) * 4, 0.85 + Math.random() * 0.3);
       createArecanutTree(105 + (a % 3) * 5, -55 + Math.floor(a / 3) * 5, 0.9 + Math.random() * 0.25);
     }
 
@@ -490,15 +497,7 @@ export function ThreeKeralaWorld({
     createFruitTree(45, 55, true, 1.0);
     createFruitTree(65, -80, false, 1.1);
 
-    // 6. BUILDINGS & COLLIDERS
-    interface Collider {
-      minX: number;
-      maxX: number;
-      minZ: number;
-      maxZ: number;
-    }
-    const colliders: Collider[] = [];
-
+    // 6. BUILDINGS & VILLAGE INFRASTRUCTURE
     // Chaya Kada
     const ckGroup = new THREE.Group();
     const ckW = 11, ckH = 4.4, ckD = 8.5;
@@ -618,8 +617,7 @@ export function ThreeKeralaWorld({
     worldGroup.add(ksrtcStand.group);
     colliders.push(...ksrtcStand.colliders);
 
-    // School, market, tharavadu
-    createKeralaHouse(-65, 45, 19, 5.4, 11, 0xd8dede, 0x933020);
+    // School, market, tharavadu (kept outside grounds)
     createKeralaHouse(-42, -32, 12, 4.4, 9, 0xd9be88, 0xa83822);
     createKeralaHouse(40, 40, 13, 5.0, 11, 0xded1b4, 0x9a361c);
 
@@ -758,6 +756,12 @@ export function ThreeKeralaWorld({
     shelterPrivateBus.rotation.y = -Math.PI / 2;
     worldGroup.add(shelterPrivateBus);
     colliders.push({ minX: 24 - 6.0, maxX: 24 + 6.0, minZ: 14.5 - 2.0, maxZ: 14.5 + 2.0 });
+
+    // 8B. KERALA SEVENS FOOTBALL GROUND (സെവൻസ് ഫുട്ബോൾ ഗ്രൗണ്ട്)
+    // Modeled exactly after the striped turf pitch diagram with white regulation markings & 3D goals
+    const footballGroundData = buildFootballGround(-58, 65, 44, 66);
+    worldGroup.add(footballGroundData.groundGroup);
+    colliders.push(...footballGroundData.colliders);
 
     // 9. NPCS & WALKING PEDESTRIANS
     interface NPCData {
@@ -995,6 +999,52 @@ export function ThreeKeralaWorld({
       { shirtColor: 0x0284c7, munduColor: 0xf3f4f6, hasUmbrella: true, hasMoustache: true }
     );
 
+    // Sevens Football Ground Coach NPC
+    createNPC(
+      {
+        id: 'football_coach',
+        name: "Majeed (കോച്ച് മജീദ്)",
+        malayalamName: "കോച്ച് മജീദ് • സെവൻസ് റഫറി",
+        role: "Sevens Football Coach & Referee",
+        dialogue: "“വാ ഉണ്ണീ ഗ്രൗണ്ടിലേക്ക്! പുതിയ സെവൻസ് ടർഫ് കണ്ടോ? വരകളും പോസ്റ്റും പന്തും ഒക്കെ റെഡിയാണ്. [W,A,S,D] കൊണ്ട് പന്തിലേക്ക് ഓടി ചവിട്ടിയാൽ നല്ല അടിപൊളി ഗോൾ അടിക്കാം! [Shift] പിടിച്ചാൽ നല്ല പവർ കിക്ക് കിട്ടും!”",
+        avatar: "⚽",
+        tag: "SEVENS",
+      },
+      -36, 60, 0xffffff, 0xd97706
+    );
+
+    // Sevens Stadium Ticket Collector NPC (ടിക്കറ്റ് കൗണ്ടർ • ₹50 ENTRY)
+    // Standing at the front entrance right beside the ticket window, facing approaching visitors
+    const tX = footballGroundData.ticketCounterPos.x;
+    const tZ = footballGroundData.ticketCounterPos.z;
+    const ticketKoyaNPC = createNPC(
+      {
+        id: 'ticket_koya',
+        name: "Koya (ടിക്കറ്റ് കോയ • ടൗൺ സെവൻസ്)",
+        malayalamName: "ടിക്കറ്റ് കോയ • ടൗൺ സെവൻസ്",
+        role: "Stadium Ticket Collector (₹50 Entry)",
+        dialogue: "“സ്വാഗതം കിഴക്കുംപുറം സെവൻസ് സ്റ്റേഡിയത്തിലേക്ക്! ഇന്നത്തെ ബിഗ് മാച്ച്: കിഴക്കുംപുറം FC vs മലപ്പുറം സെവൻസ്! പ്രവേശന ഫീസ് വെറും ₹50 രൂപ മാത്രം! ടിക്കറ്റ് എടുത്ത് ഇരുവശത്തെയും ഗാലറിയിലേക്ക് കയറിക്കോളൂ!”",
+        avatar: "🎫",
+        tag: "TICKET",
+      },
+      tX + 2.2, tZ - 1.8, 0xf5f5f5, 0x166534
+    );
+    ticketKoyaNPC.mesh.rotation.y = Math.PI; // Face North toward approaching visitors
+
+    // Lotus Pond Caretaker & Flower Gatherer NPC (ആമ്പൽക്കുളം • താമരപ്പൂക്കൾ)
+    createNPC(
+      {
+        id: 'lotus_pond',
+        name: "Devaki Amma (ദേവകി അമ്മ • പൂന്തോട്ടം)",
+        malayalamName: "ദേവകി അമ്മ • താമരക്കുളം",
+        role: "Lotus Pond Caretaker & Flower Gatherer",
+        dialogue: "“കിഴക്കുംപുറത്തെ ശാന്തമായ ആമ്പൽക്കുളത്തിലേക്ക് സ്വാഗതം! ഇവിടെ തെളിഞ്ഞ നീല വെള്ളത്തിൽ വിരിഞ്ഞുനിൽക്കുന്ന ആമ്പൽപൂക്കളും നീന്തിത്തുടിക്കുന്ന വർണ്ണമത്സ്യങ്ങളും കാണാം. കല്ലിന്മേൽ ഇരുന്ന് തണുത്ത കാറ്റേൽക്കൂ!”",
+        avatar: "🌸",
+        tag: "POND",
+      },
+      -94, -73, 0xfef08a, 0x15803d
+    );
+
     // 10. PLAYABLE CHARACTER (Rigged Babu or Rigged Unni with authentic walking locomotion)
     const player = new THREE.Group();
     let currentPlayerModel: 'unni' | 'babu' = playerModel;
@@ -1175,6 +1225,26 @@ export function ThreeKeralaWorld({
           player.position.set(34, 0.75, -45);
           soundSynth.playSound('airhorn');
           checkInteractions();
+        } else if (poi === 'football') {
+          player.position.set(-58, 0.15, 60);
+          camera.position.set(-58, 12, 85);
+          camera.lookAt(-58, 1, 65);
+          soundSynth.playSound('whistle');
+          checkInteractions();
+        } else if (poi === 'ticket') {
+          const tcX = footballGroundData.ticketCounterPos.x;
+          const tcZ = footballGroundData.ticketCounterPos.z;
+          player.position.set(tcX, 0.15, tcZ - 3.2);
+          camera.position.set(tcX, 2.5, tcZ - 7.5);
+          camera.lookAt(tcX, 1.6, tcZ);
+          soundSynth.playSound('ticket');
+          checkInteractions();
+        } else if (poi === 'pond') {
+          player.position.set(-94, 0.2, -73);
+          camera.position.set(-101, 4.8, -65);
+          camera.lookAt(-80, 0, -75);
+          soundSynth.playSound('splash');
+          checkInteractions();
         }
       },
       teleportTo: (x: number, z: number) => {
@@ -1201,6 +1271,9 @@ export function ThreeKeralaWorld({
       const now = performance.now();
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
+
+      // Lotus pond ripples, floating pads bobbing & swimming koi fish
+      lotusPond.updateAnimation(now);
 
       // Wind sway in foliage
       animatedFlora.forEach(f => {
@@ -1294,7 +1367,11 @@ export function ThreeKeralaWorld({
           isPlayerMoving = true;
           const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
           const targetRot = Math.atan2(moveVec.x, moveVec.z);
-          player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, targetRot + Math.PI, 0.18);
+          // Correct shortest-path angle lerp so character faces forward in movement direction
+          let angleDiff = (targetRot - player.rotation.y) % (Math.PI * 2);
+          if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+          if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          player.rotation.y += angleDiff * 0.22;
 
           const newX = player.position.x + moveVec.x * curSpeed;
           const newZ = player.position.z + moveVec.z * curSpeed;
@@ -1315,6 +1392,21 @@ export function ThreeKeralaWorld({
         // Authentic human walk cycle (legs swing, knees flex, feet articulate, torso twists, arms counter-swing)
         playerRig.updateAnimation(dt, isPlayerMoving, isSprinting, isSprinting ? 1.4 : 1.0);
       }
+
+      // Update Sevens Football physics and kicking interactions
+      footballGroundData.footballPhysics.update(
+        dt,
+        player.position,
+        isPlayerMoving,
+        isSprinting,
+        () => {
+          soundSynth.playSound('goal');
+          soundSynth.playSound('whistle');
+        },
+        () => {
+          soundSynth.playSound('kick');
+        }
+      );
 
       // Dynamic NPC response (Babu and villagers face player when nearby and breathe)
       npcs.forEach(n => {

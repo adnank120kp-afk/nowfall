@@ -5,10 +5,18 @@ interface ControlsHUDProps {
   onAutoToggle: () => void;
   onInteract: () => void;
   onOpenKSRTC?: () => void;
+  onOpenStadiumTicket?: () => void;
   inVehicle: boolean;
 }
 
-export function ControlsHUD({ onHonk, onAutoToggle, onInteract, onOpenKSRTC, inVehicle }: ControlsHUDProps) {
+export function ControlsHUD({
+  onHonk,
+  onAutoToggle,
+  onInteract,
+  onOpenKSRTC,
+  onOpenStadiumTicket,
+  inVehicle,
+}: ControlsHUDProps) {
   return (
     <>
       {/* Desktop Keyboard Controls Bar */}
@@ -22,6 +30,17 @@ export function ControlsHUD({ onHonk, onAutoToggle, onInteract, onOpenKSRTC, inV
         <span className="text-zinc-600">|</span>
         <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">F</span> {inVehicle ? 'Exit Auto' : 'Auto'}
         <span className="text-zinc-600">|</span>
+        {onOpenStadiumTicket && (
+          <>
+            <button
+              onClick={onOpenStadiumTicket}
+              className="px-2 py-0.5 rounded bg-emerald-950 text-amber-300 border border-amber-400/50 hover:bg-emerald-900 transition-colors flex items-center gap-1 cursor-pointer font-bold"
+            >
+              <span>T</span> 🎫 Stadium Ticket (₹50)
+            </button>
+            <span className="text-zinc-600">|</span>
+          </>
+        )}
         {onOpenKSRTC && (
           <>
             <button
@@ -53,6 +72,16 @@ export function ControlsHUD({ onHonk, onAutoToggle, onInteract, onOpenKSRTC, inV
           >
             🎺
           </button>
+          {onOpenStadiumTicket && (
+            <button
+              className="px-2.5 h-11 rounded-xl bg-emerald-900/90 border border-amber-400/60 text-amber-300 text-xs font-bold flex items-center justify-center gap-1 shadow-lg active:scale-95"
+              onClick={onOpenStadiumTicket}
+              title="Stadium Ticket (₹50)"
+            >
+              <span>🎫</span>
+              <span className="font-mono">₹50</span>
+            </button>
+          )}
           {onOpenKSRTC && (
             <button
               className="px-3 h-11 rounded-xl bg-red-900/90 border border-amber-400/50 text-amber-300 text-xs font-bold flex items-center justify-center gap-1 shadow-lg active:scale-95"

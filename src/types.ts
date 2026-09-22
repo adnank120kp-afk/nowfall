@@ -17,7 +17,7 @@ export interface NPCEntity {
 }
 
 export interface POIEntity {
-  id: 'auto' | 'bus' | 'chaya' | 'mosque' | 'player';
+  id: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'player';
   label: string;
   sublabel: string;
   icon: string;

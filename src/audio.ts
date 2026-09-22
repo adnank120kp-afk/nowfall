@@ -22,7 +22,7 @@ class KeralaAudioEngine {
     return this.isMuted;
   }
 
-  public playSound(type: 'airhorn' | 'teaglass' | 'autohorn' | 'jump' | 'coin' | 'bell' | 'ticket') {
+  public playSound(type: 'airhorn' | 'teaglass' | 'autohorn' | 'jump' | 'coin' | 'bell' | 'ticket' | 'kick' | 'goal' | 'whistle' | 'splash') {
     if (this.isMuted) return;
     this.initContext();
     if (!this.audioCtx) return;
@@ -30,7 +30,23 @@ class KeralaAudioEngine {
     try {
       const now = this.audioCtx.currentTime;
 
-      if (type === 'bell') {
+      if (type === 'splash') {
+        // Soft water ripple splash
+        [440, 660, 880].forEach((freq, i) => {
+          if (!this.audioCtx) return;
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.05);
+          osc.frequency.exponentialRampToValueAtTime(freq * 0.6, now + i * 0.05 + 0.22);
+          gain.gain.setValueAtTime(0.18, now + i * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.22);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start(now + i * 0.05);
+          osc.stop(now + i * 0.05 + 0.22);
+        });
+      } else if (type === 'bell') {
         // Authentic KSRTC conductor double bell ring ("ട്രിങ്... ട്രിങ്!")
         [0, 0.14].forEach((delay) => {
           if (!this.audioCtx) return;
@@ -132,6 +148,50 @@ class KeralaAudioEngine {
         gain.connect(this.audioCtx.destination);
         osc.start(now);
         osc.stop(now + 0.2);
+      } else if (type === 'kick') {
+        // Punchy low-thud soccer ball kick impact
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.14);
+      } else if (type === 'whistle') {
+        // Referee match whistle with vibrato
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(2600, now);
+        osc.frequency.linearRampToValueAtTime(2850, now + 0.08);
+        osc.frequency.linearRampToValueAtTime(2700, now + 0.25);
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'goal') {
+        // Celebratory match goal chord & whistle
+        [2800, 3200].forEach((freq) => {
+          if (!this.audioCtx) return;
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.22, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.5);
+        });
       }
     } catch {
       // Audio context might be restricted before user gesture

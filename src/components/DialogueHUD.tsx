@@ -6,9 +6,10 @@ interface DialogueHUDProps {
   onNext: () => void;
   onDriveAuto: () => void;
   onDismiss: () => void;
+  onOpenStadiumTicket?: () => void;
 }
 
-export function DialogueHUD({ dialogue, onNext, onDriveAuto, onDismiss }: DialogueHUDProps) {
+export function DialogueHUD({ dialogue, onNext, onDriveAuto, onDismiss, onOpenStadiumTicket }: DialogueHUDProps) {
   if (!dialogue) return null;
 
   return (
@@ -38,6 +39,14 @@ export function DialogueHUD({ dialogue, onNext, onDriveAuto, onDismiss }: Dialog
           </p>
 
           <div className="mt-3 flex items-center gap-2 flex-wrap">
+            {(dialogue.tag === 'TICKET' || dialogue.tag === 'SEVENS' || dialogue.id === 'ticket_koya') && onOpenStadiumTicket && (
+              <button
+                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold text-xs transition-colors flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
+                onClick={onOpenStadiumTicket}
+              >
+                <span>🎫 ടിക്കറ്റ് കൗണ്ടർ • BUY TICKET (₹50)</span>
+              </button>
+            )}
             <button
               className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-black font-bold text-xs transition-colors flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
               onClick={onNext}

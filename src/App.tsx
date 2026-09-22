@@ -6,6 +6,7 @@ import { DialogueHUD } from './components/DialogueHUD';
 import { ControlsHUD } from './components/ControlsHUD';
 import { DistrictModal } from './components/DistrictModal';
 import { KSRTCTicketModal, BusDestination } from './components/KSRTCTicketModal';
+import { StadiumTicketModal } from './components/StadiumTicketModal';
 import { MessagesModal } from './components/MessagesModal';
 import { ThreeKeralaWorld } from './components/ThreeKeralaWorld';
 import { soundSynth } from './audio';
@@ -61,12 +62,14 @@ export default function App() {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [districtModalOpen, setDistrictModalOpen] = useState<boolean>(false);
   const [activeDistrict, setActiveDistrict] = useState<string>('Kozhikode');
-  const [focusTarget, setFocusTarget] = useState<'auto' | 'bus' | 'chaya' | 'mosque' | null>(null);
+  const [focusTarget, setFocusTarget] = useState<'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond' | null>(null);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; z: number } | null>(null);
   const [isMapOpen, setIsMapOpen] = useState<boolean>(true);
   const [isMessagesOpen, setIsMessagesOpen] = useState<boolean>(false);
   const [isSpotsOpen, setIsSpotsOpen] = useState<boolean>(false);
   const [isKSRTCOpen, setIsKSRTCOpen] = useState<boolean>(false);
+  const [isStadiumTicketOpen, setIsStadiumTicketOpen] = useState<boolean>(false);
+  const [hasStadiumTicket, setHasStadiumTicket] = useState<boolean>(false);
   const [newspaperStory, setNewspaperStory] = useState<string>(
     '“ഇന്ന് ഇടവപ്പാതി കനക്കും! അനന്തപുരി സൂപ്പർ ഫാസ്റ്റ് ബസ്സിന്റെ പുതിയ എയർ ഹോൺ നാട്ടിൽ ചർച്ചയായി!”'
   );
@@ -140,7 +143,40 @@ export default function App() {
     });
   }, []);
 
-  const handleFocusPOI = useCallback((poi: 'auto' | 'bus' | 'chaya' | 'mosque') => {
+  const handlePurchaseStadiumTicket = useCallback(() => {
+    if (wallet < 50) {
+      soundSynth.playSound('autohorn');
+      setActiveDialogue({
+        id: 'no-ticket-money',
+        avatar: '🎫',
+        tag: 'TICKET',
+        name: 'Koya (ടിക്കറ്റ് കോയ)',
+        malayalamName: 'ടിക്കറ്റ് കോയ • ടൗൺ സെവൻസ്',
+        role: 'Stadium Ticket Collector',
+        dialogue: '“കയ്യിൽ ₹50 രൂപ തികയില്ലല്ലോ ഉണ്ണീ! ചായക്കടയിൽ പോയി ബാക്കി കാശ് ഉണ്ടാക്കി വരൂ, ടിക്കറ്റ് തരാം!”',
+      });
+      return false;
+    }
+
+    setWallet((w) => w - 50);
+    setHasStadiumTicket(true);
+    soundSynth.playSound('coin');
+    soundSynth.playSound('ticket');
+    soundSynth.playSound('whistle');
+
+    setActiveDialogue({
+      id: 'ticket-koya',
+      avatar: '🎫',
+      tag: 'TICKET',
+      name: 'Koya (ടിക്കറ്റ് കോയ • ടൗൺ സെവൻസ്)',
+      malayalamName: 'ടിക്കറ്റ് കോയ • ടൗൺ സെവൻസ്',
+      role: 'Stadium Ticket Collector',
+      dialogue: '“ടിക്കറ്റ് എടുത്തതിന് നന്ദി ഉണ്ണീ! ഇതാ നിങ്ങളുടെ ₹50 രൂപയുടെ ഒഫീഷ്യൽ സെവൻസ് മാച്ച് ടിക്കറ്റ്! ഗ്രാൻഡ് സ്റ്റാൻഡ് ഗാലറിയിലും VIP പവലിയനിലും പ്രവേശിക്കാം. കളി കണ്ട് ആഘോഷിക്കൂ!”',
+    });
+    return true;
+  }, [wallet]);
+
+  const handleFocusPOI = useCallback((poi: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond') => {
     setFocusTarget(poi);
     if (poi === 'chaya') {
       soundSynth.playSound('teaglass');
@@ -186,6 +222,40 @@ export default function App() {
         role: 'Station Master',
         dialogue: '“ആനവണ്ടി സ്റ്റാൻഡിലേക്ക് വരികയാണ്! വേഗത്തിൽ റോഡിൽ നിന്ന് മാറുക!”',
       });
+    } else if (poi === 'football') {
+      soundSynth.playSound('whistle');
+      setActiveDialogue({
+        id: 'football_coach',
+        avatar: '⚽',
+        tag: 'SEVENS',
+        name: 'Majeed (കോച്ച് മജീദ്)',
+        malayalamName: 'കോച്ച് മജീദ് • സെവൻസ് റഫറി',
+        role: 'Sevens Football Coach & Referee',
+        dialogue: '“സ്വാഗതം കിഴക്കുംപുറം സെവൻസ് സ്റ്റേഡിയത്തിലേക്ക്! പുതിയ ഗ്രാൻഡ് സ്റ്റാൻഡ് ഗാലറിയും വരകളും പോസ്റ്റുകളും പന്തും ഇതാ തയ്യാറാണ്. ഓടിച്ചെന്ന് പന്ത് ചവിട്ടി നോക്കൂ! ഗോൾ അടിച്ചാൽ വിസിൽ മുഴങ്ങും!”',
+      });
+    } else if (poi === 'ticket') {
+      soundSynth.playSound('ticket');
+      setIsStadiumTicketOpen(true);
+      setActiveDialogue({
+        id: 'ticket_koya',
+        avatar: '🎫',
+        tag: 'TICKET',
+        name: 'Koya (ടിക്കറ്റ് കോയ • ടൗൺ സെവൻസ്)',
+        malayalamName: 'ടിക്കറ്റ് കോയ • ടൗൺ സെവൻസ്',
+        role: 'Stadium Ticket Counter (₹50 Entry)',
+        dialogue: '“സ്വാഗതം കിഴക്കുംപുറം സെവൻസ് സ്റ്റേഡിയത്തിലേക്ക്! ഇന്നത്തെ ബിഗ് മാച്ച്: കിഴക്കുംപുറം FC vs മലപ്പുറം സെവൻസ്! പ്രവേശന ഫീസ് വെറും ₹50 രൂപ മാത്രം! ടിക്കറ്റ് എടുത്ത് ഗാലറിയിലേക്ക് കയറിക്കോളൂ!”',
+      });
+    } else if (poi === 'pond') {
+      soundSynth.playSound('splash');
+      setActiveDialogue({
+        id: 'lotus_pond',
+        avatar: '🌸',
+        tag: 'POND',
+        name: 'Devaki Amma (ദേവകി അമ്മ • പൂന്തോട്ടം)',
+        malayalamName: 'ദേവകി അമ്മ • താമരക്കുളം',
+        role: 'Lotus Pond Caretaker',
+        dialogue: '“സ്വാഗതം കിഴക്കുംപുറം താമരക്കുളത്തിലേക്ക്! ഇവിടെ തെളിഞ്ഞ നീല വെള്ളത്തിൽ വിരിഞ്ഞുനിൽക്കുന്ന ആമ്പൽപൂക്കളും നീന്തിത്തുടിക്കുന്ന വർണ്ണമത്സ്യങ്ങളും കാണാം. കല്ലിന്മേൽ ഇരുന്ന് തണുത്ത കാറ്റേൽക്കൂ!”',
+      });
     }
   }, []);
 
@@ -214,12 +284,14 @@ export default function App() {
     );
   }, []);
 
-  // Keyboard shortcut listener for KSRTC [B], Map [M], and Chaya Kada Spots [C]
+  // Keyboard shortcut listener for KSRTC [B], Stadium Ticket [T], Map [M], and Chaya Kada Spots [C]
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const k = e.key.toLowerCase();
       if (k === 'b') {
         setIsKSRTCOpen((prev) => !prev);
+      } else if (k === 't') {
+        setIsStadiumTicketOpen((prev) => !prev);
       } else if (k === 'm') {
         setIsMapOpen((prev) => !prev);
       } else if (k === 'c') {
@@ -241,7 +313,12 @@ export default function App() {
         weather={weather}
         inVehicle={inVehicle}
         onVehicleToggle={setInVehicle}
-        onInteractNPC={(npc) => setActiveDialogue(npc)}
+        onInteractNPC={(npc) => {
+          setActiveDialogue(npc);
+          if (npc.tag === 'TICKET' || npc.id === 'ticket_koya') {
+            setIsStadiumTicketOpen(true);
+          }
+        }}
         focusTarget={focusTarget}
         onClearFocus={() => setFocusTarget(null)}
         teleportTarget={teleportTarget}
@@ -285,6 +362,10 @@ export default function App() {
             <RightSidebarHUD
               onOrder={handleOrder}
               onFocusMosque={() => handleFocusPOI('mosque')}
+              onFocusFootball={() => handleFocusPOI('football')}
+              onFocusPond={() => handleFocusPOI('pond')}
+              onOpenStadiumTicket={() => setIsStadiumTicketOpen(true)}
+              hasStadiumTicket={hasStadiumTicket}
               newspaperStory={newspaperStory}
               onOpenKSRTC={() => setIsKSRTCOpen(true)}
               onClose={() => setIsSpotsOpen(false)}
@@ -313,6 +394,7 @@ export default function App() {
           onNext={handleNextDialogue}
           onDriveAuto={handleDriveAuto}
           onDismiss={() => setActiveDialogue(null)}
+          onOpenStadiumTicket={() => setIsStadiumTicketOpen(true)}
         />
 
         {/* BOTTOM CONTROLS BAR */}
@@ -321,9 +403,20 @@ export default function App() {
           onAutoToggle={handleDriveAuto}
           onInteract={() => handleFocusPOI('chaya')}
           onOpenKSRTC={() => setIsKSRTCOpen(true)}
+          onOpenStadiumTicket={() => setIsStadiumTicketOpen(true)}
           inVehicle={inVehicle}
         />
       </main>
+
+      {/* MODAL: SEVENS STADIUM 50 RUPEES TICKET COUNTER */}
+      <StadiumTicketModal
+        isOpen={isStadiumTicketOpen}
+        onClose={() => setIsStadiumTicketOpen(false)}
+        wallet={wallet}
+        hasTicket={hasStadiumTicket}
+        onPurchaseTicket={handlePurchaseStadiumTicket}
+        onEnterStadium={() => handleFocusPOI('football')}
+      />
 
       {/* MODAL: KSRTC BUS TICKETING & TRAVEL DESTINATIONS */}
       <KSRTCTicketModal
