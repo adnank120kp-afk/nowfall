@@ -196,9 +196,9 @@ export function buildBeautifulLotusPond(centerX = -80, centerZ = -75): LotusPond
     const angle = (i / numPerimeterPoints) * Math.PI * 2;
     const rBase = getOrganicPondRadius(angle, baseRadius);
 
-    const rWater = rBase * 0.92;
-    const rInnerRim = rBase * 0.98;
-    const rSand = rBase * 1.22;
+    const rWater = rBase * 0.98;
+    const rInnerRim = rBase * 1.0;
+    const rSand = rBase * 1.16;
 
     innerContourPoints.push(new THREE.Vector2(Math.cos(angle) * rWater, Math.sin(angle) * rWater));
     outerContourPoints.push(new THREE.Vector2(Math.cos(angle) * rInnerRim, Math.sin(angle) * rInnerRim));
@@ -261,11 +261,11 @@ export function buildBeautifulLotusPond(centerX = -80, centerZ = -75): LotusPond
   for (let i = 0; i <= numPerimeterPoints; i++) {
     const idx = i % numPerimeterPoints;
     const angle = (idx / numPerimeterPoints) * Math.PI * 2;
-    const rRim = getOrganicPondRadius(angle, baseRadius) * 0.94;
-    rimPoints.push(new THREE.Vector3(Math.cos(angle) * rRim, -0.06, Math.sin(angle) * rRim));
+    const rRim = getOrganicPondRadius(angle, baseRadius) * 0.985;
+    rimPoints.push(new THREE.Vector3(Math.cos(angle) * rRim, -0.05, Math.sin(angle) * rRim));
   }
   const rimCurve = new THREE.CatmullRomCurve3(rimPoints);
-  const rimGeo = new THREE.TubeGeometry(rimCurve, 64, 0.22, 7, true);
+  const rimGeo = new THREE.TubeGeometry(rimCurve, 64, 0.18, 7, true);
   const rimMat = new THREE.MeshLambertMaterial({
     color: 0x1f2937,
   });
@@ -287,7 +287,7 @@ export function buildBeautifulLotusPond(centerX = -80, centerZ = -75): LotusPond
     side: THREE.DoubleSide,
   });
   const waterMesh = new THREE.Mesh(waterGeo, waterMat);
-  waterMesh.position.y = -0.16;
+  waterMesh.position.y = -0.14;
   pondGroup.add(waterMesh);
 
   // Shimmering Water Surface Caustic Accents
@@ -303,7 +303,7 @@ export function buildBeautifulLotusPond(centerX = -80, centerZ = -75): LotusPond
     const cMesh = new THREE.Mesh(causticGeo, causticMat);
     const angle = Math.random() * Math.PI * 2;
     const rDist = (0.2 + Math.random() * 0.6) * getOrganicPondRadius(angle, baseRadius);
-    cMesh.position.set(Math.cos(angle) * rDist, -0.155, Math.sin(angle) * rDist);
+    cMesh.position.set(Math.cos(angle) * rDist, -0.135, Math.sin(angle) * rDist);
     cMesh.scale.set(0.6 + Math.random() * 1.0, 1, 0.4 + Math.random() * 0.8);
     cMesh.rotation.y = Math.random() * Math.PI;
     pondGroup.add(cMesh);
@@ -311,25 +311,28 @@ export function buildBeautifulLotusPond(centerX = -80, centerZ = -75): LotusPond
   }
 
   // 6. River Rock & Boulder Ring (കരിങ്കല്ല് & ഉരുളൻ പാറക്കല്ലുകൾ)
-  // Layered natural river rocks encircling the whole pond perimeter exactly as shown in Image 2
+  // Layered natural river rocks snugly bordering the pond sides directly on the water's edge
   const boulderColors = [0x8c6b4f, 0xa6825c, 0x785a40, 0xbfa07a, 0x6e5e49, 0x9c7a56];
   const boulderMaterials = boulderColors.map(c => new THREE.MeshLambertMaterial({ color: c }));
   const rockGeo = new THREE.DodecahedronGeometry(1.0, 1);
 
-  // Two concentric rings of boulders for natural depth and irregular layering
-  const numBoulders = 58;
+  // Concentric layered rocks snug against the water perimeter
+  const numBoulders = 64;
   for (let b = 0; b < numBoulders; b++) {
-    const angle = (b / numBoulders) * Math.PI * 2 + (Math.random() - 0.5) * 0.05;
+    const angle = (b / numBoulders) * Math.PI * 2 + (Math.random() - 0.5) * 0.04;
     const rBound = getOrganicPondRadius(angle, baseRadius);
 
-    // Stagger boulders between inner waterline tier and outer earth tier
+    // Stagger boulders snugly along the waterline:
+    // Inner tier rests directly along the water margin/rim, outer tier interlocks directly behind it
     const isOuter = b % 2 === 0;
-    const rOffset = isOuter ? 0.95 + Math.random() * 0.45 : 0.2 + Math.random() * 0.35;
-    const bx = Math.cos(angle) * (rBound + rOffset);
-    const bz = Math.sin(angle) * (rBound + rOffset);
+    const rDist = isOuter
+      ? rBound * 1.05 + (Math.random() - 0.5) * 0.35
+      : rBound * 0.97 + (Math.random() - 0.5) * 0.25;
+    const bx = Math.cos(angle) * rDist;
+    const bz = Math.sin(angle) * rDist;
 
     const bMesh = new THREE.Mesh(rockGeo, boulderMaterials[b % boulderMaterials.length]);
-    const bScale = (isOuter ? 0.95 : 0.75) + Math.random() * 0.45;
+    const bScale = (isOuter ? 0.9 : 0.72) + Math.random() * 0.38;
     bMesh.scale.set(
       bScale * (0.85 + Math.random() * 0.4),
       bScale * (0.55 + Math.random() * 0.25), // slightly flattened river rock profile
@@ -348,11 +351,11 @@ export function buildBeautifulLotusPond(centerX = -80, centerZ = -75): LotusPond
     // Sprout lush green sedge tufts and yellow wildflowers between boulder crevices
     if (b % 3 === 0) {
       const tuft = createShorelineSedgeTuft(0x22c55e, 0.8 + Math.random() * 0.4);
-      const tuftOffset = isOuter ? 0.5 : -0.2;
+      const tuftOffset = isOuter ? 0.35 : -0.15;
       tuft.position.set(
-        Math.cos(angle) * (rBound + rOffset + tuftOffset),
-        0.1,
-        Math.sin(angle) * (rBound + rOffset + tuftOffset)
+        Math.cos(angle) * (rDist + tuftOffset),
+        0.08,
+        Math.sin(angle) * (rDist + tuftOffset)
       );
       pondGroup.add(tuft);
     }

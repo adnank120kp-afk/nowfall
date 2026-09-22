@@ -1325,8 +1325,8 @@ export function buildFootballGround(
 
   // 6. STADIUM SIDE-SEATING GALLERIES, VIP PAVILION, DUGOUTS & FRONT TICKET COUNTER
   // 6A. East Grandstand (General Sideline Stand - Manjappada Yellow & Blue, 6 tiers)
-  // Set along the East side of the pitch covering the entire touchline length
-  const eastStandLength = 56;
+  // Perfectly parallel to the East touchline, sitting completely outside the pitch on the side, facing inward (-X)
+  const eastStandLength = 54;
   const eastStandTiers = 6;
   const eastStandTierW = 1.05;
   const eastStandTierH = 0.62;
@@ -1340,20 +1340,21 @@ export function buildFootballGround(
     '★ KIZHAKKUMPURAM SEVENS FOOTBALL CLUB • EAST SIDE GRANDSTAND • മഞ്ഞപ്പട ★',
     0xffffff // white accent seats
   );
-  const eastStandX = centerX + halfW + 3.8;
+  // Positioned strictly along the East side of the pitch, outside the turf and red gravel path
+  const eastStandX = centerX + halfW + 3.2;
   eastStand.group.position.set(eastStandX, 0, centerZ);
-  eastStand.group.rotation.y = -Math.PI / 2; // Facing West directly into the pitch
+  eastStand.group.rotation.y = 0; // Length runs North-South along Z; seats face West (-X) directly into pitch!
   groundGroup.add(eastStand.group);
   colliders.push({
-    minX: eastStandX,
+    minX: eastStandX - 0.2,
     maxX: eastStandX + eastStand.depth + 1.2,
     minZ: centerZ - eastStandLength / 2 - 0.5,
     maxZ: centerZ + eastStandLength / 2 + 0.5,
   });
 
   // 6B. West Main VIP Pavilion (Covered Grandstand with cantilever canopy roof)
-  // Set along the West side of the pitch covering the entire touchline length
-  const westStandLength = 56;
+  // Perfectly parallel to the West touchline, sitting completely outside the pitch on the side, facing inward (+X)
+  const westStandLength = 54;
   const westStandTiers = 6;
   const westPavilion = buildCoveredVIPPavilion(
     westStandLength,
@@ -1361,25 +1362,41 @@ export function buildFootballGround(
     1.05,
     0.62
   );
-  const westStandX = centerX - halfW - 4.0;
+  // Positioned strictly along the West side of the pitch, outside the turf and red gravel path
+  const westStandX = centerX - halfW - 3.2;
   westPavilion.group.position.set(westStandX, 0, centerZ);
-  westPavilion.group.rotation.y = Math.PI / 2; // Facing East directly into the pitch
+  westPavilion.group.rotation.y = Math.PI; // Length runs North-South along Z; seats face East (+X) directly into pitch!
   groundGroup.add(westPavilion.group);
   colliders.push({
     minX: westStandX - westPavilion.depth - 1.2,
-    maxX: westStandX,
+    maxX: westStandX + 0.2,
     minZ: centerZ - westStandLength / 2 - 0.5,
     maxZ: centerZ + westStandLength / 2 + 0.5,
   });
 
   // 6C. Team Technical Dugouts (Home & Away) along West sideline in front of VIP Pavilion
   const dugoutHome = buildTeamDugout('HOME: KIZHAKKUMPURAM FC', true);
-  dugoutHome.position.set(centerX - halfW - 1.8, 0, centerZ - 8.5);
+  dugoutHome.position.set(centerX - halfW - 1.2, 0, centerZ - 8.5);
+  dugoutHome.rotation.y = Math.PI; // Open front faces East (+X) directly toward the pitch!
   groundGroup.add(dugoutHome);
 
   const dugoutAway = buildTeamDugout('AWAY: MALAPPURAM SEVENS', false);
-  dugoutAway.position.set(centerX - halfW - 1.8, 0, centerZ + 8.5);
+  dugoutAway.position.set(centerX - halfW - 1.2, 0, centerZ + 8.5);
+  dugoutAway.rotation.y = Math.PI; // Open front faces East (+X) directly toward the pitch!
   groundGroup.add(dugoutAway);
+
+  colliders.push({
+    minX: centerX - halfW - 2.8,
+    maxX: centerX - halfW - 0.4,
+    minZ: centerZ - 11.2,
+    maxZ: centerZ - 5.8,
+  });
+  colliders.push({
+    minX: centerX - halfW - 2.8,
+    maxX: centerX - halfW - 0.4,
+    minZ: centerZ + 5.8,
+    maxZ: centerZ + 11.2,
+  });
 
   // 6D. Goal-End High Ball-Catch Safety Nets (Behind North & South Goals with unobstructed open runoffs)
   const northNet = buildSafetyCatchNet(28, 8.5);
@@ -1390,19 +1407,34 @@ export function buildFootballGround(
   southNet.position.set(centerX, 0, centerZ + halfL + 2.4);
   groundGroup.add(southNet);
 
-  // Low safety barrier railings with festive bunting behind goals
-  const goalEndRailMat = new THREE.MeshLambertMaterial({ color: 0x94a3b8 });
-  const northFence = new THREE.Mesh(new THREE.BoxGeometry(28, 1.1, 0.08), goalEndRailMat);
-  northFence.position.set(centerX, 0.55, centerZ - halfL - 2.8);
-  const northBunting = createBuntingGarland(28);
-  northBunting.position.set(centerX, 1.12, centerZ - halfL - 2.8);
-  groundGroup.add(northFence, northBunting);
+  // Clean open tubular steel barrier railing with festive bunting behind goals (no solid grey walls!)
+  const railSteelMat = new THREE.MeshLambertMaterial({ color: 0xcbd5e1 });
+  const buildGoalRailBarrier = (zPos: number): THREE.Group => {
+    const barGroup = new THREE.Group();
+    // Top tubular rail
+    const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 28, 8), railSteelMat);
+    topBar.rotateZ(Math.PI / 2);
+    topBar.position.set(centerX, 1.0, zPos);
+    // Mid tubular rail
+    const midBar = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 28, 8), railSteelMat);
+    midBar.rotateZ(Math.PI / 2);
+    midBar.position.set(centerX, 0.52, zPos);
+    barGroup.add(topBar, midBar);
 
-  const southFence = new THREE.Mesh(new THREE.BoxGeometry(28, 1.1, 0.08), goalEndRailMat);
-  southFence.position.set(centerX, 0.55, centerZ + halfL + 2.8);
-  const southBunting = createBuntingGarland(28);
-  southBunting.position.set(centerX, 1.12, centerZ + halfL + 2.8);
-  groundGroup.add(southFence, southBunting);
+    // Upright stanchions
+    for (let st = -13; st <= 13; st += 2.6) {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.02, 8), railSteelMat);
+      post.position.set(centerX + st, 0.51, zPos);
+      barGroup.add(post);
+    }
+    const bunting = createBuntingGarland(28);
+    bunting.position.set(centerX, 1.02, zPos);
+    barGroup.add(bunting);
+    return barGroup;
+  };
+
+  groundGroup.add(buildGoalRailBarrier(centerZ - halfL - 2.8));
+  groundGroup.add(buildGoalRailBarrier(centerZ + halfL + 2.8));
 
   // 6E. Digital Electronic LED Stadium Scoreboard (Elevated at North-East Corner)
   const scoreboard = buildLEDScoreboard();
