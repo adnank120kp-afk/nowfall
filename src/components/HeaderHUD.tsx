@@ -18,6 +18,8 @@ interface HeaderHUDProps {
   isSpotsOpen: boolean;
   onToggleSpots: () => void;
   onOpenKSRTC: () => void;
+  onOpenBigMap?: () => void;
+  isBigMapOpen?: boolean;
   playerModel?: 'unni' | 'babu';
   onTogglePlayerModel?: () => void;
 }
@@ -44,6 +46,8 @@ export function HeaderHUD({
   isSpotsOpen,
   onToggleSpots,
   onOpenKSRTC,
+  onOpenBigMap,
+  isBigMapOpen = false,
   playerModel = 'babu',
   onTogglePlayerModel,
 }: HeaderHUDProps) {
@@ -90,9 +94,28 @@ export function HeaderHUD({
         </div>
       </div>
 
-      {/* Center: TOP ICONS FOR MAP, MESSAGES & KSRTC BOARDING */}
+      {/* Center: TOP ICONS FOR BIG MAP, RADAR, MESSAGES & KSRTC BOARDING */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* 🗺️ MAP TOGGLE ICON */}
+        {/* 🗺️ BIG MAP (12 DISTRICTS) BUTTON */}
+        {onOpenBigMap && (
+          <button
+            onClick={onOpenBigMap}
+            className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-md ${
+              isBigMapOpen
+                ? 'bg-amber-500 text-black border-amber-300 shadow-amber-950/80 ring-2 ring-amber-300'
+                : 'bg-gradient-to-r from-emerald-900 via-[#0d2a1b] to-emerald-900 hover:from-emerald-800 hover:to-[#123824] text-emerald-200 border-emerald-500/60'
+            }`}
+            title="Open Big Map: 12 Districts of Kizhakkumpuram"
+          >
+            <span className="text-sm">🗺️</span>
+            <span className="font-extrabold text-amber-300">BIG MAP</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-400 text-black font-mono font-black hidden sm:inline">
+              12
+            </span>
+          </button>
+        )}
+
+        {/* 🧭 RADAR MINI-MAP TOGGLE ICON */}
         <button
           onClick={onToggleMap}
           className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-md ${
@@ -102,9 +125,9 @@ export function HeaderHUD({
           }`}
           title="Toggle GPS Radar Map"
         >
-          <span className="text-sm">🗺️</span>
-          <span className="hidden md:inline font-malayalam">മാപ്പ്</span>
-          <span className="hidden sm:inline text-[10px] font-mono opacity-80">(Map)</span>
+          <span className="text-sm">🧭</span>
+          <span className="hidden md:inline font-malayalam">റഡാർ</span>
+          <span className="hidden sm:inline text-[10px] font-mono opacity-80">(Radar)</span>
           {isMapOpen && (
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
           )}

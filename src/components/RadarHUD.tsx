@@ -2,10 +2,11 @@ import React from 'react';
 
 interface RadarHUDProps {
   onFocusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond') => void;
+  onOpenBigMap?: () => void;
   onClose?: () => void;
 }
 
-export function RadarHUD({ onFocusPOI, onClose }: RadarHUDProps) {
+export function RadarHUD({ onFocusPOI, onOpenBigMap, onClose }: RadarHUDProps) {
   return (
     <div className="flex flex-col gap-3 pointer-events-auto w-60 sm:w-64 select-none animate-fadeIn">
       {/* Circular Kerala GPS Radar tracking Babu's Auto, KSRTC Bus, Chaya Kada, Mosque */}
@@ -126,6 +127,14 @@ export function RadarHUD({ onFocusPOI, onClose }: RadarHUDProps) {
 
         {/* Quick Fast-Travel / POI Buttons */}
         <div className="grid grid-cols-2 gap-1.5 mt-2.5 pt-2 border-t border-emerald-900/50 text-[10px] font-mono">
+          {onOpenBigMap && (
+            <button
+              className="col-span-2 py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-black text-center font-black flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 uppercase tracking-wider"
+              onClick={onOpenBigMap}
+            >
+              <span>🗺️</span> OPEN BIG MAP (12 Districts)
+            </button>
+          )}
           <button
             className="col-span-2 py-1 px-1.5 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-200 border border-cyan-500/50 text-center font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
             onClick={() => onFocusPOI('pond')}

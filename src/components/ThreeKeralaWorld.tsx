@@ -10,6 +10,8 @@ import { buildRiggedBabuCharacter, buildBabuDiagramCharacter, HumanRig } from '.
 import { buildRiggedTraditionalCharacter } from './TraditionalCharacterBuilder';
 import { buildFootballGround } from './FootballGroundBuilder';
 import { buildBeautifulLotusPond, getOrganicPondRadius } from './LotusPondBuilder';
+import { buildBigKizhakkumpuramMap } from './BigMapBuilder';
+import { buildLivingTrafficAndFauna } from './TrafficAndFaunaBuilder';
 
 interface ThreeKeralaWorldProps {
   weather: WeatherMode;
@@ -90,7 +92,7 @@ export function ThreeKeralaWorld({
     // 1. SCENE & RENDERER
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x7da4a8);
-    scene.fog = new THREE.FogExp2(0x8faeaf, 0.0075);
+    scene.fog = new THREE.FogExp2(0x8faeaf, 0.0032);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
@@ -101,8 +103,8 @@ export function ThreeKeralaWorld({
     renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
-    // 2. CAMERA
-    const camera = new THREE.PerspectiveCamera(58, width / height, 0.1, 850);
+    // 2. CAMERA (Expansive viewing distance for Big Map)
+    const camera = new THREE.PerspectiveCamera(58, width / height, 0.1, 1600);
     camera.position.set(0, 16, 26);
 
     // 3. LIGHTING
@@ -110,13 +112,13 @@ export function ThreeKeralaWorld({
     scene.add(ambientLight);
 
     const sunLight = new THREE.DirectionalLight(0xfffae6, 1.45);
-    sunLight.position.set(70, 110, 45);
+    sunLight.position.set(90, 160, 60);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.camera.near = 10;
-    sunLight.shadow.camera.far = 350;
-    const shadowDist = 100;
+    sunLight.shadow.camera.far = 750;
+    const shadowDist = 260;
     sunLight.shadow.camera.left = -shadowDist;
     sunLight.shadow.camera.right = shadowDist;
     sunLight.shadow.camera.top = shadowDist;
@@ -130,21 +132,29 @@ export function ThreeKeralaWorld({
     const worldGroup = new THREE.Group();
     scene.add(worldGroup);
 
-    // Terrain - Fertile red soil and lush green grass patches
-    const groundGeo = new THREE.PlaneGeometry(420, 420, 40, 40);
+    // Terrain - Expanded 800x800 Big Map covering Highland hills, valleys, river, backwaters & beach
+    const groundGeo = new THREE.PlaneGeometry(800, 800, 70, 70);
     groundGeo.rotateX(-Math.PI / 2);
     const posAttr = groundGeo.attributes.position;
     for (let i = 0; i < posAttr.count; i++) {
       const vx = posAttr.getX(i);
       const vz = posAttr.getZ(i);
       let vy = 0;
-      // North hillock (Malarvadi Kunnu)
-      if (vz < -70) {
-        vy = Math.sin((vz + 70) * 0.04) * 9 + Math.cos(vx * 0.04) * 5;
+      // North highland hills (Highland & Forest sector)
+      if (vz < -160) {
+        vy = Math.sin((vz + 160) * 0.024) * 16 + Math.cos(vx * 0.024) * 8;
+      }
+      // Wide River Valley Basin (River Zone at Z: 120 to 170)
+      if (vz > 118 && vz < 172) {
+        vy = -2.2;
       }
       // South-east backwater canal basin
-      if (vx > 65 && vx < 95 && vz > -50 && vz < 130) {
+      if (vx > 65 && vx < 170 && vz > -50 && vz < 118) {
         vy = -2.6;
+      }
+      // Coastal Beach shoreline (South coast at Z > 280)
+      if (vz > 280) {
+        vy = -0.2;
       }
       // Organic Lotus Pond Hollow (smoothly carved in the natural lagoon shape)
       const pDx = vx - -80;
@@ -190,11 +200,18 @@ export function ThreeKeralaWorld({
     const colliders: Collider[] = [];
 
     // 3B. AUTHENTIC KERALA LOTUS POND (ആമ്പൽക്കുളം / താമരക്കുളം)
-    // Curvilinear lagoon basin, layered river boulders, crystal clear turquoise water,
-    // floating notched lily pads (താമരയില), blooming lotus blossoms, and swimming koi fish
     const lotusPond = buildBeautifulLotusPond(-80, -75);
     worldGroup.add(lotusPond.group);
     colliders.push(...lotusPond.colliders);
+
+    // 3C. BIG MAP 12-DISTRICT SYSTEM (Highland, Forest, School, Hospital, Market, River Bridge, Backwater, Beach)
+    const bigMap = buildBigKizhakkumpuramMap();
+    worldGroup.add(bigMap.group);
+    colliders.push(...bigMap.colliders);
+
+    // 3D. LIVING TRAFFIC & FAUNA SYSTEM (Cars, Lorry, Ambulance, Police Jeep, Scooter, Bicycle, Cows, Dogs, Chickens)
+    const livingWorld = buildLivingTrafficAndFauna();
+    worldGroup.add(livingWorld.group);
 
     // Wooden bridges over canal
     function createBridge(zPos: number) {
@@ -1045,6 +1062,90 @@ export function ThreeKeralaWorld({
       -94, -73, 0xfef08a, 0x15803d
     );
 
+    // District 5: Taluk Hospital Chief Medical Officer (ആശുപത്രി)
+    createNPC(
+      {
+        id: 'hospital_dr_anjali',
+        name: "Dr. Anjali (ഡോ. അഞ്ജലി • താലൂക്ക് ആശുപത്രി)",
+        malayalamName: "ഡോ. അഞ്ജലി • മെഡിക്കൽ ഓഫീസർ",
+        role: "Taluk Hospital Chief Medical Officer",
+        dialogue: "“കിഴക്കുംപുറം താലൂക്ക് ആശുപത്രിയിലേക്ക് സ്വാഗതം! 24 മണിക്കൂറും അത്യാഹിത വിഭാഗവും ആംബുലൻസ് സൗകര്യവും ഇവിടെ പ്രവർത്തിക്കുന്നു. ഗ്രാമീണ ജനങ്ങളുടെ ആരോഗ്യമാണ് പ്രധാനം!”",
+        avatar: "🩺",
+        tag: "HOSPITAL",
+      },
+      14, 62, 0xe2e8f0, 0x0284c7
+    );
+
+    // District 3: Daily Bazaar & Fish Monger (ചന്ത • പച്ചക്കറി & മീൻ)
+    createNPC(
+      {
+        id: 'market_moosa_kaka',
+        name: "Moosa Kaka (മൂസാ കാക്ക • മീൻ ചന്ത)",
+        malayalamName: "മൂസാ കാക്ക • ചന്ത",
+        role: "Bazaar Merchant & Fresh Fish Monger",
+        dialogue: "“ഇന്ന് രാവിലെ കടലിൽ നിന്ന് പിടിച്ച നല്ല ഫ്രഷ് അയലയും മത്തിയും ഉണ്ട് മോനേ! ചന്തയിൽ പച്ചക്കറിയും പഴങ്ങളും കുറഞ്ഞ വിലയ്ക്ക് കിട്ടും. നോക്കി വാങ്ങിപ്പോകൂ!”",
+        avatar: "🐟",
+        tag: "MARKET",
+      },
+      92, 14, 0xfef08a, 0x9a3412
+    );
+
+    // District 8: Highland Viewpoint Guide (മലയോരം • തേയിലത്തോട്ടം)
+    createNPC(
+      {
+        id: 'highland_chandran',
+        name: "Chandran Chettan (ചന്ദ്രൻ ചേട്ടൻ • മലയോരം)",
+        malayalamName: "ചന്ദ്രൻ ചേട്ടൻ • വ്യൂ പോയിൻ്റ്",
+        role: "Highland Forest Guide & Tea Planter",
+        dialogue: "“ഇതാണ് കിഴക്കുംപുറത്തെ ഏറ്റവും ഉയരമുള്ള മലയോര വ്യൂ പോയിൻ്റ്! ഇവിടെ നിന്നാൽ താഴെ പച്ചപ്പരപ്പാർന്ന ഗ്രാമവും അകലെ അറബിക്കടലും കാണാം. തേയിലത്തോട്ടത്തിലെ തണുത്ത കാറ്റ് ശ്വസിക്കൂ!”",
+        avatar: "⛰️",
+        tag: "HIGHLAND",
+      },
+      4, -278, 0xbfdbfe, 0x166534
+    );
+
+    // District 10: Backwater Houseboat Captain (കായൽ • കെട്ടുവള്ളം)
+    createNPC(
+      {
+        id: 'backwater_shaji',
+        name: "Captain Shaji (സ്രാങ്ക് ഷാജി • കെട്ടുവള്ളം)",
+        malayalamName: "സ്രാങ്ക് ഷാജി • ഹൗസ്ബോട്ട്",
+        role: "Kettuvallam Houseboat Captain",
+        dialogue: "“വേമ്പനാട് കായലിലൂടെയുള്ള ശിക്കാര വള്ളം യാത്രയ്ക്ക് തയ്യാറാണോ? കരിമീൻ പൊള്ളിച്ചതും കരിക്കിൻ വെള്ളവും കഴിച്ച് തെങ്ങുകൾക്കിടയിലൂടെ ശാന്തമായി തുഴയാം!”",
+        avatar: "🛶",
+        tag: "BACKWATER",
+      },
+      104, 232, 0xfde047, 0x075985
+    );
+
+    // District 11: Lighthouse Beach Coconut Vendor (കടൽത്തീരം • ഇളനീർ)
+    createNPC(
+      {
+        id: 'beach_vijayan',
+        name: "Vijayan (വിജയൻ • ഇളനീർ കച്ചവടം)",
+        malayalamName: "വിജയൻ • ലൈറ്റ് ഹൗസ് ബീച്ച്",
+        role: "Beachside Tender Coconut Vendor",
+        dialogue: "“ലൈറ്റ് ഹൗസ് ബീച്ചിലേക്ക് സ്വാഗതം സുഹൃത്തേ! ചൂടുള്ള വെയിലിൽ ഒരു നല്ല മധുരമുള്ള തണുത്ത ഇളനീർ കുടിക്കൂ. വൈകുന്നേരം അറബിക്കടലിലെ സൂര്യാസ്തമയം കാണാൻ ആളുകൾ എത്തും!”",
+        avatar: "🥥",
+        tag: "BEACH",
+      },
+      -18, 322, 0xfacc15, 0x854d0e
+    );
+
+    // District 4: St. Mary's School Headmaster (വിദ്യാഭ്യാസ മേഖല)
+    createNPC(
+      {
+        id: 'school_thomas_sir',
+        name: "Thomas Sir (തോമസ് സാർ • ഹെഡ്മാസ്റ്റർ)",
+        malayalamName: "തോമസ് സാർ • സ്കൂൾ",
+        role: "St. Mary's School Headmaster",
+        dialogue: "“വിദ്യാഭ്യാസമാണ് നാടിൻ്റെ വെളിച്ചം! നമ്മുടെ സെവൻസ് ഫുട്ബോൾ മൈതാനത്ത് വൈകുന്നേരം കുട്ടികളുടെ മാച്ച് നടക്കുന്നുണ്ട്. പഠനത്തോടൊപ്പം കായിക മികവും വേണം!”",
+        avatar: "📚",
+        tag: "SCHOOL",
+      },
+      112, -72, 0xffffff, 0x1e3a8a
+    );
+
     // 10. PLAYABLE CHARACTER (Rigged Babu or Rigged Unni with authentic walking locomotion)
     const player = new THREE.Group();
     let currentPlayerModel: 'unni' | 'babu' = playerModel;
@@ -1274,6 +1375,12 @@ export function ThreeKeralaWorld({
 
       // Lotus pond ripples, floating pads bobbing & swimming koi fish
       lotusPond.updateAnimation(now);
+
+      // Big Map coastal lighthouse beacon beam & water waves
+      bigMap.updateAnimation(now);
+
+      // Moving highway traffic & living animal behaviors (cows, dogs, chickens)
+      livingWorld.update(now, dt);
 
       // Wind sway in foliage
       animatedFlora.forEach(f => {

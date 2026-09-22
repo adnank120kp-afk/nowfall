@@ -8,6 +8,7 @@ import { DistrictModal } from './components/DistrictModal';
 import { KSRTCTicketModal, BusDestination } from './components/KSRTCTicketModal';
 import { StadiumTicketModal } from './components/StadiumTicketModal';
 import { MessagesModal } from './components/MessagesModal';
+import { BigMapModal } from './components/BigMapModal';
 import { ThreeKeralaWorld } from './components/ThreeKeralaWorld';
 import { soundSynth } from './audio';
 import { WeatherMode, NPCEntity } from './types';
@@ -65,6 +66,7 @@ export default function App() {
   const [focusTarget, setFocusTarget] = useState<'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond' | null>(null);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; z: number } | null>(null);
   const [isMapOpen, setIsMapOpen] = useState<boolean>(true);
+  const [isBigMapOpen, setIsBigMapOpen] = useState<boolean>(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState<boolean>(false);
   const [isSpotsOpen, setIsSpotsOpen] = useState<boolean>(false);
   const [isKSRTCOpen, setIsKSRTCOpen] = useState<boolean>(false);
@@ -74,6 +76,21 @@ export default function App() {
     '“ഇന്ന് ഇടവപ്പാതി കനക്കും! അനന്തപുരി സൂപ്പർ ഫാസ്റ്റ് ബസ്സിന്റെ പുതിയ എയർ ഹോൺ നാട്ടിൽ ചർച്ചയായി!”'
   );
   const [playerModel, setPlayerModel] = useState<'unni' | 'babu'>('babu');
+
+  const handleFastTravel = useCallback((coords: { x: number; z: number }, districtName: string) => {
+    setTeleportTarget(coords);
+    soundSynth.playSound('bell');
+    soundSynth.playSound('airhorn');
+    setActiveDialogue({
+      id: 'fast-travel',
+      avatar: '🗺️',
+      tag: 'DISTRICT',
+      name: `യാത്ര • ${districtName}`,
+      malayalamName: districtName,
+      role: 'Kizhakkumpuram Big Map Navigator',
+      dialogue: `“നിങ്ങൾ കിഴക്കുംപുറം ബിഗ് മാപ്പിലെ ${districtName}-ൽ എത്തിയിരിക്കുന്നു! പ്രദേശത്തെ റോഡുകളും പുതിയ കെട്ടിടങ്ങളും വാഹനങ്ങളും ആസ്വദിക്കൂ.”`,
+    });
+  }, []);
 
   const handlePurchaseAndTravel = useCallback((dest: BusDestination) => {
     setWallet((w) => w - dest.fare);
@@ -284,16 +301,18 @@ export default function App() {
     );
   }, []);
 
-  // Keyboard shortcut listener for KSRTC [B], Stadium Ticket [T], Map [M], and Chaya Kada Spots [C]
+  // Keyboard shortcut listener for Big Map [M], KSRTC [B], Stadium Ticket [T], Radar [R], and Chaya Kada Spots [C]
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const k = e.key.toLowerCase();
-      if (k === 'b') {
+      if (k === 'm') {
+        setIsBigMapOpen((prev) => !prev);
+      } else if (k === 'r') {
+        setIsMapOpen((prev) => !prev);
+      } else if (k === 'b') {
         setIsKSRTCOpen((prev) => !prev);
       } else if (k === 't') {
         setIsStadiumTicketOpen((prev) => !prev);
-      } else if (k === 'm') {
-        setIsMapOpen((prev) => !prev);
       } else if (k === 'c') {
         setIsSpotsOpen((prev) => !prev);
       }
@@ -343,6 +362,8 @@ export default function App() {
         isSpotsOpen={isSpotsOpen}
         onToggleSpots={() => setIsSpotsOpen((prev) => !prev)}
         onOpenKSRTC={() => setIsKSRTCOpen(true)}
+        onOpenBigMap={() => setIsBigMapOpen(true)}
+        isBigMapOpen={isBigMapOpen}
         playerModel={playerModel}
         onTogglePlayerModel={() => setPlayerModel((prev) => (prev === 'babu' ? 'unni' : 'babu'))}
       />
@@ -352,7 +373,11 @@ export default function App() {
         {/* LEFT HUD: CIRCULAR GPS RADAR (TOGGLEABLE) */}
         {isMapOpen && (
           <div className="absolute left-4 sm:left-6 top-4 sm:top-5 z-30">
-            <RadarHUD onFocusPOI={handleFocusPOI} onClose={() => setIsMapOpen(false)} />
+            <RadarHUD
+              onFocusPOI={handleFocusPOI}
+              onOpenBigMap={() => setIsBigMapOpen(true)}
+              onClose={() => setIsMapOpen(false)}
+            />
           </div>
         )}
 
@@ -439,6 +464,13 @@ export default function App() {
         onClose={() => setDistrictModalOpen(false)}
         currentDistrict={activeDistrict}
         onSelectDistrict={handleSelectDistrict}
+      />
+
+      {/* MODAL: BIG MAP (12 DISTRICTS OF KIZHAKKUMPURAM) */}
+      <BigMapModal
+        isOpen={isBigMapOpen}
+        onClose={() => setIsBigMapOpen(false)}
+        onFastTravel={handleFastTravel}
       />
     </div>
   );
