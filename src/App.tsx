@@ -13,6 +13,7 @@ import { MissionsModal } from './components/MissionsModal';
 import { BusinessesModal } from './components/BusinessesModal';
 import { RandomSceneModal } from './components/RandomSceneModal';
 import { PhotoModeModal } from './components/PhotoModeModal';
+import { BGMModal } from './components/BGMModal';
 import { INITIAL_KERALA_MISSIONS } from './components/MissionsSystem';
 import { RANDOM_NAATTILE_SCENES } from './components/RandomScenesData';
 import { ThreeKeralaWorld } from './components/ThreeKeralaWorld';
@@ -107,6 +108,15 @@ export default function App() {
 
   const [isBusinessesOpen, setIsBusinessesOpen] = useState<boolean>(false);
   const [isPhotoModeOpen, setIsPhotoModeOpen] = useState<boolean>(false);
+  const [isBGMOpen, setIsBGMOpen] = useState<boolean>(false);
+  const [isBGMPlaying, setIsBGMPlaying] = useState<boolean>(soundSynth.isBGMPlaying());
+
+  useEffect(() => {
+    const unsub = soundSynth.subscribeBGM((playing) => {
+      setIsBGMPlaying(playing);
+    });
+    return unsub;
+  }, []);
 
   const TIME_CYCLES: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'night'];
 
@@ -125,9 +135,9 @@ export default function App() {
     if (type === 'bus') soundSynth.playSound('airhorn');
     else if (type === 'auto') soundSynth.playSound('autohorn');
     else if (type === 'tractor') soundSynth.playSound('tractor');
-    else if (type === 'bullet') soundSynth.playSound('bullet');
     else if (type === 'jeep') soundSynth.playSound('airhorn');
     else if (type === 'boat') soundSynth.playSound('splash');
+    else if (type === 'mustang') soundSynth.playSound('whistle');
   }, []);
 
   const handleStartMission = useCallback((missionId: string) => {
@@ -450,6 +460,8 @@ export default function App() {
         setIsBusinessesOpen((prev) => !prev);
       } else if (k === 'p') {
         setIsPhotoModeOpen((prev) => !prev);
+      } else if (k === 'u') {
+        setIsBGMOpen((prev) => !prev);
       } else if (k === 'o') {
         handleCycleTimeOfDay();
       }
@@ -518,6 +530,8 @@ export default function App() {
         onTriggerRandomScene={handleTriggerRandomScene}
         onOpenBusinesses={() => setIsBusinessesOpen(true)}
         onOpenPhotoMode={() => setIsPhotoModeOpen(true)}
+        onOpenBGM={() => setIsBGMOpen(true)}
+        isBGMPlaying={isBGMPlaying}
       />
 
       {/* MAIN GAME UI OVERLAY WRAPPER */}
@@ -662,6 +676,12 @@ export default function App() {
       <PhotoModeModal
         isOpen={isPhotoModeOpen}
         onClose={() => setIsPhotoModeOpen(false)}
+      />
+
+      {/* MODAL: KERALA SOUNDTRACK RADIO BGM */}
+      <BGMModal
+        isOpen={isBGMOpen}
+        onClose={() => setIsBGMOpen(false)}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 export type WeatherMode = 'monsoon' | 'morning' | 'evening' | 'sunny' | 'thunderstorm' | 'fog';
 export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
-export type VehicleType = 'auto' | 'bus' | 'jeep' | 'tractor' | 'bullet' | 'boat';
+export type VehicleType = 'auto' | 'bus' | 'jeep' | 'tractor' | 'boat' | 'mustang';
 export type PlayerOutfit = 'babu' | 'unni' | 'kasavu' | 'driver' | 'sevens';
 
 export interface WeatherOption {
@@ -20,7 +20,7 @@ export interface NPCEntity {
 }
 
 export interface POIEntity {
-  id: 'auto' | 'bus' | 'jeep' | 'tractor' | 'bullet' | 'boat' | 'chaya' | 'mosque' | 'football' | 'player' | 'waypoint' | 'petrol';
+  id: 'auto' | 'bus' | 'jeep' | 'tractor' | 'boat' | 'mustang' | 'chaya' | 'mosque' | 'football' | 'player' | 'waypoint' | 'petrol';
   label: string;
   sublabel: string;
   icon: string;

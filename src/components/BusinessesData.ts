@@ -46,7 +46,7 @@ export const KERALA_BUSINESS_CATALOG: BusinessItem[] = [
     malayalamName: 'ഫുൾ ടാങ്ക് പെട്രോൾ ⛽',
     price: 100,
     icon: '⛽',
-    desc: 'Fill up your active vehicle (Auto, Bus, Jeep, Tractor, Bullet) to 100% fuel tank capacity.',
+    desc: 'Fill up your active vehicle (Auto, Bus, Jeep, Tractor) to 100% fuel tank capacity.',
     category: 'fuel',
   },
   {

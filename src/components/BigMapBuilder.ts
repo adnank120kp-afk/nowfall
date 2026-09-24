@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildAmericanBoxAmbulance } from './VehiclesBuilder';
 
 export interface DistrictInfo {
   id: string;
@@ -7,119 +8,145 @@ export interface DistrictInfo {
   icon: string;
   desc: string;
   coords: { x: number; z: number };
-  category: 'North' | 'Central' | 'South';
+  category: 'North' | 'Central' | 'South' | 'High Range';
 }
 
-export const KIZHAKKUMPURAM_12_DISTRICTS: DistrictInfo[] = [
+/**
+ * 🗺️ NAATTILE SCENE — KERALA MEGA MAP (14 DISTRICTS)
+ * Kasaragod → Kannur → Kozhikode → Wayanad → Malappuram → Palakkad →
+ * Thrissur → Ernakulam → Idukki → Kottayam → Alappuzha → Pathanamthitta → Kollam → Thiruvananthapuram
+ */
+export const KERALA_14_DISTRICTS: DistrictInfo[] = [
   {
-    id: 'highland',
-    name: 'Highland & Viewpoint',
-    malayalamName: 'മലവാരവും വ്യൂ പോയിന്റും',
-    icon: '⛰️',
-    desc: 'Winding ghat road, misty mountain hills, observation deck & panoramic telescope overlooking the valley.',
+    id: 'kasaragod',
+    name: '1. Kasaragod — The Northern Gateway',
+    malayalamName: 'കാസർഗോഡ് • വടക്കൻ പൈതൃകം',
+    icon: '🌴',
+    desc: 'Northern border atmosphere, historic Bekal Fort ramparts, Chandragiri river, laterite undulating hills and coconut plantations.',
+    coords: { x: -80, z: -350 },
+    category: 'North',
+  },
+  {
+    id: 'kannur',
+    name: '2. Kannur — Coast & Culture',
+    malayalamName: 'കണ്ണൂർ • തെയ്യവും തീരദേശവും',
+    icon: '🌊',
+    desc: 'Muzhappilangad drive-in beach, fishing villages, dense coconut groves, vibrant Theyyam festival grounds & coastal highway.',
+    coords: { x: 70, z: -320 },
+    category: 'North',
+  },
+  {
+    id: 'kozhikode',
+    name: '3. Kozhikode — Big City Region',
+    malayalamName: 'കോഴിക്കോട് • മിഠായിത്തെരുവും ബീച്ചും',
+    icon: '🌆',
+    desc: 'Major urban downtown, historic SM Street (മിഠായിത്തെരുവ്), busy railway terminal, Paragon style culinary street & Calicut beach.',
     coords: { x: 0, z: -280 },
     category: 'North',
   },
   {
-    id: 'forest',
-    name: 'Forest Exploration Area',
-    malayalamName: 'തേക്ക് കാടും കാട്ടുപാതയും',
-    icon: '🌲',
-    desc: 'Dense teak forest, off-road mud exploration trails, rustic logs & sacred Sarpa Kavu stone shrine.',
+    id: 'wayanad',
+    name: '4. Wayanad — Misty Western Ghats',
+    malayalamName: 'വയനാട് • മലയോര ചുരവും കാടും',
+    icon: '⛰️',
+    desc: 'High-altitude mountain ghat road, hairpin turns, cascading waterfalls, tea & coffee plantations, cool mountain fog & viewpoint.',
     coords: { x: -140, z: -250 },
+    category: 'High Range',
+  },
+  {
+    id: 'malappuram',
+    name: '5. Malappuram — Green Rolling Hills',
+    malayalamName: 'മലപ്പുറം • സെവൻസ് ഫുട്ബോളിന്റെ നാട്',
+    icon: '⚽',
+    desc: 'Rolling emerald hills, dense village lanes, traditional heritage mosques, and buzzing local Sevens football mania.',
+    coords: { x: -60, z: -160 },
     category: 'North',
   },
   {
-    id: 'coconut_village',
-    name: 'Coconut Village & Lotus Cove',
-    malayalamName: 'തെങ്ങിൻ തോപ്പും ആമ്പൽക്കുളവും',
-    icon: '🌴',
-    desc: 'Dense coconut plantations, husked coconut piles, coir spinning & the serene Lotus Pond (താമരക്കുളം).',
-    coords: { x: -80, z: -75 },
-    category: 'North',
-  },
-  {
-    id: 'old_village',
-    name: 'Old Kizhakkumpuram',
-    malayalamName: 'പഴയ കിഴക്കുംപുറം ഗ്രാമം',
-    icon: '🏘️',
-    desc: 'Traditional Nalukettu tiled houses, stone well (കിണർ), Tulasi Thara, Nair’s Chaya Kada & Juma Masjid.',
-    coords: { x: -60, z: -15 },
+    id: 'palakkad',
+    name: '6. Palakkad — The Granary & Ghat Gap',
+    malayalamName: 'പാലക്കാട് • നെല്ലറയും കോട്ടയും',
+    icon: '🌾',
+    desc: 'Famous Palakkad mountain gap, vast emerald paddy fields, coconut palm farms, historic granite fort and breezy long highways.',
+    coords: { x: 120, z: -150 },
     category: 'Central',
   },
   {
-    id: 'town_center',
-    name: 'Kizhakkumpuram Town Center',
-    malayalamName: 'ടൗൺ സെന്റർ & ജംഗ്ഷൻ',
+    id: 'thrissur',
+    name: '7. Thrissur — Cultural Capital',
+    malayalamName: 'തൃശൂർ • സാംസ്കാരിക തലസ്ഥാനം & പൂരം',
+    icon: '🎉',
+    desc: 'Thekkinkadu Maidan, iconic Thrissur Pooram festival grounds, majestic temple towers, daily cultural bazaars & gold markets.',
+    coords: { x: 80, z: -70 },
+    category: 'Central',
+  },
+  {
+    id: 'ernakulam',
+    name: '8. Ernakulam — Mega Metropolis & Metro',
+    malayalamName: 'എറണാകുളം • കൊച്ചി മെട്രോ & ബിസിനസ് ഹബ്ബ്',
     icon: '🏙️',
-    desc: 'Bustling town intersection, historic Clock Tower, Kerala Bank, Milma booth, bakeries & shops.',
+    desc: 'Modern mega metropolis, Marine Drive promenade, high-rises, Kochi Metro transit line, Harbour bridges and dense bustling traffic.',
     coords: { x: 0, z: 0 },
     category: 'Central',
   },
   {
-    id: 'market',
-    name: 'Daily Bazaar & Fish Market',
-    malayalamName: 'ചന്തയും മീൻ മാർക്കറ്റും',
-    icon: '🛍️',
-    desc: 'Fresh vegetable crates, plantains, tapioca sacks, and coastal fresh fish stalls under blue tarpaulins.',
-    coords: { x: 85, z: 10 },
+    id: 'idukki',
+    name: '9. Idukki — High Ranges & Arch Dam',
+    malayalamName: 'ഇടുക്കി • ആർച്ച് ഡാമും മലനിരകളും',
+    icon: '🌿',
+    desc: 'Western Ghats wilderness, massive double-curvature arch dam reservoir, tea carpeted valleys, steep hairpin roads and misty peaks.',
+    coords: { x: -130, z: 50 },
+    category: 'High Range',
+  },
+  {
+    id: 'kottayam',
+    name: '10. Kottayam — Land of Letters & Rubber',
+    malayalamName: 'കോട്ടയം • അക്ഷരനഗരിയും റബ്ബർ തോട്ടങ്ങളും',
+    icon: '🌴',
+    desc: 'Vast rubber plantations, Meenachil river, historic churches, printing press heritage and rolling midland countryside.',
+    coords: { x: 50, z: 65 },
     category: 'Central',
   },
   {
-    id: 'school_zone',
-    name: 'Education Zone & Ground',
-    malayalamName: 'സ്കൂളും പ്ലേഗ്രൗണ്ടും',
-    icon: '🏫',
-    desc: 'St. Mary’s Govt School, open playground, flagpole with national flag, and Sevens Football Ground.',
-    coords: { x: 110, z: -80 },
-    category: 'Central',
+    id: 'alappuzha',
+    name: '11. Alappuzha — Venice of the East & Backwaters',
+    malayalamName: 'ആലപ്പുഴ • കായൽ ലോകവും കെട്ടുവള്ളങ്ങളും',
+    icon: '🚤',
+    desc: 'Intricate backwater canals, traditional thatched Kettuvallam houseboats, Nehru Trophy snake boat race tracks & coconut waterways.',
+    coords: { x: -80, z: 120 },
+    category: 'South',
   },
   {
-    id: 'hospital_zone',
-    name: 'Hospital Zone & Pharmacy',
-    malayalamName: 'താലൂക്ക് ആശുപത്രി & മെഡിക്കൽ',
-    icon: '🏥',
-    desc: 'Govt Taluk Hospital, 24x7 Casualty, Jan Aushadhi Pharmacy, and parked 108 Kerala Ambulance.',
-    coords: { x: 18, z: 65 },
-    category: 'Central',
+    id: 'pathanamthitta',
+    name: '12. Pathanamthitta — Pilgrim Forests & Pamba',
+    malayalamName: 'പത്തനംതിട്ട • പമ്പാ നദിയും വനപാതകളും',
+    icon: '🌲',
+    desc: 'Dense Sabarimala reserve forests, holy Pamba river waters, secluded wilderness roads, teak woodlands & peaceful hill shrines.',
+    coords: { x: 110, z: 150 },
+    category: 'South',
   },
   {
-    id: 'paddy_village',
-    name: 'Paddy Village (നെൽപ്പാടം)',
-    malayalamName: 'പച്ചപ്പ് നിറഞ്ഞ നെൽപ്പാടങ്ങൾ',
-    icon: '🌾',
-    desc: 'Vast flooded emerald rice fields, narrow mud bunds (വരമ്പ്), bamboo scarecrows, and grazing cows.',
-    coords: { x: -130, z: 90 },
-    category: 'Central',
-  },
-  {
-    id: 'river_zone',
-    name: 'River Zone & Big Bridge',
-    malayalamName: 'വലിയ പുഴയും ഹൈവേ പാലവും',
+    id: 'kollam',
+    name: '13. Kollam — Historic Port & Ashtamudi Lake',
+    malayalamName: 'കൊല്ലം • അഷ്ടമുടിക്കായലും തുറമുഖവും',
     icon: '🌊',
-    desc: 'Majestic concrete multi-span bridge spanning the wide scenic river, sandy banks & fishermen canoes.',
-    coords: { x: 0, z: 145 },
+    desc: 'Scenic 8-armed Ashtamudi backwater lake, Tangasseri lighthouse, fishing harbour, coastal cashew trade and beach avenues.',
+    coords: { x: 0, z: 230 },
     category: 'South',
   },
   {
-    id: 'backwater',
-    name: 'Backwater & Houseboat Jetty',
-    malayalamName: 'കായലും കെട്ടുവള്ള ജെട്ടിയും',
-    icon: '🛶',
-    desc: 'Tranquil Kerala backwater lagoon, traditional thatched Kettuvallam houseboat & Chinese fishing nets.',
-    coords: { x: 120, z: 230 },
-    category: 'South',
-  },
-  {
-    id: 'beach_coast',
-    name: 'South Coast & Lighthouse Beach',
-    malayalamName: 'കടൽത്തീരവും ലൈറ്റ്ഹൗസും',
-    icon: '🏖️',
-    desc: 'Golden sandy beach, ocean waves, striped coastal lighthouse, tender coconut stalls & catamarans.',
+    id: 'thiruvananthapuram',
+    name: '14. Thiruvananthapuram — The State Capital',
+    malayalamName: 'തിരുവനന്തപുരം • തലസ്ഥാന നഗരിയും കോവളവും',
+    icon: '🏛️',
+    desc: 'Southern royal capital, Kerala Secretariat, Napier Museum cultural gardens, Kovalam crescent beach and southern highway terminal.',
     coords: { x: 0, z: 320 },
     category: 'South',
   },
 ];
+
+// Backwards-compatibility alias for 12 districts references
+export const KIZHAKKUMPURAM_12_DISTRICTS: DistrictInfo[] = KERALA_14_DISTRICTS;
 
 export interface BigMapResult {
   group: THREE.Group;
@@ -482,10 +509,32 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
   mapGroup.add(schoolGroup);
 
   // ==========================================
-  // 7. 🏥 HOSPITAL ZONE (Center-South, X: 18, Z: 65)
+  // 7. 🏥 HOSPITAL ZONE (East Complex, X: 52, Z: 65 — safely offset from main road)
   // ==========================================
   const hospGroup = new THREE.Group();
-  hospGroup.position.set(18, 0, 65);
+  hospGroup.position.set(52, 0, 65);
+
+  // Hospital Entrance Paved Access Driveway & Ambulance Bay (connecting from Main Road X: 9 to Hospital X: 40)
+  const hospDrivewayGeo = new THREE.PlaneGeometry(36, 11);
+  hospDrivewayGeo.rotateX(-Math.PI / 2);
+  const hospDrivewayMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+  const hospDriveway = new THREE.Mesh(hospDrivewayGeo, hospDrivewayMat);
+  hospDriveway.position.set(-18, 0.082, 0);
+  hospDriveway.receiveShadow = true;
+  hospGroup.add(hospDriveway);
+
+  // Entrance Gate Pillars on road boundary (X: -36 relative to hospGroup is X: 16)
+  const gatePillarMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
+  const pillarGeo = new THREE.BoxGeometry(0.8, 3.2, 0.8);
+  const pillarL = new THREE.Mesh(pillarGeo, gatePillarMat);
+  pillarL.position.set(-36, 1.6, 6);
+  const pillarR = new THREE.Mesh(pillarGeo, gatePillarMat);
+  pillarR.position.set(-36, 1.6, -6);
+  // Gate arch / banner
+  const archGeo = new THREE.BoxGeometry(0.5, 0.8, 12.8);
+  const arch = new THREE.Mesh(archGeo, gatePillarMat);
+  arch.position.set(-36, 3.4, 0);
+  hospGroup.add(pillarL, pillarR, arch);
 
   // Govt Taluk Hospital Main Building (താലൂക്ക് ആശുപത്രി)
   const hospWalls = new THREE.Mesh(new THREE.BoxGeometry(26, 8.5, 15), new THREE.MeshLambertMaterial({ color: 0xf0fdf4 }));
@@ -504,18 +553,236 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
   emSign.position.set(0, 4.8, 7.6);
 
   hospGroup.add(hospWalls, hospRoof, rcH, rcV, emSign);
-  colliders.push({ minX: 4, maxX: 32, minZ: 56, maxZ: 74 });
+  // Colliders for Hospital Main Building (absolute world coords: X: 39 to 65, Z: 57 to 73)
+  colliders.push({ minX: 38, maxX: 66, minZ: 56, maxZ: 74 });
 
-  // Jan Aushadhi Medical Pharmacy (മെഡിക്കൽ ഷോപ്പ്)
+  // Jan Aushadhi Medical Pharmacy (മെഡിക്കൽ ഷോപ്പ്) — placed along the hospital courtyard, far clear of road
   const medShop = new THREE.Group();
   const medWalls = new THREE.Mesh(new THREE.BoxGeometry(9, 3.8, 6), new THREE.MeshLambertMaterial({ color: 0xffffff }));
   medWalls.position.set(0, 1.9, 0);
   const medSign = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.9, 0.1), new THREE.MeshLambertMaterial({ color: 0x16a34a }));
   medSign.position.set(0, 3.2, 3.06);
   medShop.add(medWalls, medSign);
-  medShop.position.set(-18, 0, 0);
+  medShop.position.set(-16, 0, 13);
   hospGroup.add(medShop);
-  colliders.push({ minX: -24, maxX: -12, minZ: 61, maxZ: 69 });
+  // Colliders for Pharmacy (absolute world coords: X: 31 to 41, Z: 75 to 81)
+  colliders.push({ minX: 31, maxX: 41, minZ: 75, maxZ: 81 });
+
+  // =========================================================================
+  // 🚑 SIDE OF HOSPITAL: 108 AMBULANCE PARKING BAY & AMBULANCE (ആംബുലൻസ് പാർക്കിംഗ്)
+  // Situated on the North side of the hospital building (Z: -6 to -17, X: -8 to +8)
+  // Directly connected to the main entrance driveway.
+  // =========================================================================
+  const ambBayGroup = new THREE.Group();
+
+  // 1. Tarmac / Asphalt Parking Apron & Bay Pavement (connecting to driveway)
+  const apronGeo = new THREE.PlaneGeometry(17, 12);
+  apronGeo.rotateX(-Math.PI / 2);
+  const apronMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+  const apron = new THREE.Mesh(apronGeo, apronMat);
+  apron.position.set(-0.5, 0.084, -11.5);
+  apron.receiveShadow = true;
+  ambBayGroup.add(apron);
+
+  // Driveway connecting spur (smooth blend between main driveway and side parking)
+  const spurGeo = new THREE.PlaneGeometry(10, 6.5);
+  spurGeo.rotateX(-Math.PI / 2);
+  const spur = new THREE.Mesh(spurGeo, apronMat);
+  spur.position.set(-10, 0.083, -4);
+  ambBayGroup.add(spur);
+
+  // Painted parking bay slot lines (Bay 1 & Bay 2)
+  const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 }); // Safety Yellow
+  const whiteLineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const redDecalMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+
+  // Bay 1 & Bay 2 divider & boundary lines
+  for (let lx of [-7.5, -0.5, 6.5]) {
+    const bLine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 9.8), lineMat);
+    bLine.position.set(lx, 0.09, -11.5);
+    ambBayGroup.add(bLine);
+  }
+  // Stop boundary line across bays
+  const stopLine = new THREE.Mesh(new THREE.BoxGeometry(14.2, 0.02, 0.25), lineMat);
+  stopLine.position.set(-0.5, 0.09, -6.8);
+  ambBayGroup.add(stopLine);
+
+  // Painted Ground Decal: Emergency Red Cross on white square in front of ambulance bay
+  const decalBg = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.02, 2.4), whiteLineMat);
+  decalBg.position.set(-4, 0.091, -7.8);
+  const decalCrossH = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.025, 0.55), redDecalMat);
+  decalCrossH.position.set(-4, 0.093, -7.8);
+  const decalCrossV = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.025, 1.8), redDecalMat);
+  decalCrossV.position.set(-4, 0.093, -7.8);
+  ambBayGroup.add(decalBg, decalCrossH, decalCrossV);
+
+  // Painted "108 AMBULANCE ONLY" red marker plate on ground
+  const textPlate = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.02, 1.1), redDecalMat);
+  textPlate.position.set(-4, 0.092, -15.2);
+  const textPlateInner = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.022, 0.8), whiteLineMat);
+  textPlateInner.position.set(-4, 0.093, -15.2);
+  ambBayGroup.add(textPlate, textPlateInner);
+
+  // Concrete wheel stop bumpers (with yellow/black hazard bands)
+  const bumperMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+  const bumper1 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.22, 0.35), bumperMat);
+  bumper1.position.set(-4, 0.19, -15.8);
+  const bumper2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.22, 0.35), bumperMat);
+  bumper2.position.set(3, 0.19, -15.8);
+  ambBayGroup.add(bumper1, bumper2);
+
+  // 2. Covered Kerala Hospital Portico Shelter (ആംബുലൻസ് പോർട്ടിക്കോ)
+  const porticoGroup = new THREE.Group();
+  const steelMat = new THREE.MeshLambertMaterial({ color: 0x15803d }); // Hospital Green
+  const whiteMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const roofSheetMat = new THREE.MeshLambertMaterial({ color: 0x166534 });
+
+  // 4 Main Structural Steel Support Columns with hazard protective plinth sleeves
+  const colGeo = new THREE.CylinderGeometry(0.16, 0.16, 4.4, 10);
+  const sleeveGeo = new THREE.BoxGeometry(0.5, 0.6, 0.5);
+  const sleeveMat = new THREE.MeshLambertMaterial({ color: 0xfacc15 });
+
+  const colCoords: [number, number][] = [
+    [-7.6, -7.2],
+    [6.6, -7.2],
+    [-7.6, -16.0],
+    [6.6, -16.0],
+  ];
+
+  colCoords.forEach(([cx, cz]) => {
+    const col = new THREE.Mesh(colGeo, steelMat);
+    col.position.set(cx, 2.2, cz);
+    const sleeve = new THREE.Mesh(sleeveGeo, sleeveMat);
+    sleeve.position.set(cx, 0.3, cz);
+    porticoGroup.add(col, sleeve);
+  });
+
+  // Perimeter Roof Trusses & Steel Beams
+  const beamLongMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
+  const beamFront = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.3, 0.3), beamLongMat);
+  beamFront.position.set(-0.5, 4.3, -7.2);
+  const beamBack = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.3, 0.3), beamLongMat);
+  beamBack.position.set(-0.5, 4.3, -16.0);
+  const beamLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 9.1), beamLongMat);
+  beamLeft.position.set(-7.6, 4.3, -11.6);
+  const beamRight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 9.1), beamLongMat);
+  beamRight.position.set(6.6, 4.3, -11.6);
+  porticoGroup.add(beamFront, beamBack, beamLeft, beamRight);
+
+  // Sloped Weather Canopy Roof with green fascia
+  const porticoRoof = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.25, 9.8), roofSheetMat);
+  porticoRoof.position.set(-0.5, 4.5, -11.6);
+  porticoRoof.rotation.x = 0.03; // slight drainage slope
+  const roofFascia = new THREE.Mesh(new THREE.BoxGeometry(15.4, 0.45, 0.1), whiteMat);
+  roofFascia.position.set(-0.5, 4.4, -6.9);
+  porticoGroup.add(porticoRoof, roofFascia);
+
+  // Front Illuminated Overhead Signboard: "108 EMERGENCY AMBULANCE BAY"
+  const signBack = new THREE.Mesh(new THREE.BoxGeometry(11.2, 0.9, 0.15), redDecalMat);
+  signBack.position.set(-0.5, 4.9, -6.85);
+  const signInner = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.65, 0.18), whiteMat);
+  signInner.position.set(-0.5, 4.9, -6.85);
+
+  // Red Cross Medallion on canopy signboard apex
+  const signCrossH = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.26, 0.22), redDecalMat);
+  signCrossH.position.set(-5.0, 4.9, -6.83);
+  const signCrossV = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.9, 0.22), redDecalMat);
+  signCrossV.position.set(-5.0, 4.9, -6.83);
+
+  // Green 24x7 Emergency Status Light Beacon
+  const greenBeacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, 10, 10),
+    new THREE.MeshBasicMaterial({ color: 0x22c55e })
+  );
+  greenBeacon.position.set(4.5, 4.9, -6.8);
+  porticoGroup.add(signBack, signInner, signCrossH, signCrossV, greenBeacon);
+
+  // Under-canopy bright ceiling fluorescent light fixtures
+  for (let lz of [-9.5, -13.5]) {
+    for (let lx of [-4, 3]) {
+      const lampTube = new THREE.Mesh(
+        new THREE.BoxGeometry(1.8, 0.08, 0.2),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      lampTube.position.set(lx, 4.25, lz);
+      porticoGroup.add(lampTube);
+    }
+  }
+
+  ambBayGroup.add(porticoGroup);
+
+  // 3. Side Hospital Emergency Entrance Door & Stretcher Patient Ramp
+  // Connects directly onto the hospital side wall at Z = -7.5
+  const rampGeo = new THREE.BoxGeometry(5.2, 0.26, 2.6);
+  const ramp = new THREE.Mesh(rampGeo, new THREE.MeshLambertMaterial({ color: 0x64748b }));
+  ramp.position.set(-1.0, 0.13, -7.5);
+  // Double casualty emergency doors
+  const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.8, 0.12), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
+  doorFrame.position.set(-1.0, 1.4, -7.4);
+  const doorSign = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.35, 0.15), redDecalMat);
+  doorSign.position.set(-1.0, 2.7, -7.38);
+  ambBayGroup.add(ramp, doorFrame, doorSign);
+
+  // 4. Staged Medical Trauma Equipment beside Ambulance Bay
+  // Stretcher Gurney (ട്രോളി / സ്ട്രെച്ചർ)
+  const gurney = new THREE.Group();
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.85, roughness: 0.2 });
+  const stretcherBed = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.1, 2.1), whiteMat);
+  stretcherBed.position.set(0, 0.75, 0);
+  const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 0.4), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
+  pillow.position.set(0, 0.83, 0.7);
+  const gurneyFrame = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.55, 1.8), chromeMat);
+  gurneyFrame.position.set(0, 0.4, 0);
+  // IV Drip Pole with saline bottle
+  const ivPole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.3, 8), chromeMat);
+  ivPole.position.set(0.38, 1.35, 0.8);
+  const ivBottle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.06, 0.2, 8),
+    new THREE.MeshLambertMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.8 })
+  );
+  ivBottle.position.set(0.38, 1.8, 0.8);
+  gurney.add(stretcherBed, pillow, gurneyFrame, ivPole, ivBottle);
+  gurney.position.set(-1.2, 0, -11.5);
+  ambBayGroup.add(gurney);
+
+  // Dual Medical Oxygen Cylinders on Steel Rack (ഓക്സിജൻ സിലിണ്ടറുകൾ)
+  const o2Rack = new THREE.Group();
+  const o2CylMat = new THREE.MeshLambertMaterial({ color: 0x15803d }); // Medical Oxygen Green
+  const o2NeckMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  for (let ox of [-0.22, 0.22]) {
+    const tankBody = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.25, 12), o2CylMat);
+    tankBody.position.set(ox, 0.7, 0);
+    const tankTop = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), o2NeckMat);
+    tankTop.position.set(ox, 1.32, 0);
+    const valve = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.15, 8), chromeMat);
+    valve.position.set(ox, 1.5, 0);
+    o2Rack.add(tankBody, tankTop, valve);
+  }
+  o2Rack.position.set(5.5, 0, -15.2);
+  ambBayGroup.add(o2Rack);
+
+  // Safety traffic caution cones (bright fluorescent orange with white reflective ring)
+  const coneMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
+  const coneRingMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  for (let cx of [-6.8, -1.2]) {
+    const coneBase = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.04, 0.42), coneMat);
+    coneBase.position.set(cx, 0.1, -6.6);
+    const coneBody = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.65, 10), coneMat);
+    coneBody.position.set(cx, 0.42, -6.6);
+    const coneRing = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.16, 10), coneRingMat);
+    coneRing.position.set(cx, 0.38, -6.6);
+    ambBayGroup.add(coneBase, coneBody, coneRing);
+  }
+
+  // 5. 🚑 AMERICAN TYPE III MODULAR BOX AMBULANCE (ambu.jpg)
+  const { group: ambulanceGroup } = buildAmericanBoxAmbulance();
+  ambulanceGroup.position.set(-4.0, 0, -11.5);
+  ambulanceGroup.rotation.y = 0; // Parked in Bay 1 facing forward towards the driveway!
+  ambBayGroup.add(ambulanceGroup);
+  hospGroup.add(ambBayGroup);
+
+  // Colliders for Ambulance Parking Bay & Shelter Pillars (absolute world coords: X: 44 to 59, Z: 49 to 58)
+  colliders.push({ minX: 44, maxX: 59, minZ: 49, maxZ: 58 });
 
   mapGroup.add(hospGroup);
 

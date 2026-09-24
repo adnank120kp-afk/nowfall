@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KIZHAKKUMPURAM_12_DISTRICTS, DistrictInfo } from './BigMapBuilder';
+import { KERALA_14_DISTRICTS, DistrictInfo } from './BigMapBuilder';
 
 interface BigMapModalProps {
   isOpen: boolean;
@@ -9,9 +9,14 @@ interface BigMapModalProps {
 }
 
 export function BigMapModal({ isOpen, onClose, onFastTravel, playerPos }: BigMapModalProps) {
-  const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo>(KIZHAKKUMPURAM_12_DISTRICTS[4]); // default Town Center
+  const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo>(KERALA_14_DISTRICTS[7]); // default Ernakulam / Town Center
+  const [filterRegion, setFilterRegion] = useState<'ALL' | 'North' | 'Central' | 'South' | 'High Range'>('ALL');
 
   if (!isOpen) return null;
+
+  const filteredDistricts = filterRegion === 'ALL'
+    ? KERALA_14_DISTRICTS
+    : KERALA_14_DISTRICTS.filter(d => d.category === filterRegion);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 select-none animate-fadeIn">
@@ -23,14 +28,14 @@ export function BigMapModal({ isOpen, onClose, onFastTravel, playerPos }: BigMap
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-black tracking-wide text-emerald-300 uppercase">
-                  BIG MAP • KIZHAKKUMPURAM (കിഴക്കുംപുറം)
+                  NAATTILE SCENE — KERALA MEGA MAP (14 DISTRICTS)
                 </h2>
                 <span className="text-[10px] bg-amber-400 text-black px-2 py-0.5 rounded-full font-extrabold uppercase">
-                  12 Districts
+                  14 Districts
                 </span>
               </div>
               <p className="text-xs text-zinc-400 font-sans">
-                Full 3D Kerala open world map spanning from Northern Highland Hills to Southern Arabian Sea Coastline.
+                Full Kerala geography from Kasaragod in the North to Thiruvananthapuram in the South • Western Ghats &amp; Arabian Sea.
               </p>
             </div>
           </div>
@@ -43,55 +48,65 @@ export function BigMapModal({ isOpen, onClose, onFastTravel, playerPos }: BigMap
           </button>
         </div>
 
-        {/* Modal Body: Split between Interactive ASCII / Diagram Map & 12 Districts Grid */}
+        {/* Modal Body: Split between Interactive ASCII / Diagram Map & 14 Districts Grid */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {/* 1. ASCII Map Schematic with Live Interactive Hotspots */}
           <div className="bg-[#030d08] border border-emerald-500/40 rounded-2xl p-3 sm:p-4 text-emerald-400 text-[11px] sm:text-xs overflow-x-auto shadow-inner">
             <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider mb-2 flex items-center justify-between">
-              <span>Highway Network &amp; Arterial Blueprint</span>
+              <span>🗺️ Kerala Open-World Arterial Highway Blueprint</span>
               <span className="text-amber-300 font-mono">NORTH ▲ | ▼ SOUTH</span>
             </div>
 
             {/* Visual ASCII Map Diagram */}
             <pre className="font-mono leading-relaxed text-zinc-300 select-text">
-{`                         🌴 NORTH KIZHAKKUMPURAM
-                    ┌─────────────────────────────┐
-                    │   🌲 Forest (തേക്ക് കാട്)     │
-                    │   🏕️ Hill Ghat Road         │
-                    │         ⛰️ View Point        │
-                    └──────────────┬──────────────┘
-                                   │  🛣️ MAIN HIGHWAY (SH-17)
-             🏘️ OLD VILLAGE ──────┼────── 🏫 SCHOOL AREA
-             │                     │              │
-       🏠 Old Houses          🛣️ MAIN ROAD       │  St. Mary's School
-       🕌 Juma Masjid              │          🏏 Sevens Ground
-       ☕ Nair Chaya Kada          │
-             │              🏙️ KIZHAKKUMPURAM      │
-             │                 TOWN CENTER         │
-             │                     │               │
-        🌾 Paddy Village      🏥 Taluk Hospital 🛍️ Daily Bazaar & Fish
-        (നെൽപ്പാടം)                │               │
-             │                  🚌 KSRTC Stand     │
-             │                     │               │
-             └──────────────┬──────┴───────────────┘
-                            │
-                       🌉 THE BIG BRIDGE
-                            │  🌊 River Zone (വലിയ പുഴ)
-                 ┌──────────┴──────────┐
-                 │                     │
-            🌴 Riverside          🛶 Boat Area
-                 │                     │
-                 │               🛶 Backwater (കെട്ടുവള്ളം)
-                 │                     │
-                 └──────────┬──────────┘
-                            │
-                     🌴 SOUTH COAST ROAD
-                            │
-                    🏖️ LIGHTHOUSE BEACH (അറബിക്കടൽ)`}
+{`                         NORTH
+                           ↑
+      🏔️ WESTERN GHATS / FOREST
+      ╔═══════════════════════════════════════════════════════╗
+      ║  🌲  ⛰️  🌲  🐘  ⛰️  🌲  (Highland Forest Range)       ║
+      ║                                                       ║
+      ║  [01] KASARAGOD ───────── [02] KANNUR                 ║
+      ║         │                       │                     ║
+SEA ← ║         │                [03] KOZHIKODE               ║ → GHATS
+      ║         │                       │                     ║
+      ║  [05] MALAPPURAM ──────── [04] WAYANAD (Ghats)        ║
+      ║         │                       │                     ║
+      ║  [06] PALAKKAD ────────── [07] THRISSUR (Pooram)      ║
+      ║                 │               │                     ║
+      ║             [08] ERNAKULAM ─ [09] IDUKKI (Arch Dam)   ║
+      ║                 │               │                     ║
+      ║             [10] KOTTAYAM ──────┘                     ║
+      ║                 │                                     ║
+      ║             [11] ALAPPUZHA ── Backwaters & Houseboat  ║
+      ║                 │                                     ║
+      ║             [12] PATHANAMTHITTA ── [13] KOLLAM Port   ║
+      ║                 │                                     ║
+      ║             [14] THIRUVANANTHAPURAM (Capital Coast)   ║
+      ╚═══════════════════════════════════════════════════════╝
+                           ↓
+                         SOUTH`}
             </pre>
           </div>
 
-          {/* 2. 12 Major Districts Card Selection Grid */}
+          {/* Region Filter Buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] text-zinc-400 uppercase font-bold mr-1">Region Filter:</span>
+            {(['ALL', 'North', 'Central', 'South', 'High Range'] as const).map(reg => (
+              <button
+                key={reg}
+                onClick={() => setFilterRegion(reg)}
+                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                  filterRegion === reg
+                    ? 'bg-emerald-500 text-black'
+                    : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900/60'
+                }`}
+              >
+                {reg} {reg === 'ALL' ? '(14)' : ''}
+              </button>
+            ))}
+          </div>
+
+          {/* 2. 14 Major Districts Card Selection Grid */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -102,7 +117,7 @@ export function BigMapModal({ isOpen, onClose, onFastTravel, playerPos }: BigMap
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {KIZHAKKUMPURAM_12_DISTRICTS.map((d) => {
+              {filteredDistricts.map((d) => {
                 const isSelected = selectedDistrict.id === d.id;
                 return (
                   <div
@@ -123,7 +138,7 @@ export function BigMapModal({ isOpen, onClose, onFastTravel, playerPos }: BigMap
                             <div className="text-[10px] text-emerald-300 font-sans font-medium">{d.malayalamName}</div>
                           </div>
                         </div>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/50 text-zinc-400 border border-zinc-700/50">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/50 text-zinc-400 border border-zinc-700/50 whitespace-nowrap">
                           {d.category}
                         </span>
                       </div>

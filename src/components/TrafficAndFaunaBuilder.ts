@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildHighwayPatrolCruiser, buildAmericanBoxAmbulance, buildWidebodyMustangGT } from './VehiclesBuilder';
 
 export interface TrafficEntity {
   mesh: THREE.Group;
@@ -23,68 +24,9 @@ export interface TrafficAndFaunaSystem {
   update: (time: number, dt: number) => void;
 }
 
-// 1. Classic Ambassador Car (അംബാസഡർ)
-function buildAmbassadorCar(isTaxi = false): THREE.Group {
-  const car = new THREE.Group();
-  const bodyColor = isTaxi ? 0xf5f5f5 : 0xf8fafc;
-  const bodyMat = new THREE.MeshLambertMaterial({ color: bodyColor });
-  const chromeMat = new THREE.MeshLambertMaterial({ color: 0xe2e8f0 });
-  const glassMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
-  const blackMat = new THREE.MeshLambertMaterial({ color: 0x18181b });
-
-  // Main Rounded Lower Body
-  const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.9, 4.8), bodyMat);
-  lowerBody.position.y = 0.65;
-  lowerBody.castShadow = true;
-  car.add(lowerBody);
-
-  // Cabin / Greenhouse (Curved vintage roof)
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.85, 2.6), bodyMat);
-  cabin.position.set(0, 1.45, -0.2);
-  const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.75, 2.7), glassMat);
-  windshield.position.set(0, 1.45, -0.2);
-  car.add(cabin, windshield);
-
-  // Chrome Curved Grille & Bumpers
-  const frontBumper = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.25, 0.35), chromeMat);
-  frontBumper.position.set(0, 0.45, 2.45);
-  const rearBumper = frontBumper.clone();
-  rearBumper.position.set(0, 0.45, -2.45);
-  const grille = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 0.15), chromeMat);
-  grille.position.set(0, 0.75, 2.42);
-  car.add(frontBumper, rearBumper, grille);
-
-  // Round Headlights & Amber indicators
-  const lightGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 12);
-  lightGeo.rotateX(Math.PI / 2);
-  const hlL = new THREE.Mesh(lightGeo, new THREE.MeshBasicMaterial({ color: 0xfef08a }));
-  hlL.position.set(-0.85, 0.8, 2.43);
-  const hlR = hlL.clone();
-  hlR.position.x = 0.85;
-  car.add(hlL, hlR);
-
-  // Taxi Roof Sign if Taxi
-  if (isTaxi) {
-    const taxiSign = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.25, 0.3), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-    taxiSign.position.set(0, 1.98, -0.2);
-    car.add(taxiSign);
-  }
-
-  // 4 Wheels
-  const wheelGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.3, 12);
-  wheelGeo.rotateZ(Math.PI / 2);
-  for (let wx of [-1.15, 1.15]) {
-    for (let wz of [-1.4, 1.4]) {
-      const w = new THREE.Mesh(wheelGeo, blackMat);
-      w.position.set(wx, 0.38, wz);
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.32, 8), chromeMat);
-      cap.rotateZ(Math.PI / 2);
-      cap.position.copy(w.position);
-      car.add(w, cap);
-    }
-  }
-
-  return car;
+// 1. Widebody Ford Mustang GT Sports Car (മുസ്തങ് - musthu.jpg)
+function buildAmbassadorCar(_isTaxi = false): THREE.Group {
+  return buildWidebodyMustangGT();
 }
 
 // 2. Kerala Goods Lorry (കേരള ഗുഡ്സ് ലോറി • "HORN PLEASE")
@@ -144,109 +86,14 @@ function buildKeralaGoodsLorry(): THREE.Group {
   return lorry;
 }
 
-// 3. 108 Kerala Ambulance (ആംബുലൻസ്)
+// 3. American Type III Modular Box Ambulance (ആംബുലൻസ് - ambu.jpg)
 function buildAmbulance(): { group: THREE.Group; lightBeacon: THREE.PointLight } {
-  const amb = new THREE.Group();
-  const whiteMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  const redMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 });
-  const blueMat = new THREE.MeshLambertMaterial({ color: 0x1d4ed8 });
-  const blackMat = new THREE.MeshLambertMaterial({ color: 0x18181b });
-
-  // Main Ambulance Van Body
-  const vanBody = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.1, 5.2), whiteMat);
-  vanBody.position.y = 1.4;
-  amb.add(vanBody);
-
-  // Red & Blue Emergency Side Stripes
-  const stripeR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 5.0), redMat);
-  stripeR.position.set(1.16, 1.3, 0);
-  const stripeL = stripeR.clone();
-  stripeL.position.x = -1.16;
-  const stripeBlueR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 5.0), blueMat);
-  stripeBlueR.position.set(1.16, 0.95, 0);
-  const stripeBlueL = stripeBlueR.clone();
-  stripeBlueL.position.x = -1.16;
-  amb.add(stripeR, stripeL, stripeBlueR, stripeBlueL);
-
-  // Red Cross emblem on sides
-  const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.25, 0.8), redMat);
-  crossH.position.set(1.17, 1.8, 0.5);
-  const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.25), redMat);
-  crossV.position.set(1.17, 1.8, 0.5);
-  amb.add(crossH, crossV);
-
-  // Emergency Siren Lightbar on Roof
-  const sirenBase = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.25, 0.4), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
-  sirenBase.position.set(0, 2.55, 0.8);
-  const redSiren = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.28, 0.35), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
-  redSiren.position.set(-0.4, 2.65, 0.8);
-  const blueSiren = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.28, 0.35), new THREE.MeshBasicMaterial({ color: 0x3b82f6 }));
-  blueSiren.position.set(0.4, 2.65, 0.8);
-  amb.add(sirenBase, redSiren, blueSiren);
-
-  const lightBeacon = new THREE.PointLight(0xef4444, 2.5, 20);
-  lightBeacon.position.set(0, 2.8, 0.8);
-  amb.add(lightBeacon);
-
-  // 4 Wheels
-  const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 12);
-  wheelGeo.rotateZ(Math.PI / 2);
-  for (let wx of [-1.15, 1.15]) {
-    for (let wz of [-1.6, 1.6]) {
-      const w = new THREE.Mesh(wheelGeo, blackMat);
-      w.position.set(wx, 0.4, wz);
-      amb.add(w);
-    }
-  }
-
-  return { group: amb, lightBeacon };
+  return buildAmericanBoxAmbulance();
 }
 
-// 4. Kerala Police Jeep (പോലീസ് ജീപ്പ്)
+// 4. Highway Patrol Police Cruiser (ഹൈവേ പട്രോൾ പോലീസ് കാർ)
 function buildPoliceJeep(): { group: THREE.Group; lightBeacon: THREE.PointLight } {
-  const jeep = new THREE.Group();
-  const blueMat = new THREE.MeshLambertMaterial({ color: 0x1e3a8a }); // Kerala Police Navy Blue
-  const whiteMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  const blackMat = new THREE.MeshLambertMaterial({ color: 0x18181b });
-
-  // Jeep Hood & Tub Body
-  const hood = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.7, 2.2), blueMat);
-  hood.position.set(0, 0.95, 1.1);
-  const tub = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.8, 2.2), blueMat);
-  tub.position.set(0, 1.0, -1.1);
-  jeep.add(hood, tub);
-
-  // White Canvas Hood / Roof Frame
-  const canvasRoof = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.85, 2.3), whiteMat);
-  canvasRoof.position.set(0, 1.9, -1.1);
-  jeep.add(canvasRoof);
-
-  // Windshield Frame
-  const wsFrame = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.8, 0.15), blueMat);
-  wsFrame.position.set(0, 1.65, 0.05);
-  jeep.add(wsFrame);
-
-  // Roof Police Flasher Bar
-  const lightbar = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.22, 0.3), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
-  lightbar.position.set(0, 2.42, -0.3);
-  jeep.add(lightbar);
-
-  const lightBeacon = new THREE.PointLight(0x3b82f6, 2.0, 18);
-  lightBeacon.position.set(0, 2.6, -0.3);
-  jeep.add(lightBeacon);
-
-  // Heavy Duty Wheels
-  const wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.35, 14);
-  wheelGeo.rotateZ(Math.PI / 2);
-  for (let wx of [-1.1, 1.1]) {
-    for (let wz of [-1.2, 1.2]) {
-      const w = new THREE.Mesh(wheelGeo, blackMat);
-      w.position.set(wx, 0.45, wz);
-      jeep.add(w);
-    }
-  }
-
-  return { group: jeep, lightBeacon };
+  return buildHighwayPatrolCruiser();
 }
 
 // 5. Vintage Bajaj Chetak Scooter (സ്കൂട്ടർ)
@@ -287,38 +134,203 @@ function buildBajajChetakScooter(color = 0x86efac): THREE.Group {
   return scooter;
 }
 
-// 6. Classic Village Hero Bicycle (സൈക്കിൾ)
+// 6. Modern Mountain Bicycle MTB (മൗണ്ടൻ സൈക്കിൾ — യെല്ലോ ഫ്രെയിം)
+// Authentic Hardtail MTB matching the user's technical blueprint (sicu.jpg):
+// Bright vibrant yellow diamond frame with sloping top tube,
+// black front suspension fork w/ dual stanchions, wide flat MTB handlebars
+// w/ black ergonomic grips & brake levers, slim racing saddle,
+// knobby off-road MTB tread tires w/ disc brakes & black spoked rims,
+// crankset w/ chainring, pedals, chain & rear derailleur.
 function buildVillageBicycle(): THREE.Group {
   const bike = new THREE.Group();
-  const steelMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
-  const chromeMat = new THREE.MeshLambertMaterial({ color: 0xd4d4d8 });
-  const blackMat = new THREE.MeshLambertMaterial({ color: 0x09090b });
 
-  // Diamond Frame tubes
-  const topTube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.9, 5), steelMat);
-  topTube.rotateX(Math.PI / 2);
-  topTube.position.set(0, 0.9, 0);
-  const downTube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 5), steelMat);
-  downTube.rotateX(Math.PI / 3);
-  downTube.position.set(0, 0.65, 0.3);
-  const seatTube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.85, 5), steelMat);
-  seatTube.position.set(0, 0.65, -0.35);
+  const yellowFrameMat = new THREE.MeshStandardMaterial({
+    color: 0xfacc15, // Bright vibrant yellow MTB frame
+    roughness: 0.35,
+    metalness: 0.2,
+  });
+  const blackMetalMat = new THREE.MeshStandardMaterial({
+    color: 0x18181b,
+    roughness: 0.5,
+    metalness: 0.6,
+  });
+  const chromeMat = new THREE.MeshStandardMaterial({
+    color: 0xe4e4e7,
+    roughness: 0.2,
+    metalness: 0.9,
+  });
+  const tireMat = new THREE.MeshStandardMaterial({
+    color: 0x111111,
+    roughness: 0.95,
+  });
 
-  // Wheels
-  const wheelGeo = new THREE.TorusGeometry(0.38, 0.03, 6, 16);
-  const frontWheel = new THREE.Mesh(wheelGeo, blackMat);
-  frontWheel.position.set(0, 0.38, 0.75);
-  const rearWheel = new THREE.Mesh(wheelGeo, blackMat);
-  rearWheel.position.set(0, 0.38, -0.75);
+  // 1. MTB Hardtail Yellow Diamond Frame
+  // Sloping Top Tube (from head tube to seat tube junction)
+  const topTube = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.76, 8), yellowFrameMat);
+  topTube.rotation.x = 1.35;
+  topTube.position.set(0, 0.88, 0.08);
+  topTube.castShadow = true;
+  bike.add(topTube);
 
-  // Handlebars & Bell
-  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.65, 6), chromeMat);
-  handle.rotateZ(Math.PI / 2);
-  handle.position.set(0, 1.15, 0.55);
-  const bell = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-  bell.position.set(0.18, 1.2, 0.55);
+  // Stout Down Tube (from head tube to bottom bracket)
+  const downTube = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.84, 8), yellowFrameMat);
+  downTube.rotation.x = 0.88;
+  downTube.position.set(0, 0.68, 0.26);
+  downTube.castShadow = true;
+  bike.add(downTube);
 
-  bike.add(topTube, downTube, seatTube, frontWheel, rearWheel, handle, bell);
+  // Seat Tube (from bottom bracket to saddle clamp)
+  const seatTube = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.74, 8), yellowFrameMat);
+  seatTube.rotation.x = -0.28;
+  seatTube.position.set(0, 0.72, -0.28);
+  bike.add(seatTube);
+
+  // Head Tube (front steer column)
+  const headTube = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.22, 8), yellowFrameMat);
+  headTube.rotation.x = -0.32;
+  headTube.position.set(0, 0.98, 0.44);
+  bike.add(headTube);
+
+  // Chainstays (bottom bracket to rear dropout)
+  [-0.07, 0.07].forEach((x) => {
+    const chainStay = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.58, 6), yellowFrameMat);
+    chainStay.rotation.x = Math.PI / 2 + 0.12;
+    chainStay.position.set(x, 0.44, -0.56);
+    bike.add(chainStay);
+  });
+
+  // Seatstays (seat cluster to rear dropout)
+  [-0.07, 0.07].forEach((x) => {
+    const seatStay = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.65, 6), yellowFrameMat);
+    seatStay.rotation.x = 0.58;
+    seatStay.position.set(x, 0.64, -0.58);
+    bike.add(seatStay);
+  });
+
+  // 2. Black Front Suspension Fork with Dual Stanchions
+  const forkCrown = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.06), blackMetalMat);
+  forkCrown.position.set(0, 0.9, 0.47);
+  bike.add(forkCrown);
+
+  [-0.07, 0.07].forEach((x) => {
+    // Upper chrome stanchion
+    const stanchion = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.35, 8), chromeMat);
+    stanchion.rotation.x = -0.32;
+    stanchion.position.set(x, 0.78, 0.51);
+    bike.add(stanchion);
+
+    // Lower black suspension slider leg
+    const lowerLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.022, 0.42, 8), blackMetalMat);
+    lowerLeg.rotation.x = -0.32;
+    lowerLeg.position.set(x, 0.52, 0.6);
+    bike.add(lowerLeg);
+  });
+
+  // 3. Wide Straight Flat MTB Handlebars & Grips
+  const handlebar = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.74, 8), blackMetalMat);
+  handlebar.rotation.z = Math.PI / 2;
+  handlebar.position.set(0, 1.08, 0.42);
+  bike.add(handlebar);
+
+  // Black Rubber Ergonomic Grips
+  [-0.32, 0.32].forEach((x) => {
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.14, 8), blackMetalMat);
+    grip.rotation.z = Math.PI / 2;
+    grip.position.set(x, 1.08, 0.42);
+    bike.add(grip);
+
+    // Brake Levers
+    const lever = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.015, 0.02), chromeMat);
+    lever.position.set(x > 0 ? x - 0.06 : x + 0.06, 1.06, 0.47);
+    bike.add(lever);
+  });
+
+  // 4. Slim Ergonomic MTB Racing Saddle & Black Seatpost
+  const seatpost = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.32, 8), blackMetalMat);
+  seatpost.rotation.x = -0.28;
+  seatpost.position.set(0, 1.02, -0.37);
+  bike.add(seatpost);
+
+  // Saddle shape (tapered front, wider rear)
+  const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.045, 0.34), blackMetalMat);
+  saddle.position.set(0, 1.14, -0.4);
+  saddle.rotation.x = 0.08;
+  saddle.castShadow = true;
+  bike.add(saddle);
+
+  // 5. Crankset, Bottom Bracket, Pedals & Chainring
+  const bb = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.16, 12), blackMetalMat);
+  bb.rotation.z = Math.PI / 2;
+  bb.position.set(0, 0.4, -0.22);
+  bike.add(bb);
+
+  // Single front chainring w/ guard
+  const chainring = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.015, 16), blackMetalMat);
+  chainring.rotation.z = Math.PI / 2;
+  chainring.position.set(0.08, 0.4, -0.22);
+  bike.add(chainring);
+
+  // Left & right crank arms and pedals
+  [-0.1, 0.1].forEach((x, idx) => {
+    const angle = idx === 0 ? 0.7 : -2.4;
+    const crank = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.18, 0.025), blackMetalMat);
+    crank.position.set(x, 0.4 + Math.sin(angle) * 0.08, -0.22 + Math.cos(angle) * 0.08);
+    crank.rotation.x = angle;
+    bike.add(crank);
+
+    const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.09), blackMetalMat);
+    pedal.position.set(x > 0 ? x + 0.04 : x - 0.04, 0.4 + Math.sin(angle) * 0.16, -0.22 + Math.cos(angle) * 0.16);
+    bike.add(pedal);
+  });
+
+  // 6. Knobby 29" MTB Off-Road Wheels w/ Disc Rotors
+  [
+    { z: 0.76, y: 0.42 },
+    { z: -0.82, y: 0.42 },
+  ].forEach((pos) => {
+    const wheel = new THREE.Group();
+
+    // Chunky knobby MTB tire
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(0.39, 0.055, 12, 24), tireMat);
+    tire.castShadow = true;
+    wheel.add(tire);
+
+    // Tire tread blocks / knobs
+    for (let k = 0; k < 18; k++) {
+      const angle = (k / 18) * Math.PI * 2;
+      const knob = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.025, 0.045), tireMat);
+      knob.position.set(0, Math.cos(angle) * 0.43, Math.sin(angle) * 0.43);
+      knob.rotation.x = angle;
+      wheel.add(knob);
+    }
+
+    // Black alloy rim
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.365, 0.016, 6, 24), blackMetalMat);
+    wheel.add(rim);
+
+    // Center hub
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.12, 10), blackMetalMat);
+    hub.rotation.x = Math.PI / 2;
+    wheel.add(hub);
+
+    // Disc brake rotor
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.01, 16), chromeMat);
+    disc.rotation.x = Math.PI / 2;
+    disc.position.x = 0.04;
+    wheel.add(disc);
+
+    // Black steel spokes
+    for (let s = 0; s < 12; s++) {
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.72, 4), blackMetalMat);
+      spoke.rotation.z = (s / 12) * Math.PI;
+      wheel.add(spoke);
+    }
+
+    wheel.position.set(0, pos.y, pos.z);
+    bike.add(wheel);
+  });
+
+  bike.scale.set(1.05, 1.05, 1.05);
   return bike;
 }
 
@@ -485,14 +497,14 @@ export function buildLivingTrafficAndFauna(): TrafficAndFaunaSystem {
   const fauna: FaunaEntity[] = [];
 
   // 1. HIGHWAY VEHICLES (Patrolling along Z axis between -280 and +310 on the main road)
-  // Vehicle A: Classic White Ambassador Taxi (Highway Northbound, lane X = -2.8)
-  const taxiAmba = buildAmbassadorCar(true);
-  taxiAmba.position.set(-2.8, 0, -80);
-  taxiAmba.rotation.y = Math.PI; // Face North (-Z)
-  masterGroup.add(taxiAmba);
+  // Vehicle A: Nardo Grey Widebody Ford Mustang GT (മുസ്തങ് - musthu.jpg) (Highway Northbound, lane X = -2.8)
+  const mustangCar = buildWidebodyMustangGT();
+  mustangCar.position.set(-2.8, 0, -80);
+  mustangCar.rotation.y = Math.PI; // Face North (-Z)
+  masterGroup.add(mustangCar);
   vehicles.push({
-    mesh: taxiAmba,
-    speed: 0.35,
+    mesh: mustangCar,
+    speed: 0.45,
     direction: -1,
     axis: 'z',
     minBound: -270,

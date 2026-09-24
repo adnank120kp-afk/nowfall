@@ -1,6 +1,6 @@
 import React from 'react';
 import { soundSynth } from '../audio';
-import { WeatherMode } from '../types';
+import { WeatherMode, VehicleType } from '../types';
 
 interface HeaderHUDProps {
   weather: WeatherMode;
@@ -14,7 +14,7 @@ interface HeaderHUDProps {
   onToggleVehicle: () => void;
   onToggleBus?: () => void;
   inVehicle: boolean;
-  vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat';
+  vehicleType?: VehicleType;
   isMapOpen: boolean;
   onToggleMap: () => void;
   isMessagesOpen: boolean;
@@ -31,7 +31,9 @@ interface HeaderHUDProps {
   onTriggerRandomScene?: () => void;
   onOpenBusinesses?: () => void;
   onOpenPhotoMode?: () => void;
-  onSelectVehicle?: (type: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => void;
+  onSelectVehicle?: (type: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang') => void;
+  onOpenBGM?: () => void;
+  isBGMPlaying?: boolean;
 }
 
 const WEATHER_LABELS: Record<WeatherMode, { label: string; icon: string }> = {
@@ -73,6 +75,8 @@ export function HeaderHUD({
   onOpenBusinesses,
   onOpenPhotoMode,
   onSelectVehicle,
+  onOpenBGM,
+  isBGMPlaying = false,
 }: HeaderHUDProps) {
   const currentWeatherData = WEATHER_LABELS[weather];
 
@@ -357,9 +361,9 @@ export function HeaderHUD({
           {onSelectVehicle && (
             <div className="flex items-center gap-1 pl-1 border-l border-emerald-800/40">
               {[
+                { type: 'mustang', icon: '🏎️', title: 'Widebody Mustang GT (മുസ്തങ്)' },
                 { type: 'tractor', icon: '🚜', title: 'Paddy Tractor' },
                 { type: 'jeep', icon: '🚙', title: 'Mountain Jeep' },
-                { type: 'bullet', icon: '🏍️', title: 'Bullet Cruiser' },
                 { type: 'boat', icon: '🚤', title: 'Backwater Boat' },
               ].map((v) => (
                 <button
@@ -409,6 +413,22 @@ export function HeaderHUD({
           <span>📦</span>
           <span className="hidden sm:inline">ZIP</span>
         </a>
+
+        {/* Background Music BGM Player Button */}
+        {onOpenBGM && (
+          <button
+            className={`h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-mono font-bold shadow-md cursor-pointer transition-all active:scale-95 ${
+              isBGMPlaying
+                ? 'bg-amber-400 text-black border-amber-300 ring-1 ring-amber-300 animate-pulse'
+                : 'bg-black/40 border-emerald-900/60 text-emerald-300 hover:bg-emerald-800/40'
+            }`}
+            onClick={onOpenBGM}
+            title="Kerala Soundtrack Radio [M]"
+          >
+            <span>🎵</span>
+            <span className="hidden sm:inline">{isBGMPlaying ? 'BGM ON' : 'BGM'}</span>
+          </button>
+        )}
 
         {/* Mute/Sound Button */}
         <button

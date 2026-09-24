@@ -526,6 +526,146 @@ export function buildBeautifulLotusPond(centerX = -80, centerZ = -75): LotusPond
   lampGroup.position.set(-13.2, 0, 5.2);
   pondGroup.add(lampGroup);
 
+  // ==============================================================
+  // 11B. 🌸 WINDING STEPPING-STONE PATH FROM SIDE ROAD TO POND
+  // Matches the user's reference image:
+  // Meandering natural flagstone slabs embedded in the lawn,
+  // lined with river rocks, lush white daisy wildflowers with golden centers,
+  // and a rustic entrance wooden signpost at the side road junction.
+  // ==============================================================
+  const trailGroup = new THREE.Group();
+
+  // Natural flagstone paver materials (layered greys and warm earth tones)
+  const flagstoneColors = [0x9ca3af, 0xb8b4aa, 0x8d8980, 0xd1d5db, 0xa39d91];
+  const flagstoneMats = flagstoneColors.map(c => new THREE.MeshLambertMaterial({ color: c }));
+  const paverBorderMat = new THREE.MeshLambertMaterial({ color: 0x6b7280 });
+  const whiteDaisyMat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  const daisyCenterMat = new THREE.MeshLambertMaterial({ color: 0xfacc15 });
+  const stemMat = new THREE.MeshLambertMaterial({ color: 0x16a34a });
+  const pebbleMatTrail = new THREE.MeshLambertMaterial({ color: 0x78716c });
+
+  // Waypoints along the meandering path from the side road (Z ~ 43) to the pond shoreline (Z ~ 13.5)
+  const pathWaypoints: THREE.Vector3[] = [
+    new THREE.Vector3(-2.2, 0, 43.0), // At side road concrete edge
+    new THREE.Vector3(-1.8, 0, 39.5),
+    new THREE.Vector3(-0.9, 0, 35.0),
+    new THREE.Vector3(0.5, 0, 30.5),
+    new THREE.Vector3(1.8, 0, 26.0),
+    new THREE.Vector3(2.4, 0, 21.5),
+    new THREE.Vector3(1.6, 0, 17.5),
+    new THREE.Vector3(0.4, 0, 14.2),  // Snug up to pond rocks & water
+  ];
+
+  const pathSpline = new THREE.CatmullRomCurve3(pathWaypoints);
+  const numPavers = 24;
+
+  for (let p = 0; p <= numPavers; p++) {
+    const t = p / numPavers;
+    const pt = pathSpline.getPoint(t);
+    const tangent = pathSpline.getTangent(t);
+    const angle = Math.atan2(tangent.x, tangent.z);
+
+    // Flat organic flagstone stepping stone
+    const paverWidth = 1.35 + (p % 3 === 0 ? 0.25 : -0.15) + (Math.sin(p * 1.7) * 0.15);
+    const paverLength = 1.1 + (Math.cos(p * 2.3) * 0.2);
+    const paverGeo = new THREE.CylinderGeometry(paverWidth * 0.5, paverWidth * 0.53, 0.08, 8);
+    const paverMesh = new THREE.Mesh(paverGeo, flagstoneMats[p % flagstoneMats.length]);
+    paverMesh.scale.set(1.0, 1.0, paverLength / paverWidth);
+    paverMesh.rotation.y = angle + (Math.random() - 0.5) * 0.3;
+    paverMesh.position.set(pt.x + (Math.random() - 0.5) * 0.12, 0.045, pt.z);
+    paverMesh.receiveShadow = true;
+    trailGroup.add(paverMesh);
+
+    // Paver grout / border rim
+    const borderGeo = new THREE.TorusGeometry(paverWidth * 0.51, 0.035, 4, 8);
+    borderGeo.rotateX(Math.PI / 2);
+    const borderMesh = new THREE.Mesh(borderGeo, paverBorderMat);
+    borderMesh.position.copy(paverMesh.position);
+    borderMesh.position.y = 0.03;
+    borderMesh.scale.set(1.0, 1.0, paverLength / paverWidth);
+    trailGroup.add(borderMesh);
+
+    // Flanking river stones along the left and right path edges
+    [-1, 1].forEach(side => {
+      const normalX = -tangent.z * side;
+      const normalZ = tangent.x * side;
+      const rockDist = paverWidth * 0.65 + 0.35 + (Math.random() * 0.3);
+      const rx = pt.x + normalX * rockDist;
+      const rz = pt.z + normalZ * rockDist;
+
+      // Small boundary rock
+      const pebble = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.24 + Math.random() * 0.22, 1),
+        pebbleMatTrail
+      );
+      pebble.scale.set(1 + Math.random() * 0.4, 0.65, 1 + Math.random() * 0.4);
+      pebble.position.set(rx, 0.08, rz);
+      pebble.rotation.set(Math.random() * 0.4, Math.random() * Math.PI, Math.random() * 0.4);
+      pebble.castShadow = true;
+      trailGroup.add(pebble);
+
+      // White Daisy Wildflowers cluster (ആമ്പൽപാതയിലെ ഡെയ്സി പൂക്കൾ)
+      if (p % 2 === 0 || side === 1) {
+        const flowerCluster = new THREE.Group();
+        const flowerCount = 2 + Math.floor(Math.random() * 3);
+
+        for (let f = 0; f < flowerCount; f++) {
+          const fx = (Math.random() - 0.5) * 0.45;
+          const fz = (Math.random() - 0.5) * 0.45;
+          const flowerH = 0.25 + Math.random() * 0.22;
+
+          // Green stem
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, flowerH, 4), stemMat);
+          stem.position.set(fx, flowerH * 0.5, fz);
+          flowerCluster.add(stem);
+
+          // Golden center disc
+          const center = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.02, 8), daisyCenterMat);
+          center.position.set(fx, flowerH + 0.01, fz);
+          flowerCluster.add(center);
+
+          // White radiating petals
+          const petals = new THREE.Mesh(new THREE.CircleGeometry(0.12, 10), whiteDaisyMat);
+          petals.rotateX(-Math.PI / 2);
+          petals.position.set(fx, flowerH, fz);
+          flowerCluster.add(petals);
+        }
+
+        flowerCluster.position.set(rx + (Math.random() - 0.5) * 0.3, 0.02, rz + (Math.random() - 0.5) * 0.3);
+        trailGroup.add(flowerCluster);
+      }
+    });
+  }
+
+  // Rustic Wooden Signpost at Road Junction (Z: 43.2, X: -3.8)
+  const signpostGroup = new THREE.Group();
+  const woodMat = new THREE.MeshLambertMaterial({ color: 0x5c3a21 });
+  const woodBoardMat = new THREE.MeshLambertMaterial({ color: 0x7c4a2d });
+  const signTextMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+
+  // Wooden vertical post
+  const signPost = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.1, 0.14), woodMat);
+  signPost.position.y = 1.05;
+  signPost.castShadow = true;
+  signpostGroup.add(signPost);
+
+  // Directional sign board pointing towards pond
+  const signBoard = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.5, 0.08), woodBoardMat);
+  signBoard.position.set(0.4, 1.85, 0);
+  signBoard.rotation.y = -0.22;
+  signpostGroup.add(signBoard);
+
+  // Sign text line (gold / yellow arrow & lettering)
+  const signTextStrip = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.3), signTextMat);
+  signTextStrip.position.set(0.4, 1.85, 0.045);
+  signTextStrip.rotation.y = -0.22;
+  signpostGroup.add(signTextStrip);
+
+  signpostGroup.position.set(-3.8, 0, 43.2);
+  trailGroup.add(signpostGroup);
+
+  pondGroup.add(trailGroup);
+
   // 12. Safe Collision Boundaries: prevent player from falling into deep center
   // Deep water basin collider centered in pond
   colliders.push({

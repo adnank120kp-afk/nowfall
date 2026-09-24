@@ -15,8 +15,8 @@ import { buildLivingTrafficAndFauna } from './TrafficAndFaunaBuilder';
 import {
   buildKeralaTractor,
   buildKeralaJeep,
-  buildKeralaBullet,
   buildKeralaBoat,
+  buildWidebodyMustangGT,
 } from './VehiclesBuilder';
 import { buildAuthenticKeralaThattukada } from './ThattukadaBuilder';
 
@@ -24,8 +24,8 @@ interface ThreeKeralaWorldProps {
   weather: WeatherMode;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
   inVehicle: boolean;
-  vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat';
-  onVehicleToggle: (inVehicle: boolean, vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => void;
+  vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang';
+  onVehicleToggle: (inVehicle: boolean, vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang') => void;
   onInteractNPC: (npc: NPCEntity) => void;
   onOpenThattukada?: () => void;
   focusTarget: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond' | null;
@@ -53,7 +53,7 @@ export function ThreeKeralaWorld({
   const worldApiRef = useRef<{
     setWeather: (w: WeatherMode) => void;
     setTimeOfDay: (t: 'morning' | 'afternoon' | 'evening' | 'night') => void;
-    toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => void;
+    toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat') => void;
     focusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond') => void;
     teleportTo: (x: number, z: number) => void;
     triggerInteract: () => void;
@@ -532,7 +532,7 @@ export function ThreeKeralaWorld({
 
     createFruitTree(-35, -45, true, 1.1);
     createFruitTree(-15, -40, false, 1.2);
-    createFruitTree(45, 55, true, 1.0);
+    // Tree at (45, 55) removed per user request to keep the ambulance bay and driveway clear
     createFruitTree(65, -80, false, 1.1);
 
     // 6. BUILDINGS & VILLAGE INFRASTRUCTURE
@@ -683,10 +683,10 @@ export function ThreeKeralaWorld({
     bsGroup.position.set(16, 0, 9.5);
     worldGroup.add(bsGroup);
 
-    // 8. VEHICLES (Auto, Bus, Tractor, Jeep, Bullet, Boat)
+    // 8. VEHICLES (Auto, Bus, Tractor, Jeep, Boat)
     interface VehicleData {
       mesh: THREE.Group;
-      type: 'auto' | 'ksrtc' | 'private_bus' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat';
+      type: 'auto' | 'ksrtc' | 'private_bus' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang';
       isPlayerVehicle: boolean;
       speed: number;
       bounds: [number, number];
@@ -789,20 +789,6 @@ export function ThreeKeralaWorld({
     };
     vehicles.push(playerJeepData);
 
-    // DRIVABLE KERALA CLASSIC BULLET MOTORCYCLE (BULLET MODE)
-    const playerBulletMesh = buildKeralaBullet();
-    playerBulletMesh.position.set(-12, 0, -8);
-    playerBulletMesh.rotation.y = Math.PI / 2;
-    worldGroup.add(playerBulletMesh);
-    const playerBulletData: VehicleData = {
-      mesh: playerBulletMesh,
-      type: 'bullet',
-      isPlayerVehicle: true,
-      speed: 0,
-      bounds: [-115, 115],
-    };
-    vehicles.push(playerBulletData);
-
     // DRIVABLE BACKWATER BOAT (BOAT MODE)
     const playerBoatMesh = buildKeralaBoat();
     playerBoatMesh.position.set(-62, 0.2, -75);
@@ -816,6 +802,20 @@ export function ThreeKeralaWorld({
       bounds: [-115, 115],
     };
     vehicles.push(playerBoatData);
+
+    // DRIVABLE WIDEBODY FORD MUSTANG GT (മുസ്തങ് - musthu.jpg)
+    const playerMustangMesh = buildWidebodyMustangGT();
+    playerMustangMesh.position.set(20, 0, 14);
+    playerMustangMesh.rotation.y = -Math.PI / 2;
+    worldGroup.add(playerMustangMesh);
+    const playerMustangData: VehicleData = {
+      mesh: playerMustangMesh,
+      type: 'mustang',
+      isPlayerVehicle: true,
+      speed: 0,
+      bounds: [-125, 125],
+    };
+    vehicles.push(playerMustangData);
 
     // Cruising Luxury Coach Buses on Highway SH-17:
     // Eastbound: White Luxury Coach
@@ -1125,6 +1125,20 @@ export function ThreeKeralaWorld({
       14, 62, 0xe2e8f0, 0x0284c7
     );
 
+    // District 5: 108 Kerala Emergency Ambulance Pilot (ആംബുലൻസ് ഡ്രൈവർ)
+    createNPC(
+      {
+        id: 'hospital_pilot_sunil',
+        name: "Sunil Chettan (സുനിൽ ചേട്ടൻ • 108 ആംബുലൻസ് ഡ്രൈവർ)",
+        malayalamName: "സുനിൽ ചേട്ടൻ • 108 ആംബുലൻസ്",
+        role: "Kerala 108 Emergency Ambulance Pilot",
+        dialogue: "“108 എമർജൻസി ആംബുലൻസ് 24 മണിക്കൂറും സദാ തയ്യാറാണ്! കിഴക്കുംപുറത്തെ ഏതൊരു അടിയന്തിര ഘട്ടത്തിലും മിനിറ്റുകൾക്കകം ഞങ്ങൾ പാഞ്ഞെത്തും. സൈറൺ കേൾക്കുമ്പോൾ ദയവായി വഴിമാറി തരണം!”",
+        avatar: "🚑",
+        tag: "HOSPITAL",
+      },
+      46.5, 54, 0xf8fafc, 0x1e293b
+    );
+
     // District 3: Daily Bazaar & Fish Monger (ചന്ത • പച്ചക്കറി & മീൻ)
     createNPC(
       {
@@ -1232,7 +1246,7 @@ export function ThreeKeralaWorld({
       sprintMultiplier: 1.8,
       isGrounded: true,
       inVehicle: false,
-      vehicleType: 'auto' as 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat',
+      vehicleType: 'auto' as 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang',
     };
 
     // 11. MONSOON RAIN SYSTEM
@@ -1323,8 +1337,54 @@ export function ThreeKeralaWorld({
     applyWeather(weather);
     applyTimeOfDay(timeOfDay);
 
-    // 12. CONTROLLER
+    // 12. CONTROLLER & 360° ROTATION SYSTEM
     const keys: Record<string, boolean> = {};
+
+    // 360° Camera Orbit & Vehicle Turn System
+    let camAzimuth = 0;
+    let camElevation = 0;
+    let isSpinning360Cam = false;
+    let spinCamStartAngle = 0;
+    let spinCamProgress = 0;
+    const spinCamDuration = 2.4; // 2.4 seconds smooth cinematic revolution
+
+    let isSpinning360Vehicle = false;
+    let spinVehicleStartAngle = 0;
+    let spinVehicleProgress = 0;
+    const spinVehicleDuration = 1.2; // 1.2 seconds fast stunt donut/spin
+
+    function trigger360Camera() {
+      isSpinning360Cam = true;
+      spinCamStartAngle = camAzimuth;
+      spinCamProgress = 0;
+      soundSynth.playSound('bell');
+    }
+
+    function trigger360Turn() {
+      if (isSpinning360Vehicle) return;
+      isSpinning360Vehicle = true;
+      spinVehicleProgress = 0;
+      if (playerState.inVehicle) {
+        const curV = vehicles.find((v) => v.isPlayerVehicle && v.type === playerState.vehicleType);
+        spinVehicleStartAngle = curV ? curV.mesh.rotation.y : 0;
+        soundSynth.playSound('whistle');
+      } else {
+        spinVehicleStartAngle = player.rotation.y;
+        soundSynth.playSound('jump');
+      }
+    }
+
+    function rotateCameraBy(deltaRad: number) {
+      camAzimuth += deltaRad;
+      isSpinning360Cam = false;
+    }
+
+    function resetCamera() {
+      camAzimuth = 0;
+      camElevation = 0;
+      isSpinning360Cam = false;
+      soundSynth.playSound('teaglass');
+    }
 
     function handleKeyDown(e: KeyboardEvent) {
       const k = e.key.toLowerCase();
@@ -1342,6 +1402,17 @@ export function ThreeKeralaWorld({
         else soundSynth.playSound('airhorn');
       } else if (k === 't') {
         soundSynth.playSound('teaglass');
+      } else if (k === '3') {
+        // 360° Camera View
+        trigger360Camera();
+      } else if (k === 'z') {
+        // 360° Vehicle Donut / Spin Stunt
+        trigger360Turn();
+      } else if (k === 'q') {
+        // Rotate camera 30° left
+        rotateCameraBy(Math.PI / 6);
+      } else if (k === '[' || k === ']') {
+        rotateCameraBy(k === '[' ? Math.PI / 6 : -Math.PI / 6);
       } else if (e.key === ' ' && playerState.isGrounded && !playerState.inVehicle) {
         playerState.velocity.y = 0.22;
         playerState.isGrounded = false;
@@ -1356,7 +1427,56 @@ export function ThreeKeralaWorld({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    function toggleVehicleState(preferredType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') {
+    // Window listeners for custom 360 events from HUD buttons
+    const handle360CamEvent = () => trigger360Camera();
+    const handle360TurnEvent = () => trigger360Turn();
+    const handleRotateLeftEvent = () => rotateCameraBy(Math.PI / 4);
+    const handleRotateRightEvent = () => rotateCameraBy(-Math.PI / 4);
+    const handleResetCamEvent = () => resetCamera();
+
+    window.addEventListener('kerala360Camera', handle360CamEvent);
+    window.addEventListener('kerala360Turn', handle360TurnEvent);
+    window.addEventListener('keralaRotateCamLeft', handleRotateLeftEvent);
+    window.addEventListener('keralaRotateCamRight', handleRotateRightEvent);
+    window.addEventListener('keralaResetCamera', handleResetCamEvent);
+
+    // Mouse & Touch 360° Drag Orbit on 3D Viewport
+    let isPointerDragging = false;
+    let lastPointerX = 0;
+    let lastPointerY = 0;
+
+    function handlePointerDown(e: PointerEvent) {
+      if ((e.target as HTMLElement).tagName === 'BUTTON' || (e.target as HTMLElement).closest('button')) return;
+      isPointerDragging = true;
+      lastPointerX = e.clientX;
+      lastPointerY = e.clientY;
+      if (container) container.style.cursor = 'grabbing';
+    }
+
+    function handlePointerMove(e: PointerEvent) {
+      if (!isPointerDragging) return;
+      const dx = e.clientX - lastPointerX;
+      const dy = e.clientY - lastPointerY;
+      lastPointerX = e.clientX;
+      lastPointerY = e.clientY;
+
+      camAzimuth -= dx * 0.007;
+      camElevation = Math.max(-0.15, Math.min(0.75, camElevation + dy * 0.005));
+      isSpinning360Cam = false;
+    }
+
+    function handlePointerUp() {
+      isPointerDragging = false;
+      if (container) container.style.cursor = 'grab';
+    }
+
+    container.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    container.addEventListener('dblclick', resetCamera);
+    if (container) container.style.cursor = 'grab';
+
+    function toggleVehicleState(preferredType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat') {
       if (playerState.inVehicle) {
         playerState.inVehicle = false;
         player.visible = true;
@@ -1375,7 +1495,6 @@ export function ThreeKeralaWorld({
         else if (chosenType === 'auto') soundSynth.playSound('autohorn');
         else if (chosenType === 'tractor') soundSynth.playSound('tractor');
         else if (chosenType === 'jeep') soundSynth.playSound('airhorn');
-        else if (chosenType === 'bullet') soundSynth.playSound('bullet');
         else if (chosenType === 'boat') soundSynth.playSound('splash');
 
         // Teleport player vehicle to player if too far
@@ -1425,7 +1544,7 @@ export function ThreeKeralaWorld({
     worldApiRef.current = {
       setWeather: applyWeather,
       setTimeOfDay: applyTimeOfDay,
-      toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'bullet' | 'boat') => toggleVehicleState(type),
+      toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat') => toggleVehicleState(type),
       focusPOI: (poi) => {
         if (poi === 'chaya') {
           player.position.set(-22.6, 0, -12.0);
@@ -1556,14 +1675,14 @@ export function ThreeKeralaWorld({
               maxFwd = 0.52;
               maxRev = -0.24;
               turnRate = 0.044;
-            } else if (v.type === 'bullet') {
-              maxFwd = 0.62;
-              maxRev = -0.15;
-              turnRate = 0.054;
             } else if (v.type === 'boat') {
               maxFwd = 0.38;
               maxRev = -0.15;
               turnRate = 0.028;
+            } else if (v.type === 'mustang') {
+              maxFwd = 0.65;
+              maxRev = -0.28;
+              turnRate = 0.054;
             }
 
             if (keys['w'] || keys['arrowup']) vSpeed = maxFwd;
@@ -1572,6 +1691,21 @@ export function ThreeKeralaWorld({
             if (keys['d'] || keys['arrowright']) turn = -turnRate;
 
             v.mesh.rotation.y += turn;
+
+            // Apply 360° Vehicle Donut Spin Stunt
+            if (isSpinning360Vehicle) {
+              spinVehicleProgress += dt / spinVehicleDuration;
+              const p = Math.min(1.0, spinVehicleProgress);
+              const ease = Math.sin((p * Math.PI) / 2);
+              v.mesh.rotation.y = spinVehicleStartAngle + ease * Math.PI * 2;
+              // Realistic drift roll tilt
+              v.mesh.rotation.z = Math.sin(p * Math.PI * 2) * 0.05;
+              if (p >= 1.0) {
+                isSpinning360Vehicle = false;
+                v.mesh.rotation.z = 0;
+              }
+            }
+
             v.mesh.translateZ(vSpeed);
             player.position.copy(v.mesh.position);
           }
@@ -1650,6 +1784,17 @@ export function ThreeKeralaWorld({
           }
         }
 
+        // Apply 360° Character Pirouette / Turnaround on foot
+        if (isSpinning360Vehicle) {
+          spinVehicleProgress += dt / spinVehicleDuration;
+          const p = Math.min(1.0, spinVehicleProgress);
+          const ease = Math.sin((p * Math.PI) / 2);
+          player.rotation.y = spinVehicleStartAngle + ease * Math.PI * 2;
+          if (p >= 1.0) {
+            isSpinning360Vehicle = false;
+          }
+        }
+
         // Authentic human walk cycle (legs swing, knees flex, feet articulate, torso twists, arms counter-swing)
         playerRig.updateAnimation(dt, isPlayerMoving, isSprinting, isSprinting ? 1.4 : 1.0);
       }
@@ -1694,21 +1839,52 @@ export function ThreeKeralaWorld({
         }
       }
 
-      // Camera follow (Dynamic framing for Walking vs Auto Rickshaw vs 12m Luxury Coach Bus)
+      // Camera follow (Dynamic 360° Polar Orbit Framing for Walking vs Auto Rickshaw vs 12m Luxury Coach Bus)
       let focusPos = player.position;
-      let camOffset = new THREE.Vector3(0, 11, 18);
+      let baseDist = 18;
+      let baseHeight = 11;
+      let lookHeight = 2.0;
+
       if (playerState.inVehicle) {
         if (playerState.vehicleType === 'bus') {
           focusPos = playerBusMesh.position;
-          camOffset = new THREE.Vector3(0, 16, 26);
+          baseDist = 26;
+          baseHeight = 15;
+          lookHeight = 3.2;
+        } else if (playerState.vehicleType === 'mustang') {
+          focusPos = playerMustangMesh.position;
+          baseDist = 16;
+          baseHeight = 8.5;
+          lookHeight = 1.4;
         } else {
           focusPos = playerAuto.mesh.position;
-          camOffset = new THREE.Vector3(0, 11, 18);
+          baseDist = 18;
+          baseHeight = 11;
+          lookHeight = 2.0;
         }
       }
-      const targetCam = focusPos.clone().add(camOffset);
+
+      // Smooth cinematic 360° camera orbit animation
+      if (isSpinning360Cam) {
+        spinCamProgress += dt / spinCamDuration;
+        const p = Math.min(1.0, spinCamProgress);
+        // Smooth cubic easeInOut
+        const ease = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+        camAzimuth = spinCamStartAngle + ease * Math.PI * 2;
+        if (p >= 1.0) {
+          isSpinning360Cam = false;
+        }
+      }
+
+      // 360° Spherical/Polar coordinates to Cartesian 3D offset
+      const hDist = baseDist * Math.cos(camElevation);
+      const camX = Math.sin(camAzimuth) * hDist;
+      const camY = baseHeight + Math.sin(camElevation) * (baseDist * 0.7);
+      const camZ = Math.cos(camAzimuth) * hDist;
+
+      const targetCam = new THREE.Vector3(focusPos.x + camX, focusPos.y + camY, focusPos.z + camZ);
       camera.position.lerp(targetCam, 0.08);
-      camera.lookAt(focusPos.x, focusPos.y + (playerState.vehicleType === 'bus' && playerState.inVehicle ? 3.2 : 2.0), focusPos.z);
+      camera.lookAt(focusPos.x, focusPos.y + lookHeight, focusPos.z);
 
       renderer.render(scene, camera);
     }
@@ -1731,6 +1907,15 @@ export function ThreeKeralaWorld({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('kerala360Camera', handle360CamEvent);
+      window.removeEventListener('kerala360Turn', handle360TurnEvent);
+      window.removeEventListener('keralaRotateCamLeft', handleRotateLeftEvent);
+      window.removeEventListener('keralaRotateCamRight', handleRotateRightEvent);
+      window.removeEventListener('keralaResetCamera', handleResetCamEvent);
+      container?.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      container?.removeEventListener('dblclick', resetCamera);
       if (renderer.domElement && renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
