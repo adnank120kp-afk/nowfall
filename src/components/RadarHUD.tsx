@@ -132,7 +132,7 @@ export function RadarHUD({ onFocusPOI, onOpenBigMap, onClose }: RadarHUDProps) {
               className="col-span-2 py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-black text-center font-black flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 uppercase tracking-wider"
               onClick={onOpenBigMap}
             >
-              <span>🗺️</span> OPEN BIG MAP (12 Districts)
+              <span>🗺️</span> KERALA MEGA MAP (14 Districts)
             </button>
           )}
           <button

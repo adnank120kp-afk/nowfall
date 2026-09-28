@@ -11,6 +11,7 @@ interface HeaderHUDProps {
   isMuted: boolean;
   onToggleMute: () => void;
   onOpenDistrictModal: () => void;
+  activeDistrict?: string;
   onToggleVehicle: () => void;
   onToggleBus?: () => void;
   inVehicle: boolean;
@@ -31,18 +32,25 @@ interface HeaderHUDProps {
   onTriggerRandomScene?: () => void;
   onOpenBusinesses?: () => void;
   onOpenPhotoMode?: () => void;
-  onSelectVehicle?: (type: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang') => void;
+  onSelectVehicle?: (type: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper') => void;
   onOpenBGM?: () => void;
   isBGMPlaying?: boolean;
+  autoWeather?: boolean;
+  onToggleAutoWeather?: () => void;
+  weatherSecondsLeft?: number;
 }
 
 const WEATHER_LABELS: Record<WeatherMode, { label: string; icon: string }> = {
-  monsoon: { label: 'കേരള മൺസൂൺ (Monsoon Active)', icon: '🌧️' },
+  sunny: { label: 'തിളങ്ങുന്ന വെയിൽ (Clear Sunny)', icon: '☀️' },
+  cloudy: { label: 'ഇടവിട്ട മേഘങ്ങൾ (Partly Cloudy)', icon: '🌤️' },
+  overcast: { label: 'കാർമേഘം മൂടിയ ആകാശം (Overcast)', icon: '☁️' },
+  light_rain: { label: 'ചെറിയ ചാറ്റൽമഴ (Light Rain)', icon: '🌧️' },
+  monsoon: { label: 'കേരള മൺസൂൺ (Heavy Monsoon Rain)', icon: '🌧️' },
+  thunderstorm: { label: 'ഇടിമിന്നൽ മഴ (Thunderstorm)', icon: '⛈️' },
+  fog: { label: 'മലയോര മൂടൽമഞ്ഞ് (Mountain Fog)', icon: '🌫️' },
+  rainbow: { label: 'മഴവില്ല് വിരിഞ്ഞു! (Post-Rain Rainbow)', icon: '🌈' },
   morning: { label: 'മൂടൽമഞ്ഞുള്ള പ്രഭാതം (Misty Sunrise)', icon: '🌫️' },
   evening: { label: 'സന്ധ്യാ സൂര്യൻ (Golden Evening)', icon: '🌅' },
-  sunny: { label: 'തിളങ്ങുന്ന വെയിൽ (Tropical Sunshine)', icon: '☀️' },
-  thunderstorm: { label: 'ഇടിമിന്നലോടുകൂടിയ മഴ (Thunderstorm)', icon: '⚡' },
-  fog: { label: 'മലയോര മൂടൽമഞ്ഞ് (Hill Fog)', icon: '🌁' },
 };
 
 export function HeaderHUD({
@@ -54,6 +62,7 @@ export function HeaderHUD({
   isMuted,
   onToggleMute,
   onOpenDistrictModal,
+  activeDistrict,
   onToggleVehicle,
   onToggleBus,
   inVehicle,
@@ -77,6 +86,9 @@ export function HeaderHUD({
   onSelectVehicle,
   onOpenBGM,
   isBGMPlaying = false,
+  autoWeather = true,
+  onToggleAutoWeather,
+  weatherSecondsLeft = 60,
 }: HeaderHUDProps) {
   const currentWeatherData = WEATHER_LABELS[weather];
 
@@ -118,12 +130,17 @@ export function HeaderHUD({
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-emerald-300/85 font-medium mt-0.5">
-            <span className="font-malayalam text-amber-300 flex items-center gap-1 font-semibold text-[10px] sm:text-xs">
+            <button
+              onClick={onOpenDistrictModal}
+              className="font-malayalam text-amber-300 flex items-center gap-1.5 font-bold text-[10px] sm:text-xs hover:text-white transition-all cursor-pointer bg-emerald-950/70 hover:bg-emerald-900/80 px-2 py-0.5 rounded-lg border border-emerald-600/50 shadow-sm"
+              title="Click to Switch Kerala District (14 Districts from Kasaragod to TVM)"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>കിഴക്കുംപുറം വില്ലേജ് (Kizhakkumpuram)</span>
-            </span>
+              <span>📍 {activeDistrict || 'കിഴക്കുംപുറം'}</span>
+              <span className="text-[9px] text-emerald-400 font-mono">▼</span>
+            </button>
             <span className="w-1 h-1 rounded-full bg-emerald-500 hidden sm:inline-block"></span>
-            <span className="font-mono text-[11px] text-zinc-300 hidden md:inline-block">SH-17 Highway • കോഴിക്കോട് 24 KM</span>
+            <span className="font-mono text-[11px] text-zinc-300 hidden md:inline-block">NH-66 Arterial Highway • 14 Districts</span>
           </div>
         </div>
       </div>
@@ -186,7 +203,7 @@ export function HeaderHUD({
           </button>
         )}
 
-        {/* 🗺️ BIG MAP (12 DISTRICTS) BUTTON */}
+        {/* 🗺️ KERALA MEGA MAP (14 DISTRICTS) BUTTON */}
         {onOpenBigMap && (
           <button
             onClick={onOpenBigMap}
@@ -195,10 +212,11 @@ export function HeaderHUD({
                 ? 'bg-amber-500 text-black border-amber-300 shadow-amber-950/80 ring-2 ring-amber-300'
                 : 'bg-gradient-to-r from-emerald-900 via-[#0d2a1b] to-emerald-900 hover:from-emerald-800 hover:to-[#123824] text-emerald-200 border-emerald-500/60'
             }`}
-            title="Open Big Map: 12 Districts of Kizhakkumpuram"
+            title="Open Kerala Mega Map: All 14 Districts (Kasaragod to Thiruvananthapuram) [M]"
           >
             <span className="text-sm">🗺️</span>
-            <span className="font-extrabold text-amber-300">BIG MAP</span>
+            <span className="font-extrabold text-amber-300">MEGA MAP</span>
+            <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.2 rounded-full font-black hidden lg:inline">14</span>
           </button>
         )}
 
@@ -303,17 +321,36 @@ export function HeaderHUD({
           </button>
         )}
 
-        {/* Center: Live Weather Status (Hidden on smaller screens) */}
+        {/* Center: Live Dynamic Weather Status */}
         <div className="hidden xl:flex items-center gap-2 hud-panel px-3 py-1 rounded-full border border-emerald-500/30">
           <div className="flex items-center gap-1.5 text-xs font-mono">
             <span className="text-zinc-400 text-[10px]">Weather:</span>
             <span className="text-cyan-300 font-bold font-malayalam text-xs">
               {currentWeatherData.icon} {currentWeatherData.label}
             </span>
+            {autoWeather && (
+              <span className="text-[9px] bg-emerald-950 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-700/60 font-mono">
+                Auto {weatherSecondsLeft}s
+              </span>
+            )}
           </div>
+          {onToggleAutoWeather && (
+            <button
+              className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-black uppercase transition-all cursor-pointer ${
+                autoWeather
+                  ? 'bg-emerald-500 text-black'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+              }`}
+              onClick={onToggleAutoWeather}
+              title="Toggle Dynamic Automatic Weather"
+            >
+              {autoWeather ? '🔄 Auto ON' : '⏸️ Manual'}
+            </button>
+          )}
           <button
             className="px-2 py-0.5 rounded-md bg-[#0f5132] hover:bg-emerald-700 text-[10px] text-emerald-200 transition-all border border-emerald-400/40 font-mono font-bold cursor-pointer"
             onClick={onCycleWeather}
+            title="Cycle next weather mode"
           >
             Sky 🌦️
           </button>
@@ -361,6 +398,7 @@ export function HeaderHUD({
           {onSelectVehicle && (
             <div className="flex items-center gap-1 pl-1 border-l border-emerald-800/40">
               {[
+                { type: 'tipper', icon: '🚚', title: 'Kerala Tipper Lorry (ടിപ്പർ ലോറി)' },
                 { type: 'mustang', icon: '🏎️', title: 'Widebody Mustang GT (മുസ്തങ്)' },
                 { type: 'tractor', icon: '🚜', title: 'Paddy Tractor' },
                 { type: 'jeep', icon: '🚙', title: 'Mountain Jeep' },

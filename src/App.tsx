@@ -16,6 +16,7 @@ import { PhotoModeModal } from './components/PhotoModeModal';
 import { BGMModal } from './components/BGMModal';
 import { INITIAL_KERALA_MISSIONS } from './components/MissionsSystem';
 import { RANDOM_NAATTILE_SCENES } from './components/RandomScenesData';
+import { DistrictInfo, KERALA_14_DISTRICTS } from './components/BigMapBuilder';
 import { ThreeKeralaWorld } from './components/ThreeKeralaWorld';
 import { soundSynth } from './audio';
 import {
@@ -68,11 +69,24 @@ const DIALOGUE_SEQUENCE: NPCEntity[] = [
   },
 ];
 
-const WEATHER_MODES: WeatherMode[] = ['monsoon', 'morning', 'evening'];
+const WEATHER_MODES: WeatherMode[] = [
+  'sunny',
+  'cloudy',
+  'overcast',
+  'light_rain',
+  'monsoon',
+  'thunderstorm',
+  'rainbow',
+  'fog',
+  'morning',
+  'evening',
+];
 
 export default function App() {
   const [wallet, setWallet] = useState<number>(420);
   const [weather, setWeather] = useState<WeatherMode>('monsoon');
+  const [autoWeather, setAutoWeather] = useState<boolean>(true);
+  const [weatherSecondsLeft, setWeatherSecondsLeft] = useState<number>(55);
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('afternoon');
   const [inVehicle, setInVehicle] = useState<boolean>(false);
   const [vehicleType, setVehicleType] = useState<VehicleType>('auto');
@@ -80,7 +94,8 @@ export default function App() {
   const [dialogueIndex, setDialogueIndex] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [districtModalOpen, setDistrictModalOpen] = useState<boolean>(false);
-  const [activeDistrict, setActiveDistrict] = useState<string>('Kozhikode');
+  const [activeDistrict, setActiveDistrict] = useState<string>('3. Kozhikode — Big City Region');
+  const [arrivalDistrict, setArrivalDistrict] = useState<DistrictInfo | null>(null);
   const [focusTarget, setFocusTarget] = useState<'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond' | null>(null);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; z: number } | null>(null);
   const [isMapOpen, setIsMapOpen] = useState<boolean>(true);
@@ -118,6 +133,73 @@ export default function App() {
     return unsub;
   }, []);
 
+  // 🌦️ DYNAMIC AUTOMATIC WEATHER CYCLE SYSTEM
+  useEffect(() => {
+    if (!autoWeather) return;
+
+    const timer = setInterval(() => {
+      setWeatherSecondsLeft((prev) => {
+        if (prev <= 1) {
+          // Time to trigger next natural weather transition
+          setWeather((cur) => {
+            let nextMode: WeatherMode = 'sunny';
+            const isMountain = activeDistrict.includes('Wayanad') || activeDistrict.includes('Idukki');
+
+            if (isMountain && Math.random() < 0.4 && cur !== 'fog') {
+              nextMode = 'fog';
+            } else {
+              switch (cur) {
+                case 'sunny':
+                  nextMode = 'cloudy';
+                  break;
+                case 'cloudy':
+                  nextMode = 'overcast';
+                  break;
+                case 'overcast':
+                  nextMode = 'light_rain';
+                  break;
+                case 'light_rain':
+                  nextMode = 'monsoon';
+                  break;
+                case 'monsoon':
+                  nextMode = Math.random() < 0.6 ? 'thunderstorm' : 'rainbow';
+                  break;
+                case 'thunderstorm':
+                  nextMode = 'rainbow';
+                  break;
+                case 'rainbow':
+                  nextMode = 'sunny';
+                  break;
+                case 'fog':
+                  nextMode = 'cloudy';
+                  break;
+                default:
+                  nextMode = 'sunny';
+                  break;
+              }
+            }
+
+            if (nextMode === 'thunderstorm') {
+              soundSynth.playSound('thunder');
+            } else if (nextMode === 'rainbow' || nextMode === 'sunny') {
+              soundSynth.playSound('bell');
+            } else if (nextMode === 'light_rain' || nextMode === 'monsoon') {
+              soundSynth.playSound('splash');
+            }
+
+            return nextMode;
+          });
+
+          // Next weather duration: 45s to 75s
+          return 50 + Math.floor(Math.random() * 25);
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [autoWeather, activeDistrict]);
+
   const TIME_CYCLES: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'night'];
 
   const handleCycleTimeOfDay = useCallback(() => {
@@ -137,6 +219,7 @@ export default function App() {
     else if (type === 'tractor') soundSynth.playSound('tractor');
     else if (type === 'jeep') soundSynth.playSound('airhorn');
     else if (type === 'boat') soundSynth.playSound('splash');
+    else if (type === 'tipper') soundSynth.playSound('tipperhorn');
     else if (type === 'mustang') soundSynth.playSound('whistle');
   }, []);
 
@@ -208,18 +291,33 @@ export default function App() {
     soundSynth.playSound('bell');
   }, []);
 
+  const handleDistrictProximity = useCallback((distName: string, distObj: DistrictInfo) => {
+    setActiveDistrict(distObj.name);
+    setArrivalDistrict(distObj);
+    setNewspaperStory(
+      `“${distObj.name} — ${distObj.desc}”`
+    );
+  }, []);
+
   const handleFastTravel = useCallback((coords: { x: number; z: number }, districtName: string) => {
     setTeleportTarget(coords);
     soundSynth.playSound('bell');
     soundSynth.playSound('airhorn');
+    const matched = KERALA_14_DISTRICTS.find(
+      (d) => d.name.toLowerCase().includes(districtName.toLowerCase()) || d.id === districtName.toLowerCase()
+    );
+    if (matched) {
+      setActiveDistrict(matched.name);
+      setArrivalDistrict(matched);
+    }
     setActiveDialogue({
       id: 'fast-travel',
       avatar: '🗺️',
       tag: 'DISTRICT',
       name: `യാത്ര • ${districtName}`,
       malayalamName: districtName,
-      role: 'Kizhakkumpuram Big Map Navigator',
-      dialogue: `“നിങ്ങൾ കിഴക്കുംപുറം ബിഗ് മാപ്പിലെ ${districtName}-ൽ എത്തിയിരിക്കുന്നു! പ്രദേശത്തെ റോഡുകളും പുതിയ കെട്ടിടങ്ങളും വാഹനങ്ങളും ആസ്വദിക്കൂ.”`,
+      role: 'Kerala Mega Map Navigator',
+      dialogue: `“നിങ്ങൾ കേരള മെഗാ മാപ്പിലെ ${districtName}-ൽ എത്തിയിരിക്കുന്നു! പ്രദേശത്തെ റോഡുകളും പുതിയ കെട്ടിടങ്ങളും വാഹനങ്ങളും കാഴ്ചകളും ആസ്വദിക്കൂ.”`,
     });
   }, []);
 
@@ -245,11 +343,16 @@ export default function App() {
     setWeather((prev) => {
       const idx = WEATHER_MODES.indexOf(prev);
       const nextMode = WEATHER_MODES[(idx + 1) % WEATHER_MODES.length];
-      if (nextMode === 'monsoon') {
-        soundSynth.playSound('teaglass');
+      if (nextMode === 'thunderstorm') {
+        soundSynth.playSound('thunder');
+      } else if (nextMode === 'monsoon' || nextMode === 'light_rain') {
+        soundSynth.playSound('splash');
+      } else if (nextMode === 'rainbow' || nextMode === 'sunny') {
+        soundSynth.playSound('bell');
       }
       return nextMode;
     });
+    setWeatherSecondsLeft(60);
   }, []);
 
   const handleOrder = useCallback(
@@ -433,9 +536,19 @@ export default function App() {
   const handleSelectDistrict = useCallback((district: string) => {
     setActiveDistrict(district);
     soundSynth.playSound('teaglass');
-    setNewspaperStory(
-      `“${district} ജില്ലയിലെ കിഴക്കുംപുറം ഗ്രാമത്തിൽ കനത്ത മഴ! നാട്ടുകാർ ചായക്കടയിൽ സജീവ ചർച്ചയിൽ!”`
+    const matched = KERALA_14_DISTRICTS.find(
+      (d) => d.name.toLowerCase().includes(district.toLowerCase()) || d.id === district.toLowerCase()
     );
+    if (matched) {
+      setArrivalDistrict(matched);
+      setNewspaperStory(
+        `“${matched.name} — ${matched.desc}”`
+      );
+    } else {
+      setNewspaperStory(
+        `“${district} ജില്ലയിലെ കിഴക്കുംപുറം ഗ്രാമത്തിൽ കനത്ത മഴ! നാട്ടുകാർ ചായക്കടയിൽ സജീവ ചർച്ചയിൽ!”`
+      );
+    }
   }, []);
 
   // Keyboard shortcut listener for Big Map [M], KSRTC [B], Stadium Ticket [T], Radar [R], Chaya Kada Spots [C], Missions [J], Scenes [N], Bazaar [X], Photo [P], Time [O]
@@ -497,6 +610,7 @@ export default function App() {
         teleportTarget={teleportTarget}
         onClearTeleport={() => setTeleportTarget(null)}
         playerModel={playerModel}
+        onDistrictChange={handleDistrictProximity}
       />
 
       {/* TOP HUD: KERALA OPEN WORLD STATUS & AUDIO CONSOLE */}
@@ -509,6 +623,7 @@ export default function App() {
         isMuted={isMuted}
         onToggleMute={handleToggleMute}
         onOpenDistrictModal={() => setDistrictModalOpen(true)}
+        activeDistrict={activeDistrict}
         onToggleVehicle={handleDriveAuto}
         onToggleBus={handleDriveBus}
         inVehicle={inVehicle}
@@ -532,10 +647,45 @@ export default function App() {
         onOpenPhotoMode={() => setIsPhotoModeOpen(true)}
         onOpenBGM={() => setIsBGMOpen(true)}
         isBGMPlaying={isBGMPlaying}
+        autoWeather={autoWeather}
+        onToggleAutoWeather={() => setAutoWeather((prev) => !prev)}
+        weatherSecondsLeft={weatherSecondsLeft}
       />
 
       {/* MAIN GAME UI OVERLAY WRAPPER */}
       <main className="relative flex-1 w-full h-full overflow-hidden pointer-events-none">
+        {/* DISTRICT ARRIVAL TOAST BANNER */}
+        {arrivalDistrict && (
+          <div className="absolute top-4 sm:top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-auto animate-fadeIn max-w-lg w-full px-4">
+            <div className="flex items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl bg-[#061811fa] border-2 border-emerald-400 text-white shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl sm:text-3xl p-2 bg-black/60 rounded-xl border border-emerald-500/50 shrink-0">
+                  {arrivalDistrict.icon}
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] uppercase font-mono tracking-widest text-amber-300 font-bold">
+                      🗺️ KERALA MEGA MAP
+                    </span>
+                    <span className="text-[9px] bg-emerald-500 text-black font-extrabold px-1.5 py-0.2 rounded-full uppercase">
+                      {arrivalDistrict.category}
+                    </span>
+                  </div>
+                  <div className="text-xs sm:text-sm font-black text-white font-sans">{arrivalDistrict.name}</div>
+                  <div className="text-[11px] text-emerald-300 font-malayalam font-medium">{arrivalDistrict.malayalamName}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setArrivalDistrict(null)}
+                className="w-6 h-6 rounded-full bg-emerald-950/80 hover:bg-emerald-800 text-zinc-400 hover:text-white text-xs flex items-center justify-center cursor-pointer border border-emerald-700/50 shrink-0"
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* LEFT HUD: CIRCULAR GPS RADAR (TOGGLEABLE) */}
         {isMapOpen && (
           <div className="absolute left-4 sm:left-6 top-4 sm:top-5 z-30">
@@ -632,6 +782,7 @@ export default function App() {
         onClose={() => setDistrictModalOpen(false)}
         currentDistrict={activeDistrict}
         onSelectDistrict={handleSelectDistrict}
+        onFastTravel={handleFastTravel}
       />
 
       {/* MODAL: BIG MAP (12 DISTRICTS OF KIZHAKKUMPURAM) */}

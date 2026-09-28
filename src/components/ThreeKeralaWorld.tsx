@@ -10,13 +10,14 @@ import { buildRiggedBabuCharacter, buildBabuDiagramCharacter, HumanRig } from '.
 import { buildRiggedTraditionalCharacter } from './TraditionalCharacterBuilder';
 import { buildFootballGround } from './FootballGroundBuilder';
 import { buildBeautifulLotusPond, getOrganicPondRadius } from './LotusPondBuilder';
-import { buildBigKizhakkumpuramMap } from './BigMapBuilder';
+import { buildBigKizhakkumpuramMap, KERALA_14_DISTRICTS, DistrictInfo } from './BigMapBuilder';
 import { buildLivingTrafficAndFauna } from './TrafficAndFaunaBuilder';
 import {
   buildKeralaTractor,
   buildKeralaJeep,
   buildKeralaBoat,
   buildWidebodyMustangGT,
+  buildKeralaTipper,
 } from './VehiclesBuilder';
 import { buildAuthenticKeralaThattukada } from './ThattukadaBuilder';
 
@@ -24,8 +25,8 @@ interface ThreeKeralaWorldProps {
   weather: WeatherMode;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
   inVehicle: boolean;
-  vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang';
-  onVehicleToggle: (inVehicle: boolean, vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang') => void;
+  vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper';
+  onVehicleToggle: (inVehicle: boolean, vehicleType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper') => void;
   onInteractNPC: (npc: NPCEntity) => void;
   onOpenThattukada?: () => void;
   focusTarget: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond' | null;
@@ -33,6 +34,7 @@ interface ThreeKeralaWorldProps {
   teleportTarget?: { x: number; z: number } | null;
   onClearTeleport?: () => void;
   playerModel?: 'unni' | 'babu';
+  onDistrictChange?: (districtName: string, districtObj: DistrictInfo) => void;
 }
 
 export function ThreeKeralaWorld({
@@ -48,12 +50,19 @@ export function ThreeKeralaWorld({
   teleportTarget,
   onClearTeleport,
   playerModel = 'unni',
+  onDistrictChange,
 }: ThreeKeralaWorldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const onDistrictChangeRef = useRef(onDistrictChange);
+  useEffect(() => {
+    onDistrictChangeRef.current = onDistrictChange;
+  }, [onDistrictChange]);
+
+  const currentDistrictIdRef = useRef<string>('');
   const worldApiRef = useRef<{
     setWeather: (w: WeatherMode) => void;
     setTimeOfDay: (t: 'morning' | 'afternoon' | 'evening' | 'night') => void;
-    toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat') => void;
+    toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper') => void;
     focusPOI: (poi: 'auto' | 'bus' | 'chaya' | 'mosque' | 'football' | 'ticket' | 'pond') => void;
     teleportTo: (x: number, z: number) => void;
     triggerInteract: () => void;
@@ -686,7 +695,7 @@ export function ThreeKeralaWorld({
     // 8. VEHICLES (Auto, Bus, Tractor, Jeep, Boat)
     interface VehicleData {
       mesh: THREE.Group;
-      type: 'auto' | 'ksrtc' | 'private_bus' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang';
+      type: 'auto' | 'ksrtc' | 'private_bus' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper';
       isPlayerVehicle: boolean;
       speed: number;
       bounds: [number, number];
@@ -816,6 +825,20 @@ export function ThreeKeralaWorld({
       bounds: [-125, 125],
     };
     vehicles.push(playerMustangData);
+
+    // DRIVABLE KERALA HYDRAULIC TIPPER TRUCK (ടിപ്പർ ലോറി • "HORN PLEASE")
+    const playerTipperMesh = buildKeralaTipper(0xf59e0b);
+    playerTipperMesh.position.set(30, 0, 14.5);
+    playerTipperMesh.rotation.y = -Math.PI / 2;
+    worldGroup.add(playerTipperMesh);
+    const playerTipperData: VehicleData = {
+      mesh: playerTipperMesh,
+      type: 'tipper',
+      isPlayerVehicle: true,
+      speed: 0,
+      bounds: [-125, 125],
+    };
+    vehicles.push(playerTipperData);
 
     // Cruising Luxury Coach Buses on Highway SH-17:
     // Eastbound: White Luxury Coach
@@ -1246,38 +1269,41 @@ export function ThreeKeralaWorld({
       sprintMultiplier: 1.8,
       isGrounded: true,
       inVehicle: false,
-      vehicleType: 'auto' as 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang',
+      vehicleType: 'auto' as 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper',
     };
 
-    // 11. MONSOON RAIN SYSTEM
+    // 11. DYNAMIC WEATHER & RAIN / LIGHTNING / RAINBOW SYSTEM
     let rainParticles: THREE.Points | null = null;
-    function createMonsoonRain() {
-      if (rainParticles) return;
+    let rainFallSpeed = 0.65;
+    let rainbowGroup: THREE.Group | null = null;
+    let activeWeatherMode: WeatherMode = 'sunny';
+    let windSwayMultiplier = 1.0;
+    let nextLightningTime = 0;
+    let isFlashingLightning = false;
+
+    function createRain(density: 'light' | 'monsoon' | 'thunderstorm') {
+      removeRain();
+      const count = density === 'light' ? 1200 : density === 'monsoon' ? 2800 : 3800;
+      rainFallSpeed = density === 'light' ? 0.45 : density === 'monsoon' ? 0.75 : 0.95;
       const rainGeo = new THREE.BufferGeometry();
-      const count = 2600;
       const pos = new Float32Array(count * 3);
       for (let i = 0; i < count * 3; i += 3) {
-        pos[i] = (Math.random() - 0.5) * 180;
-        pos[i + 1] = Math.random() * 45;
-        pos[i + 2] = (Math.random() - 0.5) * 180;
+        pos[i] = (Math.random() - 0.5) * 220;
+        pos[i + 1] = Math.random() * 48;
+        pos[i + 2] = (Math.random() - 0.5) * 220;
       }
       rainGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       const rainMat = new THREE.PointsMaterial({
-        color: 0xa4d4f2,
-        size: 0.32,
+        color: density === 'thunderstorm' ? 0xb0e0e6 : 0xa4d4f2,
+        size: density === 'light' ? 0.22 : 0.36,
         transparent: true,
-        opacity: 0.72,
+        opacity: density === 'light' ? 0.55 : 0.8,
       });
       rainParticles = new THREE.Points(rainGeo, rainMat);
       scene.add(rainParticles);
-
-      scene.fog = new THREE.FogExp2(0x566d73, 0.016);
-      scene.background = new THREE.Color(0x566d73);
-      sunLight.intensity = 0.55;
-      ambientLight.color.setHex(0x758a91);
     }
 
-    function removeMonsoonRain() {
+    function removeRain() {
       if (rainParticles) {
         scene.remove(rainParticles);
         rainParticles.geometry.dispose();
@@ -1285,23 +1311,138 @@ export function ThreeKeralaWorld({
       }
     }
 
+    function createRainbow() {
+      if (rainbowGroup) return;
+      rainbowGroup = new THREE.Group();
+      // 7 Spectral Bands: Red, Orange, Yellow, Green, Cyan, Blue, Violet
+      const spectralColors = [
+        0xef4444, // Red
+        0xf97316, // Orange
+        0xfacc15, // Yellow
+        0x22c55e, // Green
+        0x06b6d4, // Cyan
+        0x3b82f6, // Blue
+        0xa855f7, // Violet
+      ];
+
+      spectralColors.forEach((color, idx) => {
+        const radius = 280 - idx * 2.8;
+        const tubeRadius = 1.6;
+        const arcGeo = new THREE.TorusGeometry(radius, tubeRadius, 8, 48, Math.PI);
+        const arcMat = new THREE.MeshBasicMaterial({
+          color,
+          transparent: true,
+          opacity: 0.65 - idx * 0.04,
+          side: THREE.DoubleSide,
+          blending: THREE.AdditiveBlending,
+        });
+        const arcMesh = new THREE.Mesh(arcGeo, arcMat);
+        arcMesh.rotation.z = 0;
+        rainbowGroup!.add(arcMesh);
+      });
+
+      // Position the Rainbow majestically arching across the Western Ghats / East horizon
+      rainbowGroup.position.set(0, 30, -320);
+      rainbowGroup.rotation.y = 0.15;
+      scene.add(rainbowGroup);
+    }
+
+    function removeRainbow() {
+      if (rainbowGroup) {
+        scene.remove(rainbowGroup);
+        rainbowGroup = null;
+      }
+    }
+
     function applyWeather(mode: WeatherMode) {
-      if (mode === 'monsoon') {
-        createMonsoonRain();
+      activeWeatherMode = mode;
+
+      if (mode === 'rainbow') {
+        removeRain();
+        createRainbow();
+        scene.fog = new THREE.FogExp2(0x93c5fd, 0.004);
+        scene.background = new THREE.Color(0x60a5fa);
+        sunLight.intensity = 1.55;
+        sunLight.color.setHex(0xfffae0);
+        ambientLight.color.setHex(0xe0f2fe);
+        windSwayMultiplier = 1.1;
+      } else {
+        removeRainbow();
+      }
+
+      if (mode === 'sunny') {
+        removeRain();
+        scene.fog = new THREE.FogExp2(0x86efac, 0.0035);
+        scene.background = new THREE.Color(0x7dd3fc);
+        sunLight.intensity = 1.65;
+        sunLight.color.setHex(0xfffbeb);
+        ambientLight.color.setHex(0xfef9c3);
+        windSwayMultiplier = 1.0;
+      } else if (mode === 'cloudy') {
+        removeRain();
+        scene.fog = new THREE.FogExp2(0x93c5fd, 0.006);
+        scene.background = new THREE.Color(0x94b4c4);
+        sunLight.intensity = 1.3;
+        sunLight.color.setHex(0xf1f5f9);
+        ambientLight.color.setHex(0xe2e8f0);
+        windSwayMultiplier = 1.2;
+      } else if (mode === 'overcast') {
+        removeRain();
+        scene.fog = new THREE.FogExp2(0x64748b, 0.011);
+        scene.background = new THREE.Color(0x64748b);
+        sunLight.intensity = 0.85;
+        sunLight.color.setHex(0xcbd5e1);
+        ambientLight.color.setHex(0x94a3b8);
+        windSwayMultiplier = 1.5;
+      } else if (mode === 'light_rain') {
+        createRain('light');
+        scene.fog = new THREE.FogExp2(0x52606d, 0.012);
+        scene.background = new THREE.Color(0x52606d);
+        sunLight.intensity = 0.7;
+        sunLight.color.setHex(0xb0c4de);
+        ambientLight.color.setHex(0x778899);
+        windSwayMultiplier = 1.6;
+      } else if (mode === 'monsoon') {
+        createRain('monsoon');
+        scene.fog = new THREE.FogExp2(0x3e5258, 0.017);
+        scene.background = new THREE.Color(0x3e5258);
+        sunLight.intensity = 0.45;
+        sunLight.color.setHex(0x94a3b8);
+        ambientLight.color.setHex(0x64748b);
+        windSwayMultiplier = 2.4;
+      } else if (mode === 'thunderstorm') {
+        createRain('thunderstorm');
+        scene.fog = new THREE.FogExp2(0x1e272c, 0.021);
+        scene.background = new THREE.Color(0x1e272c);
+        sunLight.intensity = 0.3;
+        sunLight.color.setHex(0x94a3b8);
+        ambientLight.color.setHex(0x475569);
+        windSwayMultiplier = 3.2;
+        nextLightningTime = performance.now() + 4000;
+      } else if (mode === 'fog') {
+        removeRain();
+        scene.fog = new THREE.FogExp2(0xa8bcc2, 0.022);
+        scene.background = new THREE.Color(0xa0b4ba);
+        sunLight.intensity = 0.8;
+        sunLight.color.setHex(0xe2e8f0);
+        ambientLight.color.setHex(0xcbd5e1);
+        windSwayMultiplier = 0.8;
       } else if (mode === 'morning') {
-        removeMonsoonRain();
+        removeRain();
         scene.fog = new THREE.FogExp2(0xc4e2e8, 0.009);
         scene.background = new THREE.Color(0xb2dbe2);
-        sunLight.intensity = 1.1;
+        sunLight.intensity = 1.15;
         sunLight.color.setHex(0xfffae0);
         ambientLight.color.setHex(0xe3f2fd);
+        windSwayMultiplier = 0.9;
       } else if (mode === 'evening') {
-        removeMonsoonRain();
+        removeRain();
         scene.fog = new THREE.FogExp2(0x995e38, 0.007);
         scene.background = new THREE.Color(0xd67d4b);
-        sunLight.intensity = 1.3;
+        sunLight.intensity = 1.35;
         sunLight.color.setHex(0xffaa5e);
         ambientLight.color.setHex(0xffc599);
+        windSwayMultiplier = 1.1;
       }
     }
 
@@ -1476,7 +1617,7 @@ export function ThreeKeralaWorld({
     container.addEventListener('dblclick', resetCamera);
     if (container) container.style.cursor = 'grab';
 
-    function toggleVehicleState(preferredType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat') {
+    function toggleVehicleState(preferredType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper') {
       if (playerState.inVehicle) {
         playerState.inVehicle = false;
         player.visible = true;
@@ -1496,6 +1637,8 @@ export function ThreeKeralaWorld({
         else if (chosenType === 'tractor') soundSynth.playSound('tractor');
         else if (chosenType === 'jeep') soundSynth.playSound('airhorn');
         else if (chosenType === 'boat') soundSynth.playSound('splash');
+        else if (chosenType === 'tipper') soundSynth.playSound('tipperhorn');
+        else if (chosenType === 'mustang') soundSynth.playSound('refuel');
 
         // Teleport player vehicle to player if too far
         const targetV = vehicles.find(v => v.isPlayerVehicle && v.type === chosenType);
@@ -1544,7 +1687,7 @@ export function ThreeKeralaWorld({
     worldApiRef.current = {
       setWeather: applyWeather,
       setTimeOfDay: applyTimeOfDay,
-      toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat') => toggleVehicleState(type),
+      toggleVehicle: (type?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper') => toggleVehicleState(type),
       focusPOI: (poi) => {
         if (poi === 'chaya') {
           player.position.set(-22.6, 0, -12.0);
@@ -1603,6 +1746,7 @@ export function ThreeKeralaWorld({
 
     // 13. ANIMATION LOOP
     let lastTime = performance.now();
+    let districtCheckTimer = 0;
     function animate() {
       animFrameId = requestAnimationFrame(animate);
       const now = performance.now();
@@ -1621,31 +1765,62 @@ export function ThreeKeralaWorld({
       // Moving highway traffic & living animal behaviors (cows, dogs, chickens)
       livingWorld.update(now, dt);
 
-      // Wind sway in foliage
+      // Wind sway in foliage with weather multiplier
       animatedFlora.forEach(f => {
-        const windSway = Math.sin(now * 0.0018 * f.speed + f.phase);
+        const windSway = Math.sin(now * 0.0018 * f.speed * windSwayMultiplier + f.phase) * windSwayMultiplier;
         if (f.type === 'palm') {
           f.crown.rotation.z = windSway * 0.065;
-          f.crown.rotation.x = Math.cos(now * 0.0015 + f.phase) * 0.045;
+          f.crown.rotation.x = Math.cos(now * 0.0015 * windSwayMultiplier + f.phase) * 0.045 * windSwayMultiplier;
         } else if (f.type === 'arecanut') {
           f.crown.rotation.z = windSway * 0.04;
         } else if (f.type === 'banana') {
-          f.crown.rotation.y += Math.sin(now * 0.001 + f.phase) * 0.001;
+          f.crown.rotation.y += Math.sin(now * 0.001 + f.phase) * 0.001 * windSwayMultiplier;
         }
       });
 
-      // Rain particles
+      // Rain particles falling & drifting with wind
       if (rainParticles) {
         const pos = rainParticles.geometry.attributes.position.array as Float32Array;
+        const drift = activeWeatherMode === 'thunderstorm' ? 0.22 : 0.08;
         for (let i = 1; i < pos.length; i += 3) {
-          pos[i] -= 1.1;
-          pos[i - 1] += 0.08;
+          pos[i] -= rainFallSpeed;
+          pos[i - 1] += drift;
           if (pos[i] < 0) {
-            pos[i] = 45;
-            pos[i - 1] = (Math.random() - 0.5) * 180;
+            pos[i] = 48;
+            pos[i - 1] = (Math.random() - 0.5) * 220;
           }
         }
         rainParticles.geometry.attributes.position.needsUpdate = true;
+      }
+
+      // Thunderstorm Lightning Flashes & Rumbling Thunder
+      if (activeWeatherMode === 'thunderstorm') {
+        if (now > nextLightningTime && !isFlashingLightning) {
+          isFlashingLightning = true;
+          // Primary flash burst
+          sunLight.intensity = 2.8;
+          sunLight.color.setHex(0xffffff);
+          ambientLight.color.setHex(0xf8fafc);
+          setTimeout(() => {
+            sunLight.intensity = 0.5;
+            ambientLight.color.setHex(0x64748b);
+            setTimeout(() => {
+              // Secondary flash flicker
+              sunLight.intensity = 2.2;
+              setTimeout(() => {
+                sunLight.intensity = 0.3;
+                sunLight.color.setHex(0x94a3b8);
+                ambientLight.color.setHex(0x475569);
+                isFlashingLightning = false;
+                nextLightningTime = performance.now() + 6000 + Math.random() * 8000;
+                // Positional thunder rumble audio after light delay
+                setTimeout(() => {
+                  soundSynth.playSound('thunder');
+                }, 550);
+              }, 60);
+            }, 70);
+          }, 80);
+        }
       }
 
       // Vehicles (Player Auto / Luxury Coach Bus & Traffic)
@@ -1683,6 +1858,10 @@ export function ThreeKeralaWorld({
               maxFwd = 0.65;
               maxRev = -0.28;
               turnRate = 0.054;
+            } else if (v.type === 'tipper') {
+              maxFwd = 0.44;
+              maxRev = -0.18;
+              turnRate = 0.034;
             }
 
             if (keys['w'] || keys['arrowup']) vSpeed = maxFwd;
@@ -1828,6 +2007,25 @@ export function ThreeKeralaWorld({
         }
       });
 
+      // Check closest Kerala district out of all 14 districts (Kasaragod to Thiruvananthapuram)
+      districtCheckTimer += dt;
+      if (districtCheckTimer > 0.4) {
+        districtCheckTimer = 0;
+        let closestDist = KERALA_14_DISTRICTS[0];
+        let minD = Infinity;
+        for (const dist of KERALA_14_DISTRICTS) {
+          const d = Math.hypot(player.position.x - dist.coords.x, player.position.z - dist.coords.z);
+          if (d < minD) {
+            minD = d;
+            closestDist = dist;
+          }
+        }
+        if (closestDist.id !== currentDistrictIdRef.current) {
+          currentDistrictIdRef.current = closestDist.id;
+          onDistrictChangeRef.current?.(closestDist.name, closestDist);
+        }
+      }
+
       // Gravity & Jump
       if (!playerState.isGrounded) {
         player.position.y += playerState.velocity.y;
@@ -1851,6 +2049,11 @@ export function ThreeKeralaWorld({
           baseDist = 26;
           baseHeight = 15;
           lookHeight = 3.2;
+        } else if (playerState.vehicleType === 'tipper') {
+          focusPos = playerTipperMesh.position;
+          baseDist = 24;
+          baseHeight = 13.5;
+          lookHeight = 2.8;
         } else if (playerState.vehicleType === 'mustang') {
           focusPos = playerMustangMesh.position;
           baseDist = 16;

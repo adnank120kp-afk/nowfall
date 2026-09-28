@@ -1,5 +1,10 @@
 import * as THREE from 'three';
-import { buildHighwayPatrolCruiser, buildAmericanBoxAmbulance, buildWidebodyMustangGT } from './VehiclesBuilder';
+import {
+  buildHighwayPatrolCruiser,
+  buildAmericanBoxAmbulance,
+  buildWidebodyMustangGT,
+  buildKeralaTipper,
+} from './VehiclesBuilder';
 
 export interface TrafficEntity {
   mesh: THREE.Group;
@@ -29,61 +34,9 @@ function buildAmbassadorCar(_isTaxi = false): THREE.Group {
   return buildWidebodyMustangGT();
 }
 
-// 2. Kerala Goods Lorry (കേരള ഗുഡ്സ് ലോറി • "HORN PLEASE")
-function buildKeralaGoodsLorry(): THREE.Group {
-  const lorry = new THREE.Group();
-  const cabinColor = 0xf59e0b; // Bright amber/yellow Kerala truck cabin
-  const cabinMat = new THREE.MeshLambertMaterial({ color: cabinColor });
-  const woodGreenMat = new THREE.MeshLambertMaterial({ color: 0x15803d }); // Carved green wooden body
-  const blackMat = new THREE.MeshLambertMaterial({ color: 0x18181b });
-
-  // Chassis
-  const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, 8.2), blackMat);
-  chassis.position.y = 0.8;
-  lorry.add(chassis);
-
-  // Front Driver Cabin
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.4, 2.2), cabinMat);
-  cabin.position.set(0, 2.1, 2.9);
-  // Windshield visor (കണ്ണാടിത്തട്ട്)
-  const visor = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.35, 0.4), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
-  visor.position.set(0, 3.2, 3.8);
-  const windshield = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.9, 0.1), new THREE.MeshLambertMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 }));
-  windshield.position.set(0, 2.5, 4.02);
-  lorry.add(cabin, visor, windshield);
-
-  // Decorated Wooden Cargo Bed (തടി ബോഡി)
-  const cargoBed = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.8, 5.6), woodGreenMat);
-  cargoBed.position.set(0, 1.9, -1.1);
-  // Wooden Side Ribs
-  for (let r = -2.4; r <= 2.4; r += 0.8) {
-    const ribL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.9, 0.15), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
-    ribL.position.set(-1.3, 1.9, -1.1 + r);
-    const ribR = ribL.clone();
-    ribR.position.x = 1.3;
-    lorry.add(ribL, ribR);
-  }
-  // "HORN PLEASE" Rear Tailgate Signboard
-  const tailgate = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.6, 0.15), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
-  tailgate.position.set(0, 1.4, -3.95);
-  lorry.add(cargoBed, tailgate);
-
-  // Wheels (6-wheel heavy lorry)
-  const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 14);
-  wheelGeo.rotateZ(Math.PI / 2);
-  for (let wx of [-1.3, 1.3]) {
-    // Front wheels
-    const wf = new THREE.Mesh(wheelGeo, blackMat);
-    wf.position.set(wx, 0.5, 2.8);
-    // Rear dual axles
-    const wr1 = new THREE.Mesh(wheelGeo, blackMat);
-    wr1.position.set(wx, 0.5, -1.8);
-    const wr2 = new THREE.Mesh(wheelGeo, blackMat);
-    wr2.position.set(wx, 0.5, -3.0);
-    lorry.add(wf, wr1, wr2);
-  }
-
-  return lorry;
+// 2. Authentic Kerala Heavy Hydraulic Dump Tipper Truck (കേരള ടിപ്പർ ലോറി • "HORN PLEASE" • KL-14-T-8055)
+function buildKeralaGoodsLorry(color = 0xf59e0b): THREE.Group {
+  return buildKeralaTipper(color);
 }
 
 // 3. American Type III Modular Box Ambulance (ആംബുലൻസ് - ambu.jpg)
@@ -592,6 +545,21 @@ export function buildLivingTrafficAndFauna(): TrafficAndFaunaSystem {
     minBound: -140,
     maxBound: 140,
     fixedCoord: -2.2,
+  });
+
+  // Vehicle G: Kerala Quarry Sand Tipper Lorry (Signal Orange • ക്വാറി മണൽ ടിപ്പർ • Highway Northbound, lane X = -2.8)
+  const quarryTipper = buildKeralaGoodsLorry(0xea580c);
+  quarryTipper.position.set(-2.8, 0, 70);
+  quarryTipper.rotation.y = Math.PI; // Face North (-Z)
+  masterGroup.add(quarryTipper);
+  vehicles.push({
+    mesh: quarryTipper,
+    speed: 0.26,
+    direction: -1,
+    axis: 'z',
+    minBound: -270,
+    maxBound: 290,
+    fixedCoord: -2.8,
   });
 
   // 2. 🐄 ANIMALS (Cows, Dogs, Chickens)

@@ -473,6 +473,8 @@ class KeralaAudioEngine {
       | 'chenda'
       | 'refuel'
       | 'workshop'
+      | 'tipperhorn'
+      | 'airbrake'
   ) {
     if (this.isMuted) return;
     this.initContext();
@@ -785,6 +787,47 @@ class KeralaAudioEngine {
           osc.start(now + i * 0.05);
           osc.stop(now + i * 0.05 + 0.12);
         });
+      } else if (type === 'tipperhorn') {
+        // 🎺 Iconic Kerala Tipper Truck Dual Trumpet Pneumatic Air Horn ("പാമ്പ് ഹോൺ")
+        // Dual brassy resonant tones (370Hz and 460Hz) with sharp attack and harmonic richness
+        [370, 462].forEach((freq) => {
+          if (!this.audioCtx) return;
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, now);
+          osc.frequency.linearRampToValueAtTime(freq * 1.02, now + 0.15);
+          gain.gain.setValueAtTime(0.32, now);
+          gain.gain.setValueAtTime(0.30, now + 0.25);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        });
+      } else if (type === 'airbrake') {
+        // 💨 Heavy Commercial Vehicle Pneumatic Air Brake Exhaust Purge (Tsssshhhh!)
+        const bufferSize = Math.floor(this.audioCtx.sampleRate * 0.35);
+        const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1600, now);
+        filter.frequency.exponentialRampToValueAtTime(450, now + 0.32);
+        filter.Q.setValueAtTime(2.5, now);
+        const gain = this.audioCtx.createGain();
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        noise.start(now);
+        noise.stop(now + 0.35);
       }
     } catch {
       // Audio context might be restricted before user gesture

@@ -166,7 +166,13 @@ export function ControlsHUD({
         <span className="text-zinc-600">|</span>
         <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-bold">F</span>
         <span className="text-emerald-300">
-          {inVehicle && vehicleType === 'mustang' ? '🏎️ Exit Mustang' : inVehicle && vehicleType === 'auto' ? 'Exit Auto' : '🛺 Auto'}
+          {inVehicle && vehicleType === 'tipper'
+            ? '🚚 Exit Tipper'
+            : inVehicle && vehicleType === 'mustang'
+            ? '🏎️ Exit Mustang'
+            : inVehicle && vehicleType === 'auto'
+            ? 'Exit Auto'
+            : '🛺 Auto'}
         </span>
         <span className="text-zinc-600">|</span>
         {onOpenThattukada && (

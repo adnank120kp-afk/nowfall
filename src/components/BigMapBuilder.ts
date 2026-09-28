@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildAmericanBoxAmbulance } from './VehiclesBuilder';
+import { buildAmericanBoxAmbulance, buildKeralaTipper } from './VehiclesBuilder';
 
 export interface DistrictInfo {
   id: string;
@@ -20,7 +20,7 @@ export const KERALA_14_DISTRICTS: DistrictInfo[] = [
   {
     id: 'kasaragod',
     name: '1. Kasaragod — The Northern Gateway',
-    malayalamName: 'കാസർഗോഡ് • വടക്കൻ പൈതൃകം',
+    malayalamName: 'കാസർഗോഡ് • വടക്കൻ പൈതൃകം & ബേക്കൽ കോട്ട',
     icon: '🌴',
     desc: 'Northern border atmosphere, historic Bekal Fort ramparts, Chandragiri river, laterite undulating hills and coconut plantations.',
     coords: { x: -80, z: -350 },
@@ -29,7 +29,7 @@ export const KERALA_14_DISTRICTS: DistrictInfo[] = [
   {
     id: 'kannur',
     name: '2. Kannur — Coast & Culture',
-    malayalamName: 'കണ്ണൂർ • തെയ്യവും തീരദേശവും',
+    malayalamName: 'കണ്ണൂർ • തെയ്യവും മുഴപ്പിലങ്ങാട് ബീച്ചും',
     icon: '🌊',
     desc: 'Muzhappilangad drive-in beach, fishing villages, dense coconut groves, vibrant Theyyam festival grounds & coastal highway.',
     coords: { x: 70, z: -320 },
@@ -47,7 +47,7 @@ export const KERALA_14_DISTRICTS: DistrictInfo[] = [
   {
     id: 'wayanad',
     name: '4. Wayanad — Misty Western Ghats',
-    malayalamName: 'വയനാട് • മലയോര ചുരവും കാടും',
+    malayalamName: 'വയനാട് • മലയോര ചുരവും വെള്ളച്ചാട്ടവും',
     icon: '⛰️',
     desc: 'High-altitude mountain ghat road, hairpin turns, cascading waterfalls, tea & coffee plantations, cool mountain fog & viewpoint.',
     coords: { x: -140, z: -250 },
@@ -65,7 +65,7 @@ export const KERALA_14_DISTRICTS: DistrictInfo[] = [
   {
     id: 'palakkad',
     name: '6. Palakkad — The Granary & Ghat Gap',
-    malayalamName: 'പാലക്കാട് • നെല്ലറയും കോട്ടയും',
+    malayalamName: 'പാലക്കാട് • നെല്ലറയും കോട്ടയും കാറ്റും',
     icon: '🌾',
     desc: 'Famous Palakkad mountain gap, vast emerald paddy fields, coconut palm farms, historic granite fort and breezy long highways.',
     coords: { x: 120, z: -150 },
@@ -145,7 +145,6 @@ export const KERALA_14_DISTRICTS: DistrictInfo[] = [
   },
 ];
 
-// Backwards-compatibility alias for 12 districts references
 export const KIZHAKKUMPURAM_12_DISTRICTS: DistrictInfo[] = KERALA_14_DISTRICTS;
 
 export interface BigMapResult {
@@ -160,960 +159,1230 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
   const colliders: { minX: number; maxX: number; minZ: number; maxZ: number }[] = [];
   const waterObjects: THREE.Mesh[] = [];
 
-  // ==========================================
-  // 1. ⛰️ HIGHLAND & VIEWPOINT (North, Z: -280)
-  // ==========================================
-  const highlandGroup = new THREE.Group();
-  highlandGroup.position.set(0, 0, -280);
-
-  // Viewpoint Pavilion Platform on hill
-  const deckMat = new THREE.MeshLambertMaterial({ color: 0x5a3d28 });
-  const deck = new THREE.Mesh(new THREE.BoxGeometry(22, 1.2, 16), deckMat);
-  deck.position.set(0, 18, 0);
-  highlandGroup.add(deck);
-
-  // Deck Railings
-  const deckRailMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  const dRailFront = new THREE.Mesh(new THREE.BoxGeometry(22, 1.1, 0.25), deckRailMat);
-  dRailFront.position.set(0, 19.1, 7.8);
-  const dRailBack = dRailFront.clone();
-  dRailBack.position.set(0, 19.1, -7.8);
-  const dRailL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.1, 16), deckRailMat);
-  dRailL.position.set(-10.8, 19.1, 0);
-  const dRailR = dRailL.clone();
-  dRailR.position.set(10.8, 19.1, 0);
-  highlandGroup.add(dRailFront, dRailBack, dRailL, dRailR);
-
-  // Thatched Gazebo Roof on Deck
-  const pillarMat = new THREE.MeshLambertMaterial({ color: 0x3d2817 });
-  for (let px of [-9, 9]) {
-    for (let pz of [-6, 6]) {
-      const p = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.28, 4.2, 8), pillarMat);
-      p.position.set(px, 20.6, pz);
-      highlandGroup.add(p);
-    }
-  }
-  const thatchMat = new THREE.MeshLambertMaterial({ color: 0x8b6508 });
-  const thatchRoof = new THREE.Mesh(new THREE.ConeGeometry(13, 3.8, 4), thatchMat);
-  thatchRoof.position.set(0, 24.2, 0);
-  thatchRoof.rotateY(Math.PI / 4);
-  highlandGroup.add(thatchRoof);
-
-  // Observation Telescope
-  const teleMat = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
-  const teleStand = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 1.4, 8), teleMat);
-  teleStand.position.set(0, 19.3, 6.8);
-  const teleScope = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.9, 8), teleMat);
-  teleScope.rotateX(Math.PI / 2 - 0.2);
-  teleScope.position.set(0, 20.1, 6.8);
-  highlandGroup.add(teleStand, teleScope);
-
-  // Highland Viewpoint Signboard
-  const signPillar = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.6, 0.2), pillarMat);
-  signPillar.position.set(-6, 19.9, 6.5);
-  const signBoard = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.2, 0.15), new THREE.MeshLambertMaterial({ color: 0x047857 }));
-  signBoard.position.set(-6, 21.0, 6.5);
-  highlandGroup.add(signPillar, signBoard);
-
-  mapGroup.add(highlandGroup);
-  colliders.push({ minX: -12, maxX: 12, minZ: -290, maxZ: -270 });
-
-  // ==========================================
-  // 2. 🌲 FOREST AREA (North-West, X: -140, Z: -250)
-  // ==========================================
-  const forestGroup = new THREE.Group();
-  forestGroup.position.set(-140, 0, -250);
-
-  // Forest Dirt Trail Clearing
-  const trailMat = new THREE.MeshLambertMaterial({ color: 0x6e4e32 });
-  const trail = new THREE.Mesh(new THREE.PlaneGeometry(8, 120), trailMat);
-  trail.rotateX(-Math.PI / 2);
-  trail.position.set(0, 0.09, 0);
-  forestGroup.add(trail);
-
-  // Sacred Forest Shrine (സർപ്പക്കാവ് / വനക്ഷേത്രം)
-  const shrineStoneMat = new THREE.MeshLambertMaterial({ color: 0x374151 });
-  const shrineBase = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 6), shrineStoneMat);
-  shrineBase.position.set(12, 0.4, -15);
-  // Stone Idol Plaque (നാഗപ്രതിഷ്ഠ)
-  const idolMat = new THREE.MeshLambertMaterial({ color: 0x1f2937 });
-  const idol = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 0.35), idolMat);
-  idol.position.set(12, 1.7, -15);
-  // Brass Deepam (വിളക്ക്)
-  const brassMat = new THREE.MeshLambertMaterial({ color: 0xd97706 });
-  const deepam = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 1.2, 8), brassMat);
-  deepam.position.set(12, 1.2, -12.8);
-  forestGroup.add(shrineBase, idol, deepam);
-
-  // Dense Teak & Jungle Trees
-  const teakTrunkMat = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
-  const teakFoliageMat = new THREE.MeshLambertMaterial({ color: 0x1e3a1e });
-  for (let i = 0; i < 28; i++) {
-    const tx = (Math.random() - 0.5) * 80;
-    const tz = (Math.random() - 0.5) * 90;
-    if (Math.abs(tx) < 6) continue; // Keep trail open
-    const th = 9 + Math.random() * 5;
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, th, 7), teakTrunkMat);
-    trunk.position.set(tx, th / 2, tz);
-    trunk.castShadow = true;
-    const foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(3.2 + Math.random() * 1.5, 1), teakFoliageMat);
-    foliage.position.set(tx, th + 2.2, tz);
-    foliage.castShadow = true;
-    forestGroup.add(trunk, foliage);
-  }
-
-  // Timber Stacked Logs on forest verge
-  const logMat = new THREE.MeshLambertMaterial({ color: 0x5c4033 });
-  for (let l = 0; l < 6; l++) {
-    const log = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 7, 8), logMat);
-    log.rotateZ(Math.PI / 2);
-    log.position.set(-6, 0.4 + (l % 2) * 0.7, -30 + Math.floor(l / 2) * 2.2);
-    forestGroup.add(log);
-  }
-
-  mapGroup.add(forestGroup);
-
-  // ==========================================
-  // 3. 🏘️ OLD KIZHAKKUMPURAM (West, X: -60, Z: -15)
-  // ==========================================
-  const oldVillageGroup = new THREE.Group();
-  oldVillageGroup.position.set(-60, 0, -15);
-
-  // Traditional Kerala Nalukettu House
-  const wallMat = new THREE.MeshLambertMaterial({ color: 0xfef9c3 });
-  const roofTileMat = new THREE.MeshLambertMaterial({ color: 0xb45309 });
-  const woodMat = new THREE.MeshLambertMaterial({ color: 0x5c3317 });
-
-  const naluHouse = new THREE.Group();
-  const baseWalls = new THREE.Mesh(new THREE.BoxGeometry(16, 4.2, 14), wallMat);
-  baseWalls.position.set(0, 2.1, 0);
-  naluHouse.add(baseWalls);
-
-  // Pitched Terracotta Tile Roof
-  const mainRoof = new THREE.Mesh(new THREE.ConeGeometry(13.5, 4.8, 4), roofTileMat);
-  mainRoof.position.set(0, 6.2, 0);
-  mainRoof.rotateY(Math.PI / 4);
-  naluHouse.add(mainRoof);
-
-  // Traditional Verandah with carved wooden pillars (പൂമുഖം)
-  const porch = new THREE.Mesh(new THREE.BoxGeometry(10, 0.4, 3.5), new THREE.MeshLambertMaterial({ color: 0x991b1b }));
-  porch.position.set(0, 0.2, 8.5);
-  naluHouse.add(porch);
-  for (let px of [-4.2, -1.4, 1.4, 4.2]) {
-    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 3.4, 8), woodMat);
-    pillar.position.set(px, 1.9, 9.8);
-    naluHouse.add(pillar);
-  }
-  const porchRoof = new THREE.Mesh(new THREE.ConeGeometry(7.5, 2.6, 4), roofTileMat);
-  porchRoof.position.set(0, 4.8, 8.6);
-  porchRoof.rotateY(Math.PI / 4);
-  naluHouse.add(porchRoof);
-  naluHouse.position.set(-18, 0, -8);
-  oldVillageGroup.add(naluHouse);
-  colliders.push({ minX: -86, maxX: -70, minZ: -32, maxZ: -10 });
-
-  // Traditional Stone Water Well (കിണർ) with Pulley (കപ്പി)
-  const wellStoneMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
-  const wellCylinder = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.3, 1.2, 14, 1, true), wellStoneMat);
-  wellCylinder.position.set(-4, 0.6, 8);
-  // Well Post & Pulley Crossbar
-  const post1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 6), woodMat);
-  post1.position.set(-5.6, 1.4, 8);
-  const post2 = post1.clone();
-  post2.position.set(-2.4, 1.4, 8);
-  const xbar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.6, 6), woodMat);
-  xbar.rotateZ(Math.PI / 2);
-  xbar.position.set(-4, 2.7, 8);
-  // Pulley & Bucket
-  const pulley = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.15, 10), new THREE.MeshLambertMaterial({ color: 0x1f2937 }));
-  pulley.position.set(-4, 2.5, 8);
-  const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.8, 4), new THREE.MeshLambertMaterial({ color: 0xd4d4d8 }));
-  rope.position.set(-4, 1.6, 8);
-  const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.25, 0.6, 8), new THREE.MeshLambertMaterial({ color: 0x78716c }));
-  bucket.position.set(-4, 0.8, 8);
-  oldVillageGroup.add(wellCylinder, post1, post2, xbar, pulley, rope, bucket);
-
-  // Tulasi Thara (തുളസിത്തറ)
-  const tulasiMat = new THREE.MeshLambertMaterial({ color: 0xfef08a });
-  const tulasiBase = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 1.5), tulasiMat);
-  tulasiBase.position.set(3, 0.6, 6);
-  const tulasiPlant = new THREE.Mesh(new THREE.DodecahedronGeometry(0.65, 1), new THREE.MeshLambertMaterial({ color: 0x15803d }));
-  tulasiPlant.position.set(3, 1.6, 6);
-  oldVillageGroup.add(tulasiBase, tulasiPlant);
-
-  mapGroup.add(oldVillageGroup);
-
-  // ==========================================
-  // 4. 🏙️ TOWN CENTER (Center, X: 0, Z: 0)
-  // ==========================================
-  const townGroup = new THREE.Group();
-  townGroup.position.set(0, 0, 0);
-
-  // Historic Town Clock Tower (മണിമേട) at the central intersection
-  const clockTower = new THREE.Group();
-  const ctStoneMat = new THREE.MeshLambertMaterial({ color: 0xd1d5db });
-  const ctPlinth = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.2, 4.8), new THREE.MeshLambertMaterial({ color: 0x4b5563 }));
-  ctPlinth.position.y = 0.6;
-  const ctShaft = new THREE.Mesh(new THREE.BoxGeometry(3.6, 12, 3.6), ctStoneMat);
-  ctShaft.position.y = 7.2;
-  const ctTopBox = new THREE.Mesh(new THREE.BoxGeometry(4.2, 3.5, 4.2), new THREE.MeshLambertMaterial({ color: 0x1e3a8a }));
-  ctTopBox.position.y = 14.5;
-  const ctRoof = new THREE.Mesh(new THREE.ConeGeometry(3.8, 3.2, 4), new THREE.MeshLambertMaterial({ color: 0xb45309 }));
-  ctRoof.position.y = 17.8;
-  ctRoof.rotateY(Math.PI / 4);
-
-  // Clock Dials on 4 faces
-  const dialMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  for (let r of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
-    const dial = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.1, 16), dialMat);
-    dial.rotateX(Math.PI / 2);
-    dial.rotateY(r);
-    dial.position.set(Math.sin(r) * 2.16, 14.5, Math.cos(r) * 2.16);
-    clockTower.add(dial);
-  }
-  clockTower.add(ctPlinth, ctShaft, ctTopBox, ctRoof);
-  clockTower.position.set(-16, 0, -22);
-  townGroup.add(clockTower);
-  colliders.push({ minX: -19, maxX: -13, minZ: -25, maxZ: -19 });
-
-  // Commercial Shops Arcade: Kerala Bank & Bakery
-  const bankGroup = new THREE.Group();
-  const bankWalls = new THREE.Mesh(new THREE.BoxGeometry(18, 5.5, 9), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
-  bankWalls.position.set(0, 2.75, 0);
-  const bankRoof = new THREE.Mesh(new THREE.BoxGeometry(18.6, 0.6, 9.6), new THREE.MeshLambertMaterial({ color: 0x0369a1 }));
-  bankRoof.position.set(0, 5.8, 0);
-  // Bank Signboard
-  const bankSign = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 0.2), new THREE.MeshLambertMaterial({ color: 0xfef08a }));
-  bankSign.position.set(0, 4.8, 4.65);
-  // ATM Kiosk Glass Box
-  const atmBox = new THREE.Mesh(new THREE.BoxGeometry(3.5, 3.2, 3), new THREE.MeshLambertMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 }));
-  atmBox.position.set(6, 1.6, 5.6);
-  bankGroup.add(bankWalls, bankRoof, bankSign, atmBox);
-  bankGroup.position.set(16, 0, -22);
-  townGroup.add(bankGroup);
-  colliders.push({ minX: 6, maxX: 26, minZ: -27, maxZ: -17 });
-
-  // Milma Milk & Snacks Booth (മിൽമ ബൂത്ത്)
-  const milmaBooth = new THREE.Group();
-  const milmaWalls = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.2, 4), new THREE.MeshLambertMaterial({ color: 0x2563eb }));
-  milmaWalls.position.y = 1.6;
-  const milmaRoof = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.4, 4.8), new THREE.MeshLambertMaterial({ color: 0x1d4ed8 }));
-  milmaRoof.position.y = 3.3;
-  const milmaSign = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.8, 0.1), new THREE.MeshLambertMaterial({ color: 0xffffff }));
-  milmaSign.position.set(0, 2.8, 2.06);
-  milmaBooth.add(milmaWalls, milmaRoof, milmaSign);
-  milmaBooth.position.set(-18, 0, 16);
-  townGroup.add(milmaBooth);
-  colliders.push({ minX: -21, maxX: -15, minZ: 13, maxZ: 19 });
-
-  mapGroup.add(townGroup);
-
-  // ==========================================
-  // 5. 🛍️ MARKET (East, X: 85, Z: 10)
-  // ==========================================
-  const marketGroup = new THREE.Group();
-  marketGroup.position.set(85, 0, 10);
-
-  // Market Stalls with Vibrant Tarpaulins (നീല / ഓറഞ്ച് ടാർപോളിൻ)
-  const tarpColors = [0x0284c7, 0xea580c, 0x16a34a, 0xd97706];
-  for (let m = 0; m < 4; m++) {
-    const stall = new THREE.Group();
-    const stallX = (m % 2) * 12 - 6;
-    const stallZ = Math.floor(m / 2) * 14 - 7;
-    // Counter
-    const counter = new THREE.Mesh(new THREE.BoxGeometry(9, 1.2, 4), new THREE.MeshLambertMaterial({ color: 0x78350f }));
-    counter.position.set(0, 0.6, 0);
-    // Bamboo canopy poles
-    for (let px of [-4.2, 4.2]) {
-      for (let pz of [-1.8, 1.8]) {
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.6, 6), woodMat);
-        pole.position.set(px, 1.8, pz);
-        stall.add(pole);
-      }
-    }
-    // Colorful Tarpaulin Canopy
-    const tarpMat = new THREE.MeshLambertMaterial({ color: tarpColors[m % tarpColors.length], side: THREE.DoubleSide });
-    const tarp = new THREE.Mesh(new THREE.PlaneGeometry(9.6, 4.6), tarpMat);
-    tarp.rotateX(Math.PI / 2 + 0.1);
-    tarp.position.set(0, 3.6, 0);
-    stall.add(counter, tarp);
-
-    // Vegetable & Fruit Crates (തക്കാളി, കപ്പ, വാഴപ്പഴം)
-    const crateMat = new THREE.MeshLambertMaterial({ color: 0x92400e });
-    for (let c = 0; c < 3; c++) {
-      const crate = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.5, 1.2), crateMat);
-      crate.position.set(-2.4 + c * 2.4, 1.4, 0);
-      stall.add(crate);
-    }
-    stall.position.set(stallX, 0, stallZ);
-    marketGroup.add(stall);
-  }
-
-  // Coastal Fish Market Counter (മീൻ മാർക്കറ്റ്) with silver fish on ice
-  const fishStall = new THREE.Group();
-  const fishBench = new THREE.Mesh(new THREE.BoxGeometry(10, 1.1, 4), new THREE.MeshLambertMaterial({ color: 0x334155 }));
-  fishBench.position.set(0, 0.55, 0);
-  const iceLayer = new THREE.Mesh(new THREE.BoxGeometry(9.4, 0.2, 3.4), new THREE.MeshLambertMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.9 }));
-  iceLayer.position.set(0, 1.15, 0);
-  // Blue overhead tarp
-  const fishTarp = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 5), new THREE.MeshLambertMaterial({ color: 0x0284c7, side: THREE.DoubleSide }));
-  fishTarp.rotateX(Math.PI / 2);
-  fishTarp.position.set(0, 3.4, 0);
-  fishStall.add(fishBench, iceLayer, fishTarp);
-  fishStall.position.set(16, 0, 0);
-  marketGroup.add(fishStall);
-
-  mapGroup.add(marketGroup);
-  colliders.push({ minX: 72, maxX: 106, minZ: -5, maxZ: 25 });
-
-  // ==========================================
-  // 6. 🏫 EDUCATION ZONE (East-North, X: 110, Z: -80)
-  // ==========================================
-  const schoolGroup = new THREE.Group();
-  schoolGroup.position.set(110, 0, -80);
-
-  // St. Mary's Govt Higher Secondary School Building (സ്കൂൾ കെട്ടിടം)
-  const schoolWalls = new THREE.Mesh(new THREE.BoxGeometry(32, 7.5, 14), new THREE.MeshLambertMaterial({ color: 0xfef08a }));
-  schoolWalls.position.set(0, 3.75, 0);
-  const schoolRoof = new THREE.Mesh(new THREE.ConeGeometry(24, 4.8, 4), roofTileMat);
-  schoolRoof.position.set(0, 9.6, 0);
-  schoolRoof.rotateY(Math.PI / 4);
-  // Verandah pillars
-  for (let px = -14; px <= 14; px += 4.5) {
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 6.8, 8), new THREE.MeshLambertMaterial({ color: 0xffffff }));
-    p.position.set(px, 3.4, 7.4);
-    schoolGroup.add(p);
-  }
-  // School Name Board
-  const schoolBoard = new THREE.Mesh(new THREE.BoxGeometry(20, 1.4, 0.2), new THREE.MeshLambertMaterial({ color: 0x1e3a8a }));
-  schoolBoard.position.set(0, 7.2, 7.2);
-  schoolGroup.add(schoolWalls, schoolRoof, schoolBoard);
-  colliders.push({ minX: 92, maxX: 128, minZ: -90, maxZ: -70 });
-
-  // Tricolor Flagpost (ദേശീയ പതാക)
-  const flagBase = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.0, 0.6, 8), new THREE.MeshLambertMaterial({ color: 0xffffff }));
-  flagBase.position.set(0, 0.3, 16);
-  const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 10, 8), new THREE.MeshLambertMaterial({ color: 0xd1d5db }));
-  flagPole.position.set(0, 5.3, 16);
-  const flagCloth = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.5), new THREE.MeshLambertMaterial({ color: 0xf97316, side: THREE.DoubleSide }));
-  flagCloth.position.set(1.2, 9.8, 16);
-  schoolGroup.add(flagBase, flagPole, flagCloth);
-
-  // Parked Yellow School Bus
-  const busBody = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.8, 11), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
-  busBody.position.set(-18, 1.8, 15);
-  const busCabin = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.2, 4), new THREE.MeshLambertMaterial({ color: 0x38bdf8 }));
-  busCabin.position.set(-18, 2.4, 17.2);
-  schoolGroup.add(busBody, busCabin);
-
-  mapGroup.add(schoolGroup);
-
-  // ==========================================
-  // 7. 🏥 HOSPITAL ZONE (East Complex, X: 52, Z: 65 — safely offset from main road)
-  // ==========================================
-  const hospGroup = new THREE.Group();
-  hospGroup.position.set(52, 0, 65);
-
-  // Hospital Entrance Paved Access Driveway & Ambulance Bay (connecting from Main Road X: 9 to Hospital X: 40)
-  const hospDrivewayGeo = new THREE.PlaneGeometry(36, 11);
-  hospDrivewayGeo.rotateX(-Math.PI / 2);
-  const hospDrivewayMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
-  const hospDriveway = new THREE.Mesh(hospDrivewayGeo, hospDrivewayMat);
-  hospDriveway.position.set(-18, 0.082, 0);
-  hospDriveway.receiveShadow = true;
-  hospGroup.add(hospDriveway);
-
-  // Entrance Gate Pillars on road boundary (X: -36 relative to hospGroup is X: 16)
-  const gatePillarMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
-  const pillarGeo = new THREE.BoxGeometry(0.8, 3.2, 0.8);
-  const pillarL = new THREE.Mesh(pillarGeo, gatePillarMat);
-  pillarL.position.set(-36, 1.6, 6);
-  const pillarR = new THREE.Mesh(pillarGeo, gatePillarMat);
-  pillarR.position.set(-36, 1.6, -6);
-  // Gate arch / banner
-  const archGeo = new THREE.BoxGeometry(0.5, 0.8, 12.8);
-  const arch = new THREE.Mesh(archGeo, gatePillarMat);
-  arch.position.set(-36, 3.4, 0);
-  hospGroup.add(pillarL, pillarR, arch);
-
-  // Govt Taluk Hospital Main Building (താലൂക്ക് ആശുപത്രി)
-  const hospWalls = new THREE.Mesh(new THREE.BoxGeometry(26, 8.5, 15), new THREE.MeshLambertMaterial({ color: 0xf0fdf4 }));
-  hospWalls.position.set(0, 4.25, 0);
-  const hospRoof = new THREE.Mesh(new THREE.BoxGeometry(27, 0.6, 16), new THREE.MeshLambertMaterial({ color: 0x15803d }));
-  hospRoof.position.set(0, 8.8, 0);
-
-  // Red Cross Emblem (ചുവപ്പ് കുരിശ്)
-  const rcH = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.9, 0.15), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
-  rcH.position.set(0, 6.8, 7.6);
-  const rcV = new THREE.Mesh(new THREE.BoxGeometry(0.9, 3.2, 0.15), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
-  rcV.position.set(0, 6.8, 7.6);
-
-  // 24x7 Emergency / Casualty Sign
-  const emSign = new THREE.Mesh(new THREE.BoxGeometry(16, 1.1, 0.15), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
-  emSign.position.set(0, 4.8, 7.6);
-
-  hospGroup.add(hospWalls, hospRoof, rcH, rcV, emSign);
-  // Colliders for Hospital Main Building (absolute world coords: X: 39 to 65, Z: 57 to 73)
-  colliders.push({ minX: 38, maxX: 66, minZ: 56, maxZ: 74 });
-
-  // Jan Aushadhi Medical Pharmacy (മെഡിക്കൽ ഷോപ്പ്) — placed along the hospital courtyard, far clear of road
-  const medShop = new THREE.Group();
-  const medWalls = new THREE.Mesh(new THREE.BoxGeometry(9, 3.8, 6), new THREE.MeshLambertMaterial({ color: 0xffffff }));
-  medWalls.position.set(0, 1.9, 0);
-  const medSign = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.9, 0.1), new THREE.MeshLambertMaterial({ color: 0x16a34a }));
-  medSign.position.set(0, 3.2, 3.06);
-  medShop.add(medWalls, medSign);
-  medShop.position.set(-16, 0, 13);
-  hospGroup.add(medShop);
-  // Colliders for Pharmacy (absolute world coords: X: 31 to 41, Z: 75 to 81)
-  colliders.push({ minX: 31, maxX: 41, minZ: 75, maxZ: 81 });
-
-  // =========================================================================
-  // 🚑 SIDE OF HOSPITAL: 108 AMBULANCE PARKING BAY & AMBULANCE (ആംബുലൻസ് പാർക്കിംഗ്)
-  // Situated on the North side of the hospital building (Z: -6 to -17, X: -8 to +8)
-  // Directly connected to the main entrance driveway.
-  // =========================================================================
-  const ambBayGroup = new THREE.Group();
-
-  // 1. Tarmac / Asphalt Parking Apron & Bay Pavement (connecting to driveway)
-  const apronGeo = new THREE.PlaneGeometry(17, 12);
-  apronGeo.rotateX(-Math.PI / 2);
-  const apronMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
-  const apron = new THREE.Mesh(apronGeo, apronMat);
-  apron.position.set(-0.5, 0.084, -11.5);
-  apron.receiveShadow = true;
-  ambBayGroup.add(apron);
-
-  // Driveway connecting spur (smooth blend between main driveway and side parking)
-  const spurGeo = new THREE.PlaneGeometry(10, 6.5);
-  spurGeo.rotateX(-Math.PI / 2);
-  const spur = new THREE.Mesh(spurGeo, apronMat);
-  spur.position.set(-10, 0.083, -4);
-  ambBayGroup.add(spur);
-
-  // Painted parking bay slot lines (Bay 1 & Bay 2)
-  const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 }); // Safety Yellow
+  // Common shared materials
+  const whiteWallMat = new THREE.MeshLambertMaterial({ color: 0xf8fafc });
+  const crimsonRedMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 });
+  const darkGlassMat = new THREE.MeshLambertMaterial({ color: 0x0284c7, transparent: true, opacity: 0.85 });
+  const roofGrayMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+  const lateriteMat = new THREE.MeshLambertMaterial({ color: 0xb45309 });
+  const lateriteDarkMat = new THREE.MeshLambertMaterial({ color: 0x92400e });
+  const tileRoofMat = new THREE.MeshLambertMaterial({ color: 0xc2410c });
+  const woodMat = new THREE.MeshLambertMaterial({ color: 0x5a3d28 });
+  const asphaltMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+  const yellowLineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
   const whiteLineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const redDecalMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
 
-  // Bay 1 & Bay 2 divider & boundary lines
-  for (let lx of [-7.5, -0.5, 6.5]) {
-    const bLine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 9.8), lineMat);
-    bLine.position.set(lx, 0.09, -11.5);
-    ambBayGroup.add(bLine);
+  // Animated elements references
+  const animObstacleLights: THREE.Mesh[] = [];
+  const animBeacons: THREE.SpotLight[] = [];
+
+  // =========================================================================
+  // 1. 🌴 KASARAGOD — THE NORTHERN START (X: -80, Z: -350)
+  // Coastal Fort, Laterite Hills, Chandragiri River, Karnataka Border Gateway
+  // =========================================================================
+  const kasaragodGroup = new THREE.Group();
+  kasaragodGroup.position.set(-80, 0, -350);
+
+  // 1A. Karnataka-Kerala Border Gateway Arch
+  const borderArch = new THREE.Group();
+  const borderPillarL = new THREE.Mesh(new THREE.BoxGeometry(1.6, 6.2, 1.6), lateriteMat);
+  borderPillarL.position.set(-8, 3.1, 0);
+  const borderPillarR = new THREE.Mesh(new THREE.BoxGeometry(1.6, 6.2, 1.6), lateriteMat);
+  borderPillarR.position.set(8, 3.1, 0);
+  const borderBeam = new THREE.Mesh(new THREE.BoxGeometry(18, 1.4, 1.8), lateriteDarkMat);
+  borderBeam.position.set(0, 5.8, 0);
+  // Kerala Welcome Sign
+  const borderSign = new THREE.Mesh(new THREE.BoxGeometry(15, 0.9, 0.2), new THREE.MeshLambertMaterial({ color: 0x047857 }));
+  borderSign.position.set(0, 5.8, 0.95);
+  // Sloped Traditional Kerala Padippura Roof
+  const borderRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 2.5, 4), tileRoofMat);
+  borderRoof.rotateY(Math.PI / 4);
+  borderRoof.position.set(0, 7.6, 0);
+  borderArch.add(borderPillarL, borderPillarR, borderBeam, borderSign, borderRoof);
+  borderArch.position.set(0, 0, -25);
+  kasaragodGroup.add(borderArch);
+
+  // 1B. Bekal Fort Inspired Laterite Bastion & Observation Ramparts
+  const fortGroup = new THREE.Group();
+  // Semi-circular Observation Tower
+  const towerGeo = new THREE.CylinderGeometry(8.5, 9.2, 10.5, 16);
+  const tower = new THREE.Mesh(towerGeo, lateriteMat);
+  tower.position.set(0, 5.25, 0);
+  // Crenellated Battlements
+  for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+    const battlement = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 0.9), lateriteDarkMat);
+    battlement.position.set(Math.cos(a) * 8.2, 11.1, Math.sin(a) * 8.2);
+    battlement.rotation.y = -a;
+    fortGroup.add(battlement);
   }
-  // Stop boundary line across bays
-  const stopLine = new THREE.Mesh(new THREE.BoxGeometry(14.2, 0.02, 0.25), lineMat);
-  stopLine.position.set(-0.5, 0.09, -6.8);
-  ambBayGroup.add(stopLine);
+  // Flagstaff on Bastion Apex
+  const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5.5, 8), new THREE.MeshLambertMaterial({ color: 0xd4d4d8 }));
+  flagPole.position.set(0, 13.2, 0);
+  const flagCloth = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.0, 0.04), crimsonRedMat);
+  flagCloth.position.set(0.9, 14.8, 0);
+  fortGroup.add(tower, flagPole, flagCloth);
+  fortGroup.position.set(-25, 0, 10);
+  kasaragodGroup.add(fortGroup);
+  colliders.push({ minX: -115, maxX: -95, minZ: -350, maxZ: -330 });
 
-  // Painted Ground Decal: Emergency Red Cross on white square in front of ambulance bay
-  const decalBg = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.02, 2.4), whiteLineMat);
-  decalBg.position.set(-4, 0.091, -7.8);
-  const decalCrossH = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.025, 0.55), redDecalMat);
-  decalCrossH.position.set(-4, 0.093, -7.8);
-  const decalCrossV = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.025, 1.8), redDecalMat);
-  decalCrossV.position.set(-4, 0.093, -7.8);
-  ambBayGroup.add(decalBg, decalCrossH, decalCrossV);
-
-  // Painted "108 AMBULANCE ONLY" red marker plate on ground
-  const textPlate = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.02, 1.1), redDecalMat);
-  textPlate.position.set(-4, 0.092, -15.2);
-  const textPlateInner = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.022, 0.8), whiteLineMat);
-  textPlateInner.position.set(-4, 0.093, -15.2);
-  ambBayGroup.add(textPlate, textPlateInner);
-
-  // Concrete wheel stop bumpers (with yellow/black hazard bands)
-  const bumperMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
-  const bumper1 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.22, 0.35), bumperMat);
-  bumper1.position.set(-4, 0.19, -15.8);
-  const bumper2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.22, 0.35), bumperMat);
-  bumper2.position.set(3, 0.19, -15.8);
-  ambBayGroup.add(bumper1, bumper2);
-
-  // 2. Covered Kerala Hospital Portico Shelter (ആംബുലൻസ് പോർട്ടിക്കോ)
-  const porticoGroup = new THREE.Group();
-  const steelMat = new THREE.MeshLambertMaterial({ color: 0x15803d }); // Hospital Green
-  const whiteMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  const roofSheetMat = new THREE.MeshLambertMaterial({ color: 0x166534 });
-
-  // 4 Main Structural Steel Support Columns with hazard protective plinth sleeves
-  const colGeo = new THREE.CylinderGeometry(0.16, 0.16, 4.4, 10);
-  const sleeveGeo = new THREE.BoxGeometry(0.5, 0.6, 0.5);
-  const sleeveMat = new THREE.MeshLambertMaterial({ color: 0xfacc15 });
-
-  const colCoords: [number, number][] = [
-    [-7.6, -7.2],
-    [6.6, -7.2],
-    [-7.6, -16.0],
-    [6.6, -16.0],
-  ];
-
-  colCoords.forEach(([cx, cz]) => {
-    const col = new THREE.Mesh(colGeo, steelMat);
-    col.position.set(cx, 2.2, cz);
-    const sleeve = new THREE.Mesh(sleeveGeo, sleeveMat);
-    sleeve.position.set(cx, 0.3, cz);
-    porticoGroup.add(col, sleeve);
-  });
-
-  // Perimeter Roof Trusses & Steel Beams
-  const beamLongMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
-  const beamFront = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.3, 0.3), beamLongMat);
-  beamFront.position.set(-0.5, 4.3, -7.2);
-  const beamBack = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.3, 0.3), beamLongMat);
-  beamBack.position.set(-0.5, 4.3, -16.0);
-  const beamLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 9.1), beamLongMat);
-  beamLeft.position.set(-7.6, 4.3, -11.6);
-  const beamRight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 9.1), beamLongMat);
-  beamRight.position.set(6.6, 4.3, -11.6);
-  porticoGroup.add(beamFront, beamBack, beamLeft, beamRight);
-
-  // Sloped Weather Canopy Roof with green fascia
-  const porticoRoof = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.25, 9.8), roofSheetMat);
-  porticoRoof.position.set(-0.5, 4.5, -11.6);
-  porticoRoof.rotation.x = 0.03; // slight drainage slope
-  const roofFascia = new THREE.Mesh(new THREE.BoxGeometry(15.4, 0.45, 0.1), whiteMat);
-  roofFascia.position.set(-0.5, 4.4, -6.9);
-  porticoGroup.add(porticoRoof, roofFascia);
-
-  // Front Illuminated Overhead Signboard: "108 EMERGENCY AMBULANCE BAY"
-  const signBack = new THREE.Mesh(new THREE.BoxGeometry(11.2, 0.9, 0.15), redDecalMat);
-  signBack.position.set(-0.5, 4.9, -6.85);
-  const signInner = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.65, 0.18), whiteMat);
-  signInner.position.set(-0.5, 4.9, -6.85);
-
-  // Red Cross Medallion on canopy signboard apex
-  const signCrossH = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.26, 0.22), redDecalMat);
-  signCrossH.position.set(-5.0, 4.9, -6.83);
-  const signCrossV = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.9, 0.22), redDecalMat);
-  signCrossV.position.set(-5.0, 4.9, -6.83);
-
-  // Green 24x7 Emergency Status Light Beacon
-  const greenBeacon = new THREE.Mesh(
-    new THREE.SphereGeometry(0.2, 10, 10),
-    new THREE.MeshBasicMaterial({ color: 0x22c55e })
-  );
-  greenBeacon.position.set(4.5, 4.9, -6.8);
-  porticoGroup.add(signBack, signInner, signCrossH, signCrossV, greenBeacon);
-
-  // Under-canopy bright ceiling fluorescent light fixtures
-  for (let lz of [-9.5, -13.5]) {
-    for (let lx of [-4, 3]) {
-      const lampTube = new THREE.Mesh(
-        new THREE.BoxGeometry(1.8, 0.08, 0.2),
-        new THREE.MeshBasicMaterial({ color: 0xffffff })
-      );
-      lampTube.position.set(lx, 4.25, lz);
-      porticoGroup.add(lampTube);
-    }
+  // 1C. Northern Kerala Nalukettu Courtyard House (Sloped tiled roof, laterite walls)
+  const naluGroup = new THREE.Group();
+  const naluBase = new THREE.Mesh(new THREE.BoxGeometry(16, 4.2, 14), lateriteMat);
+  naluBase.position.set(0, 2.1, 0);
+  const naluRoof = new THREE.Mesh(new THREE.ConeGeometry(12, 4.2, 4), tileRoofMat);
+  naluRoof.rotateY(Math.PI / 4);
+  naluRoof.position.set(0, 6.2, 0);
+  // Wooden verandah pillars
+  for (let vx of [-7, -3.5, 0, 3.5, 7]) {
+    const vPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 2.8, 8), woodMat);
+    vPillar.position.set(vx, 1.4, 7.3);
+    naluGroup.add(vPillar);
   }
+  naluGroup.add(naluBase, naluRoof);
+  naluGroup.position.set(22, 0, 5);
+  kasaragodGroup.add(naluGroup);
+  colliders.push({ minX: -68, maxX: -48, minZ: -355, maxZ: -335 });
 
-  ambBayGroup.add(porticoGroup);
+  mapGroup.add(kasaragodGroup);
 
-  // 3. Side Hospital Emergency Entrance Door & Stretcher Patient Ramp
-  // Connects directly onto the hospital side wall at Z = -7.5
-  const rampGeo = new THREE.BoxGeometry(5.2, 0.26, 2.6);
-  const ramp = new THREE.Mesh(rampGeo, new THREE.MeshLambertMaterial({ color: 0x64748b }));
-  ramp.position.set(-1.0, 0.13, -7.5);
-  // Double casualty emergency doors
-  const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.8, 0.12), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
-  doorFrame.position.set(-1.0, 1.4, -7.4);
-  const doorSign = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.35, 0.15), redDecalMat);
-  doorSign.position.set(-1.0, 2.7, -7.38);
-  ambBayGroup.add(ramp, doorFrame, doorSign);
+  // =========================================================================
+  // 2. 🌊 KANNUR — COAST & CULTURE (X: 70, Z: -320)
+  // Muzhappilangad Drive-In Beach, Theyyam Ritual Grounds, Fishing Village
+  // =========================================================================
+  const kannurGroup = new THREE.Group();
+  kannurGroup.position.set(70, 0, -320);
 
-  // 4. Staged Medical Trauma Equipment beside Ambulance Bay
-  // Stretcher Gurney (ട്രോളി / സ്ട്രെച്ചർ)
-  const gurney = new THREE.Group();
-  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.85, roughness: 0.2 });
-  const stretcherBed = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.1, 2.1), whiteMat);
-  stretcherBed.position.set(0, 0.75, 0);
-  const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 0.4), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
-  pillow.position.set(0, 0.83, 0.7);
-  const gurneyFrame = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.55, 1.8), chromeMat);
-  gurneyFrame.position.set(0, 0.4, 0);
-  // IV Drip Pole with saline bottle
-  const ivPole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.3, 8), chromeMat);
-  ivPole.position.set(0.38, 1.35, 0.8);
-  const ivBottle = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.06, 0.06, 0.2, 8),
-    new THREE.MeshLambertMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.8 })
-  );
-  ivBottle.position.set(0.38, 1.8, 0.8);
-  gurney.add(stretcherBed, pillow, gurneyFrame, ivPole, ivBottle);
-  gurney.position.set(-1.2, 0, -11.5);
-  ambBayGroup.add(gurney);
+  // 2A. Muzhappilangad Drive-in Beach Hard-packed Sand Strip & Surf
+  const kBeach = new THREE.Mesh(new THREE.PlaneGeometry(110, 48), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
+  kBeach.rotateX(-Math.PI / 2);
+  kBeach.position.set(0, 0.04, 15);
+  kannurGroup.add(kBeach);
 
-  // Dual Medical Oxygen Cylinders on Steel Rack (ഓക്സിജൻ സിലിണ്ടറുകൾ)
-  const o2Rack = new THREE.Group();
-  const o2CylMat = new THREE.MeshLambertMaterial({ color: 0x15803d }); // Medical Oxygen Green
-  const o2NeckMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  for (let ox of [-0.22, 0.22]) {
-    const tankBody = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.25, 12), o2CylMat);
-    tankBody.position.set(ox, 0.7, 0);
-    const tankTop = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), o2NeckMat);
-    tankTop.position.set(ox, 1.32, 0);
-    const valve = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.15, 8), chromeMat);
-    valve.position.set(ox, 1.5, 0);
-    o2Rack.add(tankBody, tankTop, valve);
+  // 2B. Theyyam / Kaliyattam Sacred Festival Stage (തെയ്യത്തറ & തീയാട്ടം)
+  const theyyamStage = new THREE.Group();
+  // Circular Sacred Stone Platform
+  const altarPlatform = new THREE.Mesh(new THREE.CylinderGeometry(9, 9.5, 0.9, 20), lateriteMat);
+  altarPlatform.position.set(0, 0.45, 0);
+  // Central Sacred Hearth / Fire Altar (മേലേരി / തീക്കുണ്ടം)
+  const fireAltar = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, 0.6, 12), new THREE.MeshLambertMaterial({ color: 0x7c2d12 }));
+  fireAltar.position.set(0, 0.9, 0);
+  const fireEmber = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.8, 8), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
+  fireEmber.position.set(0, 1.8, 0);
+  // Chenda Melam Troupe Stands & Festival Flags
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const flagStaff = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 4.5, 8), woodMat);
+    flagStaff.position.set(Math.cos(angle) * 7.5, 2.25, Math.sin(angle) * 7.5);
+    const pennant = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.03), crimsonRedMat);
+    pennant.position.set(Math.cos(angle) * 7.5 + 0.4, 3.5, Math.sin(angle) * 7.5);
+    theyyamStage.add(flagStaff, pennant);
   }
-  o2Rack.position.set(5.5, 0, -15.2);
-  ambBayGroup.add(o2Rack);
+  theyyamStage.add(altarPlatform, fireAltar, fireEmber);
+  theyyamStage.position.set(-15, 0, -18);
+  kannurGroup.add(theyyamStage);
+  colliders.push({ minX: 45, maxX: 65, minZ: -348, maxZ: -328 });
 
-  // Safety traffic caution cones (bright fluorescent orange with white reflective ring)
-  const coneMat = new THREE.MeshLambertMaterial({ color: 0xf97316 });
-  const coneRingMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  for (let cx of [-6.8, -1.2]) {
-    const coneBase = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.04, 0.42), coneMat);
-    coneBase.position.set(cx, 0.1, -6.6);
-    const coneBody = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.65, 10), coneMat);
-    coneBody.position.set(cx, 0.42, -6.6);
-    const coneRing = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.16, 10), coneRingMat);
-    coneRing.position.set(cx, 0.38, -6.6);
-    ambBayGroup.add(coneBase, coneBody, coneRing);
+  // 2C. Traditional Fishermen Huts with Coconut Leaf Thatched Canopies
+  for (let h = 0; h < 2; h++) {
+    const hut = new THREE.Group();
+    const hWalls = new THREE.Mesh(new THREE.BoxGeometry(6, 2.8, 5.5), new THREE.MeshLambertMaterial({ color: 0xfde68a }));
+    hWalls.position.set(0, 1.4, 0);
+    const hRoof = new THREE.Mesh(new THREE.ConeGeometry(4.8, 2.6, 4), new THREE.MeshLambertMaterial({ color: 0x78350f }));
+    hRoof.rotateY(Math.PI / 4);
+    hRoof.position.set(0, 3.8, 0);
+    hut.add(hWalls, hRoof);
+    hut.position.set(22 + h * 11, 0, -8 + h * 8);
+    kannurGroup.add(hut);
+    colliders.push({ minX: 88 + h * 11, maxX: 98 + h * 11, minZ: -332 + h * 8, maxZ: -322 + h * 8 });
   }
 
-  // 5. 🚑 AMERICAN TYPE III MODULAR BOX AMBULANCE (ambu.jpg)
-  const { group: ambulanceGroup } = buildAmericanBoxAmbulance();
-  ambulanceGroup.position.set(-4.0, 0, -11.5);
-  ambulanceGroup.rotation.y = 0; // Parked in Bay 1 facing forward towards the driveway!
-  ambBayGroup.add(ambulanceGroup);
-  hospGroup.add(ambBayGroup);
+  mapGroup.add(kannurGroup);
 
-  // Colliders for Ambulance Parking Bay & Shelter Pillars (absolute world coords: X: 44 to 59, Z: 49 to 58)
-  colliders.push({ minX: 44, maxX: 59, minZ: 49, maxZ: 58 });
+  // =========================================================================
+  // 3. 🌆 KOZHIKODE — BIG CITY REGION (X: 0, Z: -280)
+  // Downtown High Street, SM Street (Mittai Theruvu), Calicut Beach Pier Ruins
+  // =========================================================================
+  const kozhikodeGroup = new THREE.Group();
+  kozhikodeGroup.position.set(0, 0, -280);
 
-  mapGroup.add(hospGroup);
+  // 3A. Historic SM Street (മിഠായിത്തെരുവ് / Sweet Meat Street) Heritage Arch
+  const smArch = new THREE.Group();
+  const smPillarL = new THREE.Mesh(new THREE.BoxGeometry(1.4, 7.2, 1.4), new THREE.MeshLambertMaterial({ color: 0x065f46 }));
+  smPillarL.position.set(-7, 3.6, 0);
+  const smPillarR = new THREE.Mesh(new THREE.BoxGeometry(1.4, 7.2, 1.4), new THREE.MeshLambertMaterial({ color: 0x065f46 }));
+  smPillarR.position.set(7, 3.6, 0);
+  const smBanner = new THREE.Mesh(new THREE.BoxGeometry(16, 1.6, 0.4), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
+  smBanner.position.set(0, 6.8, 0);
+  const smLampL = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+  smLampL.position.set(-7, 7.6, 0);
+  const smLampR = smLampL.clone();
+  smLampR.position.set(7, 7.6, 0);
+  smArch.add(smPillarL, smPillarR, smBanner, smLampL, smLampR);
+  smArch.position.set(-30, 0, 0);
+  kozhikodeGroup.add(smArch);
 
-  // ==========================================
-  // 8. 🌾 PADDY VILLAGE (South-West, X: -130, Z: 90)
-  // ==========================================
-  const paddyGroup = new THREE.Group();
-  paddyGroup.position.set(-130, 0, 90);
-
-  // Huge Flooded Paddy Fields with Mud Bunds
-  for (let px = -35; px <= 35; px += 35) {
-    for (let pz = -30; pz <= 30; pz += 30) {
-      // Flooded water bed
-      const pWater = new THREE.Mesh(
-        new THREE.PlaneGeometry(31, 26),
-        new THREE.MeshPhongMaterial({ color: 0x22c55e, shininess: 90, transparent: true, opacity: 0.72 })
-      );
-      pWater.rotateX(-Math.PI / 2);
-      pWater.position.set(px, 0.22, pz);
-      paddyGroup.add(pWater);
-
-      // Mud bunds (വരമ്പ്)
-      const bMat = new THREE.MeshLambertMaterial({ color: 0x785338 });
-      const bNorth = new THREE.Mesh(new THREE.BoxGeometry(33, 0.45, 1.8), bMat);
-      bNorth.position.set(px, 0.25, pz - 14);
-      const bSouth = bNorth.clone();
-      bSouth.position.set(px, 0.25, pz + 14);
-      const bWest = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.45, 29), bMat);
-      bWest.position.set(px - 16, 0.25, pz);
-      const bEast = bWest.clone();
-      bEast.position.set(px + 16, 0.25, pz);
-      paddyGroup.add(bNorth, bSouth, bWest, bEast);
-    }
+  // 3B. Kozhikodan Halwa & Paragon Culinary Bazaars
+  for (let s = 0; s < 3; s++) {
+    const shop = new THREE.Group();
+    const sBody = new THREE.Mesh(new THREE.BoxGeometry(8, 4.5, 6), new THREE.MeshLambertMaterial({ color: s === 1 ? 0xfef08a : 0xffedd5 }));
+    sBody.position.set(0, 2.25, 0);
+    const sSign = new THREE.Mesh(new THREE.BoxGeometry(7.6, 1.1, 0.2), crimsonRedMat);
+    sSign.position.set(0, 4.8, 3.1);
+    shop.add(sBody, sSign);
+    shop.position.set(-42 + s * 10, 0, -12);
+    kozhikodeGroup.add(shop);
+    colliders.push({ minX: -48 + s * 10, maxX: -36 + s * 10, minZ: -296, maxZ: -286 });
   }
 
-  // Bamboo Scarecrow (പേടിപ്പാവ / കൊതിച്ചി)
-  const scGroup = new THREE.Group();
-  const scPole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.4, 6), woodMat);
-  scPole.position.y = 1.2;
-  const scArm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.8, 6), woodMat);
-  scArm.rotateZ(Math.PI / 2);
-  scArm.position.y = 1.8;
-  const scShirt = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 0.3), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
-  scShirt.position.y = 1.6;
-  const scPotHead = new THREE.Mesh(new THREE.SphereGeometry(0.35, 7, 7), new THREE.MeshLambertMaterial({ color: 0x1f2937 }));
-  scPotHead.position.y = 2.45;
-  scGroup.add(scPole, scArm, scShirt, scPotHead);
-  scGroup.position.set(0, 0, 0);
-  paddyGroup.add(scGroup);
+  // 3C. Calicut Beach Old Sea Pier Ruins (കടൽപ്പാലം Pillars in the water)
+  const pierGroup = new THREE.Group();
+  for (let p = 0; p < 7; p++) {
+    const pierColL = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 6, 8), new THREE.MeshLambertMaterial({ color: 0x475569 }));
+    pierColL.position.set(38, 2.5, -20 + p * 6);
+    const pierColR = pierColL.clone();
+    pierColR.position.set(43, 2.5, -20 + p * 6);
+    const beamAcross = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.4, 0.5), new THREE.MeshLambertMaterial({ color: 0x334155 }));
+    beamAcross.position.set(40.5, 5.2, -20 + p * 6);
+    pierGroup.add(pierColL, pierColR, beamAcross);
+  }
+  kozhikodeGroup.add(pierGroup);
 
-  mapGroup.add(paddyGroup);
+  mapGroup.add(kozhikodeGroup);
 
-  // ==========================================
-  // 9. 🌊 RIVER ZONE & 🌉 BIG BRIDGE (Z: 145)
-  // ==========================================
-  const riverGroup = new THREE.Group();
-  riverGroup.position.set(0, 0, 145);
+  // =========================================================================
+  // 4. ⛰️ WAYANAD — MISTY WESTERN GHATS & WATERFALL (X: -140, Z: -250)
+  // Hairpin Ghat Roads, Cascading Mountain Waterfall, Tea & Coffee Terraces
+  // =========================================================================
+  const wayanadGroup = new THREE.Group();
+  wayanadGroup.position.set(-140, 0, -250);
 
-  // Wide River Water Body (flowing East-West across the entire map, width 54m, span 700m)
-  const riverWaterGeo = new THREE.PlaneGeometry(720, 54);
-  riverWaterGeo.rotateX(-Math.PI / 2);
-  const riverWaterMat = new THREE.MeshPhongMaterial({
-    color: 0x0f766e,
-    emissive: 0x042f2e,
+  // 4A. Cascading Mountain Cliff & Waterfall (വെള്ളച്ചാട്ടം)
+  const cliffGeo = new THREE.BoxGeometry(32, 28, 18);
+  const cliffMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+  const cliff = new THREE.Mesh(cliffGeo, cliffMat);
+  cliff.position.set(0, 14, 0);
+  wayanadGroup.add(cliff);
+  colliders.push({ minX: -158, maxX: -122, minZ: -260, maxZ: -240 });
+
+  // Waterfall Water Stream tumbling down cliff face
+  const wFallMat = new THREE.MeshPhongMaterial({
+    color: 0x38bdf8,
+    emissive: 0x075985,
     shininess: 120,
     transparent: true,
     opacity: 0.88,
   });
-  const riverWater = new THREE.Mesh(riverWaterGeo, riverWaterMat);
-  riverWater.position.set(0, -0.7, 0);
-  riverGroup.add(riverWater);
-  waterObjects.push(riverWater);
+  const wFallStream = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 27), wFallMat);
+  wFallStream.position.set(0, 14.5, 9.1);
+  wayanadGroup.add(wFallStream);
+  waterObjects.push(wFallStream);
 
-  // 🌉 THE BIG HIGHWAY BRIDGE (Crosses river at X: 0, spanning from Z: 115 to Z: 175)
-  const bridgeGroup = new THREE.Group();
-  const bridgeDeckMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
-  const bridgePillarMat = new THREE.MeshLambertMaterial({ color: 0x94a3b8 });
-  const bridgeRailMat = new THREE.MeshLambertMaterial({ color: 0xe2e8f0 });
+  // Splash Lagoon at Waterfall Base
+  const poolMat = new THREE.MeshPhongMaterial({ color: 0x0284c7, transparent: true, opacity: 0.85 });
+  const pool = new THREE.Mesh(new THREE.CylinderGeometry(8.5, 9.5, 0.6, 16), poolMat);
+  pool.position.set(0, 0.3, 14);
+  wayanadGroup.add(pool);
+  waterObjects.push(pool);
 
-  // Highway Bridge Deck (Width 16m, Length 62m)
-  const bDeck = new THREE.Mesh(new THREE.BoxGeometry(16, 1.4, 62), bridgeDeckMat);
-  bDeck.position.set(0, 3.2, 0);
-  bDeck.receiveShadow = true;
-  bridgeGroup.add(bDeck);
-
-  // Asphalt road surface on bridge with white lane markings
-  const bRoadMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
-  const bRoad = new THREE.Mesh(new THREE.PlaneGeometry(13.5, 61.8), bRoadMat);
-  bRoad.rotateX(-Math.PI / 2);
-  bRoad.position.set(0, 3.92, 0);
-  bridgeGroup.add(bRoad);
-
-  // Yellow center dividing line
-  const bLine = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 60), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-  bLine.rotateX(-Math.PI / 2);
-  bLine.position.set(0, 3.94, 0);
-  bridgeGroup.add(bLine);
-
-  // Massive Concrete Support Piers in the water
-  for (let pz of [-18, 0, 18]) {
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(14, 5.2, 4.5), bridgePillarMat);
-    pier.position.set(0, 0.8, pz);
-    pier.castShadow = true;
-    bridgeGroup.add(pier);
+  // 4B. Stepped Terraced Emerald Tea Plantations (തേയിലത്തോട്ടങ്ങൾ)
+  for (let t = 0; t < 4; t++) {
+    const teaBed = new THREE.Mesh(
+      new THREE.BoxGeometry(26, 0.9, 7),
+      new THREE.MeshLambertMaterial({ color: 0x15803d })
+    );
+    teaBed.position.set(22, 1.2 + t * 1.4, -10 + t * 6);
+    wayanadGroup.add(teaBed);
   }
 
-  // Steel Guardrails & Decorative Streetlights on Bridge
-  const railLeft = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.2, 62), bridgeRailMat);
-  railLeft.position.set(-7.4, 4.5, 0);
-  const railRight = railLeft.clone();
-  railRight.position.set(7.4, 4.5, 0);
-  bridgeGroup.add(railLeft, railRight);
+  // 4C. High-Range Bamboo Tribal Huts & Viewpoint Pavilion
+  const vHut = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 7), woodMat);
+  vHut.position.set(-22, 2, 12);
+  const vRoof = new THREE.Mesh(new THREE.ConeGeometry(6.5, 3.5, 4), new THREE.MeshLambertMaterial({ color: 0x78350f }));
+  vRoof.rotateY(Math.PI / 4);
+  vRoof.position.set(-22, 5.5, 12);
+  wayanadGroup.add(vHut, vRoof);
+  colliders.push({ minX: -168, maxX: -156, minZ: -242, maxZ: -232 });
 
-  for (let lz of [-22, -7, 7, 22]) {
-    for (let lx of [-7.5, 7.5]) {
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.2, 8), bridgePillarMat);
-      pole.position.set(lx, 5.9, lz);
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
-      bulb.position.set(lx * 0.88, 7.8, lz);
-      bridgeGroup.add(pole, bulb);
+  // 4D. Wild Asiatic Elephant (കാട്ടാന) in Wayanad Bamboo Forest
+  const elephantGroup = new THREE.Group();
+  const eBody = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.4, 5.2), new THREE.MeshLambertMaterial({ color: 0x475569 }));
+  eBody.position.set(0, 3.0, 0);
+  const eHead = new THREE.Mesh(new THREE.SphereGeometry(1.8, 10, 10), new THREE.MeshLambertMaterial({ color: 0x475569 }));
+  eHead.position.set(0, 4.0, 3.2);
+  // Trunk
+  const eTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.6, 3.4, 8), new THREE.MeshLambertMaterial({ color: 0x475569 }));
+  eTrunk.position.set(0, 2.4, 4.3);
+  eTrunk.rotateX(0.35);
+  // Ivory Tusks
+  for (let side of [-0.7, 0.7]) {
+    const tusk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.16, 2.2, 8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+    tusk.position.set(side, 2.8, 3.9);
+    tusk.rotateX(0.5);
+    elephantGroup.add(tusk);
+  }
+  // Ears
+  for (let side of [-1.9, 1.9]) {
+    const ear = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.4, 1.8), new THREE.MeshLambertMaterial({ color: 0x334155 }));
+    ear.position.set(side, 4.0, 2.8);
+    ear.rotateZ(side > 0 ? 0.35 : -0.35);
+    elephantGroup.add(ear);
+  }
+  // Legs
+  for (let lx of [-1.15, 1.15]) {
+    for (let lz of [-1.7, 1.7]) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.62, 3.0, 8), new THREE.MeshLambertMaterial({ color: 0x334155 }));
+      leg.position.set(lx, 1.5, lz);
+      elephantGroup.add(leg);
+    }
+  }
+  elephantGroup.add(eBody, eHead, eTrunk);
+  elephantGroup.position.set(8, 0, 16);
+  wayanadGroup.add(elephantGroup);
+  colliders.push({ minX: -136, maxX: -124, minZ: -238, maxZ: -226 });
+
+  // Elephant Warning Sign (മുന്നറിയിപ്പ്: കാട്ടാന ശല്യം! 🐘)
+  const signPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.8, 8), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+  signPole.position.set(16, 1.9, 14);
+  const signBoard = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.1), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+  signBoard.position.set(16, 3.6, 14);
+  signBoard.rotateZ(Math.PI / 4);
+  wayanadGroup.add(signPole, signBoard);
+
+  mapGroup.add(wayanadGroup);
+
+  // =========================================================================
+  // 5. ⚽ MALAPPURAM — HILLS & SEVENS FOOTBALL (X: -60, Z: -160)
+  // Traditional Juma Masjid, Sevens Football Ground, Rolling Green Hills
+  // =========================================================================
+  const malappuramGroup = new THREE.Group();
+  malappuramGroup.position.set(-60, 0, -160);
+
+  // 5A. Traditional Malappuram Heritage White & Green Mosque
+  const masjid = new THREE.Group();
+  const mWalls = new THREE.Mesh(new THREE.BoxGeometry(18, 7.5, 15), whiteWallMat);
+  mWalls.position.set(0, 3.75, 0);
+  const mDome = new THREE.Mesh(new THREE.SphereGeometry(4.5, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x16a34a }));
+  mDome.position.set(0, 7.5, 0);
+  // Twin Minarets
+  for (let mx of [-9, 9]) {
+    const minaret = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 14, 12), whiteWallMat);
+    minaret.position.set(mx, 7, 7.5);
+    const minDome = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), new THREE.MeshLambertMaterial({ color: 0x16a34a }));
+    minDome.position.set(mx, 14.5, 7.5);
+    masjid.add(minaret, minDome);
+  }
+  masjid.add(mWalls, mDome);
+  masjid.position.set(-18, 0, 0);
+  malappuramGroup.add(masjid);
+  colliders.push({ minX: -88, maxX: -68, minZ: -170, maxZ: -150 });
+
+  // 5B. Sevens Football Field with Goalposts & Floodlights
+  const pitchGeo = new THREE.PlaneGeometry(38, 26);
+  pitchGeo.rotateX(-Math.PI / 2);
+  const pitch = new THREE.Mesh(pitchGeo, new THREE.MeshLambertMaterial({ color: 0x15803d }));
+  pitch.position.set(22, 0.06, 0);
+  malappuramGroup.add(pitch);
+
+  // Floodlight Poles at Corners
+  for (let fx of [5, 39]) {
+    for (let fz of [-12, 12]) {
+      const fPole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 10, 8), new THREE.MeshLambertMaterial({ color: 0x64748b }));
+      fPole.position.set(fx, 5, fz);
+      const fLamp = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 0.8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+      fLamp.position.set(fx, 10.2, fz);
+      malappuramGroup.add(fPole, fLamp);
     }
   }
 
-  riverGroup.add(bridgeGroup);
-  mapGroup.add(riverGroup);
+  mapGroup.add(malappuramGroup);
 
-  // ==========================================
-  // 10. 🛶 BACKWATER & HOUSEBOAT (South-East, X: 120, Z: 230)
-  // ==========================================
-  const backwaterGroup = new THREE.Group();
-  backwaterGroup.position.set(120, 0, 230);
+  // =========================================================================
+  // 6. 🌾 PALAKKAD — PALAKKAD GAP & GRANARY (X: 120, Z: -150)
+  // Expansive Paddy Fields, Tipu's Granite Fort Wall, Massey Farm Tractor
+  // =========================================================================
+  const palakkadGroup = new THREE.Group();
+  palakkadGroup.position.set(120, 0, -150);
 
-  // Tranquil Backwater Basin (കായൽ)
-  const bwWater = new THREE.Mesh(
-    new THREE.PlaneGeometry(120, 90),
-    new THREE.MeshPhongMaterial({ color: 0x0e7490, emissive: 0x083344, shininess: 110, transparent: true, opacity: 0.85 })
-  );
-  bwWater.rotateX(-Math.PI / 2);
-  bwWater.position.set(0, -0.4, 0);
-  backwaterGroup.add(bwWater);
-  waterObjects.push(bwWater);
+  // 6A. Expansive Emerald Flooded Paddy Fields with Mud Bunds
+  for (let px of [-22, 22]) {
+    for (let pz of [-16, 16]) {
+      const pWater = new THREE.Mesh(
+        new THREE.PlaneGeometry(36, 26),
+        new THREE.MeshPhongMaterial({ color: 0x16a34a, shininess: 80, transparent: true, opacity: 0.78 })
+      );
+      pWater.rotateX(-Math.PI / 2);
+      pWater.position.set(px, 0.18, pz);
+      palakkadGroup.add(pWater);
 
-  // Wooden Boat Jetty (തടി ജട്ടി)
-  const jettyMat = new THREE.MeshLambertMaterial({ color: 0x451a03 });
-  const jettyDeck = new THREE.Mesh(new THREE.BoxGeometry(6, 0.6, 26), jettyMat);
-  jettyDeck.position.set(-30, 0.2, 0);
-  backwaterGroup.add(jettyDeck);
+      // Mud Bund (വരമ്പ്)
+      const bund = new THREE.Mesh(new THREE.BoxGeometry(38, 0.35, 1.4), lateriteDarkMat);
+      bund.position.set(px, 0.22, pz + 13);
+      palakkadGroup.add(bund);
+    }
+  }
 
-  // Authentic Kerala Kettuvallam (Houseboat / കെട്ടുവള്ളം)
-  const houseboat = new THREE.Group();
-  // Wooden Hull (Dark curved hull)
-  const hullMat = new THREE.MeshLambertMaterial({ color: 0x3f1f0a });
-  const hull = new THREE.Mesh(new THREE.BoxGeometry(6.5, 1.8, 22), hullMat);
-  hull.position.y = 0.5;
-  houseboat.add(hull);
+  // 6B. Historic Granite Fort Bastion (Palakkad Fort Rampart)
+  const pFort = new THREE.Mesh(new THREE.BoxGeometry(32, 6.5, 4.5), new THREE.MeshLambertMaterial({ color: 0x4b5563 }));
+  pFort.position.set(0, 3.25, -34);
+  palakkadGroup.add(pFort);
+  colliders.push({ minX: 104, maxX: 136, minZ: -188, maxZ: -180 });
 
-  // Curved Bamboo & Coir Thatched Roof Canopy (വളഞ്ഞ മേൽക്കൂര)
-  const thatchRoofGeo = new THREE.CylinderGeometry(3.6, 3.6, 17, 12, 1, false, 0, Math.PI);
-  const hbThatchMat = new THREE.MeshLambertMaterial({ color: 0xb45309, side: THREE.DoubleSide });
-  const hbRoof = new THREE.Mesh(thatchRoofGeo, hbThatchMat);
-  hbRoof.rotateX(Math.PI / 2);
-  hbRoof.position.set(0, 2.2, 0);
-  houseboat.add(hbRoof);
+  // 6C. Parked Red Massey Ferguson Farm Tractor
+  const tractorGroup = new THREE.Group();
+  const trBody = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.8, 3.8), crimsonRedMat);
+  trBody.position.set(0, 1.4, 0);
+  const trTireL = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.7, 12), asphaltMat);
+  trTireL.rotateZ(Math.PI / 2);
+  trTireL.position.set(-1.4, 1.1, -0.8);
+  const trTireR = trTireL.clone();
+  trTireR.position.set(1.4, 1.1, -0.8);
+  tractorGroup.add(trBody, trTireL, trTireR);
+  tractorGroup.position.set(-18, 0, 15);
+  palakkadGroup.add(tractorGroup);
 
-  // Front Sun Deck (മുൻവശത്തെ ഇരിപ്പിടം)
-  const sunDeckMat = new THREE.MeshLambertMaterial({ color: 0x78350f });
-  const sunDeck = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.3, 4.2), sunDeckMat);
-  sunDeck.position.set(0, 1.2, 9.5);
-  houseboat.add(sunDeck);
+  // 6D. Iconic Palakkad Gap Tall Palmyrah Palms (കരിമ്പനകൾ) & Breezy Farm Lane
+  for (let kx of [-36, -24, 28, 40]) {
+    const pTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.48, 16, 8), new THREE.MeshLambertMaterial({ color: 0x27272a }));
+    pTrunk.position.set(kx, 8.0, 22);
+    const pCrown = new THREE.Mesh(new THREE.SphereGeometry(2.8, 8, 8), new THREE.MeshLambertMaterial({ color: 0x14532d }));
+    pCrown.position.set(kx, 16.5, 22);
+    palakkadGroup.add(pTrunk, pCrown);
+  }
 
-  houseboat.position.set(-18, 0, 4);
-  backwaterGroup.add(houseboat);
-  colliders.push({ minX: 96, maxX: 112, minZ: 220, maxZ: 246 });
+  // 6E. Working Kerala Quarry & Roadworks Heavy Tipper Lorry (ടിപ്പർ ലോറി • "HORN PLEASE")
+  const palakkadTipper = buildKeralaTipper(0xf59e0b);
+  palakkadTipper.position.set(-6, 0, 24);
+  palakkadTipper.rotation.y = -0.35;
+  palakkadGroup.add(palakkadTipper);
+  colliders.push({ minX: -55 - 4, maxX: -55 + 4, minZ: -120 + 20, maxZ: -120 + 28 });
 
-  // Chinese Fishing Net (ചീനവല) on water edge
-  const cNetGroup = new THREE.Group();
-  const cPoleMat = new THREE.MeshLambertMaterial({ color: 0x713f12 });
-  const mainCantilever = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 11, 8), cPoleMat);
-  mainCantilever.rotateZ(Math.PI / 3);
-  mainCantilever.position.set(4, 4.5, 0);
-  const netGeo = new THREE.PlaneGeometry(7.5, 7.5);
-  const netMat = new THREE.MeshBasicMaterial({ color: 0xa1a1aa, wireframe: true });
-  const netMesh = new THREE.Mesh(netGeo, netMat);
-  netMesh.rotateX(Math.PI / 2.3);
-  netMesh.position.set(8.5, 1.2, 0);
-  cNetGroup.add(mainCantilever, netMesh);
-  cNetGroup.position.set(32, 0, -10);
-  backwaterGroup.add(cNetGroup);
+  mapGroup.add(palakkadGroup);
 
-  mapGroup.add(backwaterGroup);
+  // =========================================================================
+  // 7. 🎉 THRISSUR — CULTURAL CAPITAL & POORAM (X: 80, Z: -70)
+  // Thekkinkadu Maidan, Caparisoned Elephant Statues, Vadakkumnathan Gopuram
+  // =========================================================================
+  const thrissurGroup = new THREE.Group();
+  thrissurGroup.position.set(80, 0, -70);
 
-  // ==========================================
-  // 11. 🏖️ BEACH & COAST (South, Z: 320)
-  // ==========================================
-  const beachGroup = new THREE.Group();
-  beachGroup.position.set(0, 0, 320);
+  // 7A. Thekkinkadu Maidan Festival Ground Circle
+  const maidanGeo = new THREE.CircleGeometry(36, 32);
+  maidanGeo.rotateX(-Math.PI / 2);
+  const maidan = new THREE.Mesh(maidanGeo, new THREE.MeshLambertMaterial({ color: 0xd97706 }));
+  maidan.position.set(0, 0.05, 0);
+  thrissurGroup.add(maidan);
 
-  // Golden Sand Strip (സ്വർണ്ണ മണൽപ്പരപ്പ്)
-  const sandMat = new THREE.MeshLambertMaterial({ color: 0xfde047 });
-  const beachSand = new THREE.Mesh(new THREE.PlaneGeometry(720, 80), sandMat);
-  beachSand.rotateX(-Math.PI / 2);
-  beachSand.position.set(0, 0.05, 0);
-  beachGroup.add(beachSand);
+  // 7B. Temple Pagoda Gopuram with Gilded Copper Roofing
+  const gopuram = new THREE.Group();
+  const gBase = new THREE.Mesh(new THREE.BoxGeometry(16, 5, 12), lateriteMat);
+  gBase.position.set(0, 2.5, 0);
+  // Multi-tier pagoda hip roofs
+  for (let r = 0; r < 3; r++) {
+    const rGeo = new THREE.ConeGeometry(13 - r * 2.5, 3.2, 4);
+    const rRoof = new THREE.Mesh(rGeo, new THREE.MeshLambertMaterial({ color: 0xb45309 }));
+    rRoof.rotateY(Math.PI / 4);
+    rRoof.position.set(0, 5 + r * 2.8, 0);
+    gopuram.add(rRoof);
+  }
+  gopuram.add(gBase);
+  gopuram.position.set(0, 0, -22);
+  thrissurGroup.add(gopuram);
+  colliders.push({ minX: 72, maxX: 88, minZ: -98, maxZ: -86 });
 
-  // Arabian Sea Ocean Waves (അറബിക്കടൽ)
-  const seaMat = new THREE.MeshPhongMaterial({
-    color: 0x0284c7,
-    emissive: 0x082f49,
-    shininess: 160,
-    transparent: true,
-    opacity: 0.9,
+  // 7C. Caparisoned Pooram Elephant Statues with Gold Nettipattam & Parasols
+  for (let e = -1; e <= 1; e++) {
+    const eleGroup = new THREE.Group();
+    // Body & Head
+    const eBody = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.8, 4.2), new THREE.MeshLambertMaterial({ color: 0x374151 }));
+    eBody.position.set(0, 2.5, 0);
+    const eHead = new THREE.Mesh(new THREE.SphereGeometry(1.4, 10, 10), new THREE.MeshLambertMaterial({ color: 0x374151 }));
+    eHead.position.set(0, 3.4, 2.4);
+    // Golden Nettipattam Forehead Ornament
+    const nettipattam = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.8), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+    nettipattam.position.set(0, 3.4, 3.75);
+    // Colorful Muthukkuda Parasol on Back
+    const parasolPole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.2, 8), woodMat);
+    parasolPole.position.set(0, 4.8, 0);
+    const parasolDome = new THREE.Mesh(new THREE.ConeGeometry(1.8, 0.9, 12), crimsonRedMat);
+    parasolDome.position.set(0, 6.2, 0);
+    eleGroup.add(eBody, eHead, nettipattam, parasolPole, parasolDome);
+    eleGroup.position.set(e * 9, 0, 10);
+    thrissurGroup.add(eleGroup);
+    colliders.push({ minX: 80 + e * 9 - 2, maxX: 80 + e * 9 + 2, minZ: -63, maxZ: -57 });
+  }
+
+  mapGroup.add(thrissurGroup);
+
+  // =========================================================================
+  // 8. 🏙️ ERNAKULAM — MEGA METROPOLIS & METRO (X: 0, Z: 0)
+  // Corporate High Rises, Elevated Kochi Metro Viaduct with Train Overhead,
+  // Marine Drive Promenade & Commercial Downtown
+  // =========================================================================
+  const ernakulamGroup = new THREE.Group();
+  ernakulamGroup.position.set(0, 0, 0);
+
+  // 8A. Glass Skyscraper Towers & Modern High-Rises
+  const towerConfigs: { x: number; z: number; w: number; h: number; d: number; col: number }[] = [
+    { x: -55, z: -40, w: 18, h: 36, d: 16, col: 0x0284c7 }, // Blue Glass Tower
+    { x: 55, z: -35, w: 16, h: 42, d: 18, col: 0x0f766e },  // Teal Tech Hub
+    { x: -52, z: 35, w: 16, h: 32, d: 15, col: 0x334155 },  // Granite Tower
+  ];
+
+  towerConfigs.forEach((tc) => {
+    const tMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(tc.w, tc.h, tc.d),
+      new THREE.MeshLambertMaterial({ color: tc.col })
+    );
+    tMesh.position.set(tc.x, tc.h / 2, tc.z);
+    ernakulamGroup.add(tMesh);
+    colliders.push({
+      minX: tc.x - tc.w / 2 - 1,
+      maxX: tc.x + tc.w / 2 + 1,
+      minZ: tc.z - tc.d / 2 - 1,
+      maxZ: tc.z + tc.d / 2 + 1,
+    });
+
+    // Rooftop Red Flashing Aircraft Warning Light
+    const bLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xef4444 })
+    );
+    bLight.position.set(tc.x, tc.h + 0.5, tc.z);
+    ernakulamGroup.add(bLight);
+    animObstacleLights.push(bLight);
   });
-  const oceanWaves = new THREE.Mesh(new THREE.PlaneGeometry(720, 90), seaMat);
-  oceanWaves.rotateX(-Math.PI / 2);
-  oceanWaves.position.set(0, -0.2, 65);
-  beachGroup.add(oceanWaves);
-  waterObjects.push(oceanWaves);
 
-  // Iconic Red-and-White Striped Kerala Coastal Lighthouse (ലൈറ്റ്ഹൗസ്)
-  const lighthouseGroup = new THREE.Group();
-  const lhWhiteMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  const lhRedMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 });
+  // 8B. Elevated Kochi Metro Viaduct & Sleek Metro Train
+  const metroGroup = new THREE.Group();
+  // Concrete Viaduct Deck spanning East-West across Central Town (Span 160m at Z: -15)
+  const viaductDeck = new THREE.Mesh(new THREE.BoxGeometry(160, 1.2, 5.5), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+  viaductDeck.position.set(0, 9.5, -15);
+  metroGroup.add(viaductDeck);
 
-  // Alternating striped cylinders
-  const totalStripes = 6;
-  for (let s = 0; s < totalStripes; s++) {
-    const sMat = s % 2 === 0 ? lhRedMat : lhWhiteMat;
+  // Viaduct Heavy Support Concrete Pillars
+  for (let px = -70; px <= 70; px += 28) {
+    const pMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 9.5, 2.4), new THREE.MeshLambertMaterial({ color: 0x64748b }));
+    pMesh.position.set(px, 4.75, -15);
+    metroGroup.add(pMesh);
+    colliders.push({ minX: px - 1.5, maxX: px + 1.5, minZ: -16.5, maxZ: -13.5 });
+  }
+
+  // Sleek Kochi Metro Train Coach (Cyan & Metallic White) on Track
+  const trainBody = new THREE.Mesh(new THREE.BoxGeometry(28, 3.4, 3.6), new THREE.MeshLambertMaterial({ color: 0x06b6d4 }));
+  trainBody.position.set(12, 11.8, -15);
+  const trainRoof = new THREE.Mesh(new THREE.BoxGeometry(28.2, 0.4, 3.8), whiteWallMat);
+  trainRoof.position.set(12, 13.6, -15);
+  // Tinted Train Windows Band
+  const trainGlass = new THREE.Mesh(new THREE.BoxGeometry(27.5, 1.2, 3.7), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
+  trainGlass.position.set(12, 12.2, -15);
+  metroGroup.add(trainBody, trainRoof, trainGlass);
+  ernakulamGroup.add(metroGroup);
+
+  // 8C. Marine Drive Rainbow Bridge Walkway Arch
+  const rainbowBridge = new THREE.Mesh(
+    new THREE.TorusGeometry(12, 0.8, 8, 24, Math.PI),
+    new THREE.MeshLambertMaterial({ color: 0xfacc15 })
+  );
+  rainbowBridge.position.set(38, 0, 25);
+  rainbowBridge.rotation.z = 0;
+  ernakulamGroup.add(rainbowBridge);
+
+  mapGroup.add(ernakulamGroup);
+
+  // =========================================================================
+  // 9. 🌿 IDUKKI — HIGH RANGES & ARCH DAM (X: -130, Z: 50)
+  // Asia's Largest Double-Curvature Arch Dam, High Mountain Reservoir & Gorge
+  // =========================================================================
+  const idukkiGroup = new THREE.Group();
+  idukkiGroup.position.set(-130, 0, 50);
+
+  // 9A. Massive Curved Concrete Arch Dam Wall (ആർച്ച് ഡാം)
+  const damCurve = new THREE.Mesh(
+    new THREE.CylinderGeometry(36, 42, 22, 24, 1, true, 0, Math.PI * 0.55),
+    new THREE.MeshLambertMaterial({ color: 0x64748b, side: THREE.DoubleSide })
+  );
+  damCurve.rotateY(Math.PI / 3);
+  damCurve.position.set(0, 11, 0);
+  idukkiGroup.add(damCurve);
+  colliders.push({ minX: -155, maxX: -110, minZ: 35, maxZ: 65 });
+
+  // Dam Crest Highway Roadway (along top of dam wall)
+  const damRoadway = new THREE.Mesh(new THREE.BoxGeometry(45, 1.2, 4.5), asphaltMat);
+  damRoadway.position.set(0, 22.5, 0);
+  damRoadway.rotateY(0.4);
+  idukkiGroup.add(damRoadway);
+
+  // Hydro Reservoir Lake Water (behind the dam wall)
+  const resLake = new THREE.Mesh(
+    new THREE.PlaneGeometry(65, 55),
+    new THREE.MeshPhongMaterial({ color: 0x0369a1, emissive: 0x082f49, shininess: 130, transparent: true, opacity: 0.9 })
+  );
+  resLake.rotateX(-Math.PI / 2);
+  resLake.position.set(0, 18, -26);
+  idukkiGroup.add(resLake);
+  waterObjects.push(resLake);
+
+  // Hydro Powerhouse Turbine Station at Dam Base
+  const powerHouse = new THREE.Mesh(new THREE.BoxGeometry(14, 6.5, 9), new THREE.MeshLambertMaterial({ color: 0x334155 }));
+  powerHouse.position.set(8, 3.25, 20);
+  idukkiGroup.add(powerHouse);
+  colliders.push({ minX: -126, maxX: -114, minZ: 65, maxZ: 75 });
+
+  mapGroup.add(idukkiGroup);
+
+  // =========================================================================
+  // 10. 🌴 KOTTAYAM — RUBBER PLANTATIONS & MODERN HOSPITAL (X: 50, Z: 65)
+  // Rubber Tree Estates with Latex Cups, Syrian Christian Heritage Church,
+  // AND THE NEW FULLY-CONVERTED MODERN LOW-POLY HOSPITAL COMPLEX (image.png)!
+  // =========================================================================
+  const kottayamGroup = new THREE.Group();
+  kottayamGroup.position.set(50, 0, 65);
+
+  // 10A. Vast Rubber Tree Plantation with latex tapping incisions & coconut shells
+  for (let rx of [-36, -26, -16]) {
+    for (let rz of [-24, -14, -4]) {
+      const rTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 7.5, 8), woodMat);
+      rTrunk.position.set(rx, 3.75, rz);
+      // Latex cup (half coconut shell)
+      const rCup = new THREE.Mesh(new THREE.SphereGeometry(0.22, 6, 6, 0, Math.PI * 2, 0, Math.PI / 2), whiteWallMat);
+      rCup.position.set(rx + 0.28, 1.8, rz);
+      // Foliage canopy
+      const rFoliage = new THREE.Mesh(new THREE.SphereGeometry(2.4, 8, 8), new THREE.MeshLambertMaterial({ color: 0x15803d }));
+      rFoliage.position.set(rx, 8.2, rz);
+      kottayamGroup.add(rTrunk, rCup, rFoliage);
+    }
+  }
+
+  // 10B. Traditional Syrian Christian Heritage Church with White Bell Tower & Cross
+  const church = new THREE.Group();
+  const cBody = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 22), whiteWallMat);
+  cBody.position.set(0, 4, 0);
+  const cRoof = new THREE.Mesh(new THREE.ConeGeometry(11, 4.5, 4), tileRoofMat);
+  cRoof.rotateY(Math.PI / 4);
+  cRoof.position.set(0, 9.8, 0);
+  // Tall Square Bell Tower (മണിമേട)
+  const bTower = new THREE.Mesh(new THREE.BoxGeometry(4.8, 16, 4.8), whiteWallMat);
+  bTower.position.set(0, 8, 12);
+  const bSpire = new THREE.Mesh(new THREE.ConeGeometry(3.6, 6, 4), crimsonRedMat);
+  bSpire.rotateY(Math.PI / 4);
+  bSpire.position.set(0, 19, 12);
+  // Gold Church Cross
+  const crossH = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.45, 0.3), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+  crossH.position.set(0, 22.8, 12);
+  const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.45, 3.2, 0.3), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+  crossV.position.set(0, 22.8, 12);
+  church.add(cBody, cRoof, bTower, bSpire, crossH, crossV);
+  church.position.set(-28, 0, 22);
+  kottayamGroup.add(church);
+  colliders.push({ minX: 16, maxX: 32, minZ: 76, maxZ: 98 });
+
+  // =========================================================================
+  // 🏥 CONVERTED MODERN LOW-POLY HOSPITAL COMPLEX (IMAGE.PNG)
+  // Multi-tier white wings, crimson horizontal accent stripes, grand red entrance
+  // arch portal with glass doors, rhythmic cyan tinted windows, and prominent
+  // circular ROOFTOP HELIPAD with bold white 'H' and obstacle lighting!
+  // =========================================================================
+  const hospComplex = new THREE.Group();
+  hospComplex.position.set(16, 0, 0); // Positioned inside Kottayam East Sector
+
+  // 1. Main Central Medical Tower (3-Story Modern Block)
+  const mainTowerW = 28;
+  const mainTowerH = 13.5;
+  const mainTowerD = 18;
+  const mainTower = new THREE.Mesh(
+    new THREE.BoxGeometry(mainTowerW, mainTowerH, mainTowerD),
+    whiteWallMat
+  );
+  mainTower.position.set(0, mainTowerH / 2, 0);
+  hospComplex.add(mainTower);
+
+  // Horizontal Crimson / Red Accent Ledge Trims (as seen in image.png)
+  for (let f = 1; f <= 3; f++) {
+    const accentBand = new THREE.Mesh(
+      new THREE.BoxGeometry(mainTowerW + 0.4, 0.55, mainTowerD + 0.4),
+      crimsonRedMat
+    );
+    accentBand.position.set(0, f * 4.2, 0);
+    hospComplex.add(accentBand);
+  }
+
+  // 2. Left Clinical Wing (2-Story stepped wing)
+  const leftWing = new THREE.Mesh(
+    new THREE.BoxGeometry(14, 9.2, 14),
+    whiteWallMat
+  );
+  leftWing.position.set(-18, 4.6, 0);
+  const leftWingTrim = new THREE.Mesh(
+    new THREE.BoxGeometry(14.4, 0.5, 14.4),
+    crimsonRedMat
+  );
+  leftWingTrim.position.set(-18, 9.3, 0);
+  hospComplex.add(leftWing, leftWingTrim);
+
+  // 3. Right Outpatient & Diagnostic Wing (2-Story stepped wing)
+  const rightWing = new THREE.Mesh(
+    new THREE.BoxGeometry(14, 9.2, 14),
+    whiteWallMat
+  );
+  rightWing.position.set(18, 4.6, 0);
+  const rightWingTrim = new THREE.Mesh(
+    new THREE.BoxGeometry(14.4, 0.5, 14.4),
+    crimsonRedMat
+  );
+  rightWingTrim.position.set(18, 9.3, 0);
+  hospComplex.add(rightWing, rightWingTrim);
+
+  // 4. Facade Window Grid (Light Cyan tinted glass with dark mullion frames)
+  for (let floor = 0; floor < 3; floor++) {
+    const wy = 2.4 + floor * 4.2;
+    for (let wx = -10; wx <= 10; wx += 5) {
+      // Main tower front windows
+      const winGlass = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.9, 0.2), darkGlassMat);
+      winGlass.position.set(wx, wy, mainTowerD / 2 + 0.08);
+      hospComplex.add(winGlass);
+    }
+    // Wings windows
+    if (floor < 2) {
+      for (let wx of [-22, -15, 15, 22]) {
+        const wingWin = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.8, 0.2), darkGlassMat);
+        wingWin.position.set(wx, wy, 7.08);
+        hospComplex.add(wingWin);
+      }
+    }
+  }
+
+  // 5. Grand Red Arched Entrance Portal (Matching image.png)
+  const portalGroup = new THREE.Group();
+  // Projecting Red Canopy Frame
+  const portalArch = new THREE.Mesh(
+    new THREE.BoxGeometry(10.5, 4.8, 5.5),
+    crimsonRedMat
+  );
+  portalArch.position.set(0, 2.4, mainTowerD / 2 + 2.5);
+  // Recessed Entrance Portal Foyer
+  const portalCutout = new THREE.Mesh(
+    new THREE.BoxGeometry(7.8, 3.8, 5.8),
+    new THREE.MeshLambertMaterial({ color: 0x0f172a })
+  );
+  portalCutout.position.set(0, 1.9, mainTowerD / 2 + 2.6);
+  // Automatic Glass Sliding Double Doors
+  const doorGlass = new THREE.Mesh(
+    new THREE.BoxGeometry(5.2, 3.2, 0.15),
+    new THREE.MeshLambertMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
+  );
+  doorGlass.position.set(0, 1.6, mainTowerD / 2 + 1.2);
+  // Red Cross / Medical Signboard above Entrance
+  const crossPlinth = new THREE.Mesh(
+    new THREE.BoxGeometry(7.2, 1.1, 0.2),
+    whiteWallMat
+  );
+  crossPlinth.position.set(0, 5.2, mainTowerD / 2 + 5.3);
+  const rcCrossH = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.6, 0.25), crimsonRedMat);
+  rcCrossH.position.set(0, 5.2, mainTowerD / 2 + 5.4);
+  const rcCrossV = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2.4, 0.25), crimsonRedMat);
+  rcCrossV.position.set(0, 5.2, mainTowerD / 2 + 5.4);
+
+  // Entrance Concrete Ramp & Yellow Safety Apron
+  const rampMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(9.5, 0.25, 4.2),
+    new THREE.MeshLambertMaterial({ color: 0x475569 })
+  );
+  rampMesh.position.set(0, 0.12, mainTowerD / 2 + 6.8);
+  portalGroup.add(portalArch, portalCutout, doorGlass, crossPlinth, rcCrossH, rcCrossV, rampMesh);
+  hospComplex.add(portalGroup);
+
+  // 6. 🚁 PROMINENT CIRCULAR ROOFTOP HELIPAD (image.png)
+  const helipadGroup = new THREE.Group();
+  helipadGroup.position.set(0, mainTowerH + 0.1, 0);
+
+  // Elevated Helipad Round Platform
+  const padRadius = 7.2;
+  const padGeo = new THREE.CylinderGeometry(padRadius, padRadius, 0.45, 32);
+  const padMesh = new THREE.Mesh(padGeo, new THREE.MeshLambertMaterial({ color: 0x334155 }));
+  padMesh.position.set(0, 0.22, 0);
+  helipadGroup.add(padMesh);
+
+  // Painted Red Circular Border Ring on Helipad
+  const ringGeo = new THREE.RingGeometry(5.8, 6.8, 32);
+  ringGeo.rotateX(-Math.PI / 2);
+  const ringMesh = new THREE.Mesh(ringGeo, crimsonRedMat);
+  ringMesh.position.set(0, 0.46, 0);
+  helipadGroup.add(ringMesh);
+
+  // Bold Crisp White 'H' Symbol (Helipad Identification)
+  const hBarL = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 4.6), whiteLineMat);
+  hBarL.rotateX(-Math.PI / 2);
+  hBarL.position.set(-1.6, 0.47, 0);
+  const hBarR = hBarL.clone();
+  hBarR.position.set(1.6, 0.47, 0);
+  const hBarMid = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.85), whiteLineMat);
+  hBarMid.rotateX(-Math.PI / 2);
+  hBarMid.position.set(0, 0.47, 0);
+  helipadGroup.add(hBarL, hBarR, hBarMid);
+
+  // Helipad Perimeter Safety Netting & Yellow Warning Lights
+  for (let pa = 0; pa < Math.PI * 2; pa += Math.PI / 8) {
+    const pLight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+    );
+    pLight.position.set(Math.cos(pa) * (padRadius - 0.2), 0.55, Math.sin(pa) * (padRadius - 0.2));
+    helipadGroup.add(pLight);
+  }
+
+  // 7. Rooftop Infrastructure: Elevator Penthouse, Antenna & AC Chillers
+  const penthouse = new THREE.Mesh(
+    new THREE.BoxGeometry(5.5, 3.2, 5.0),
+    whiteWallMat
+  );
+  penthouse.position.set(10.5, 1.6, 5);
+  helipadGroup.add(penthouse);
+
+  // AC Chiller Units
+  for (let cx of [-10, -7]) {
+    const chiller = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 1.6, 2.8),
+      new THREE.MeshLambertMaterial({ color: 0x64748b })
+    );
+    chiller.position.set(cx, 0.8, -5);
+    helipadGroup.add(chiller);
+  }
+
+  // Communications Mast with Blinking Obstacle Red Light
+  const mast = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.08, 6.5, 8),
+    new THREE.MeshLambertMaterial({ color: 0xd4d4d8 })
+  );
+  mast.position.set(10.5, 6.2, 5);
+  const mastLight = new THREE.Mesh(
+    new THREE.SphereGeometry(0.25, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xef4444 })
+  );
+  mastLight.position.set(10.5, 9.6, 5);
+  helipadGroup.add(mast, mastLight);
+  animObstacleLights.push(mastLight);
+
+  hospComplex.add(helipadGroup);
+
+  // 8. 🚑 108 AMBULANCE CASUALTY EMERGENCY WING & BAY
+  const casualtyWing = new THREE.Group();
+  casualtyWing.position.set(-18, 0, 10);
+
+  // Driveway Apron
+  const ambApron = new THREE.Mesh(
+    new THREE.PlaneGeometry(16, 12),
+    asphaltMat
+  );
+  ambApron.rotateX(-Math.PI / 2);
+  ambApron.position.set(0, 0.06, 0);
+  casualtyWing.add(ambApron);
+
+  // Overhead Ambulance Portico Canopy with Red Cross
+  const ambCanopy = new THREE.Mesh(new THREE.BoxGeometry(14, 0.4, 9), crimsonRedMat);
+  ambCanopy.position.set(0, 4.4, 0);
+  // Support Columns
+  for (let cx of [-6.2, 6.2]) {
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 4.4, 8), whiteWallMat);
+    col.position.set(cx, 2.2, 4);
+    casualtyWing.add(col);
+  }
+  const ambSign = new THREE.Mesh(new THREE.BoxGeometry(10, 0.8, 0.2), whiteWallMat);
+  ambSign.position.set(0, 4.9, 4.45);
+  casualtyWing.add(ambCanopy, ambSign);
+
+  // Park the Type III Box Ambulance inside the bay
+  const { group: ambulance } = buildAmericanBoxAmbulance();
+  ambulance.position.set(0, 0, 0);
+  casualtyWing.add(ambulance);
+
+  hospComplex.add(casualtyWing);
+
+  // Hospital Colliders (incorporating the new multi-wing layout)
+  colliders.push({ minX: 42, maxX: 92, minZ: 52, maxZ: 78 });
+
+  kottayamGroup.add(hospComplex);
+  mapGroup.add(kottayamGroup);
+
+  // =========================================================================
+  // 11. 🚤 ALAPPUZHA — BACKWATERS & HOUSEBOATS (X: -80, Z: 120)
+  // Venice of the East, Kettuvallam Thatched Houseboat, Chundan Snake Boat,
+  // Interconnected Canals & Chinese Fishing Nets
+  // =========================================================================
+  const alappuzhaGroup = new THREE.Group();
+  alappuzhaGroup.position.set(-80, 0, 120);
+
+  // 11A. Wide Backwater Basin (കായൽ)
+  const bwBasin = new THREE.Mesh(
+    new THREE.PlaneGeometry(130, 95),
+    new THREE.MeshPhongMaterial({ color: 0x0e7490, emissive: 0x083344, shininess: 120, transparent: true, opacity: 0.88 })
+  );
+  bwBasin.rotateX(-Math.PI / 2);
+  bwBasin.position.set(0, -0.45, 0);
+  alappuzhaGroup.add(bwBasin);
+  waterObjects.push(bwBasin);
+
+  // 11B. Authentic Kerala Kettuvallam (Houseboat) with Bamboo Thatch Roof
+  const hBoat = new THREE.Group();
+  const hHull = new THREE.Mesh(new THREE.BoxGeometry(6.8, 1.9, 24), new THREE.MeshLambertMaterial({ color: 0x3f1f0a }));
+  hHull.position.y = 0.55;
+  const hThatch = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.8, 3.8, 18, 14, 1, false, 0, Math.PI),
+    new THREE.MeshLambertMaterial({ color: 0xb45309, side: THREE.DoubleSide })
+  );
+  hThatch.rotateX(Math.PI / 2);
+  hThatch.position.set(0, 2.3, 0);
+  const hDeck = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.35, 4.5), new THREE.MeshLambertMaterial({ color: 0x78350f }));
+  hDeck.position.set(0, 1.25, 10.5);
+  hBoat.add(hHull, hThatch, hDeck);
+  hBoat.position.set(-18, 0, 5);
+  alappuzhaGroup.add(hBoat);
+  colliders.push({ minX: -105, maxX: -91, minZ: 110, maxZ: 135 });
+
+  // 11C. Nehru Trophy Chundan Vallam (100-Oarsmen Snake Boat)
+  const snakeBoat = new THREE.Group();
+  const sbHull = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 32), new THREE.MeshLambertMaterial({ color: 0x18181b }));
+  sbHull.position.set(0, 0.45, 0);
+  // High Prow Stern Curving Upwards (അമരം)
+  const sbStern = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.6, 5.5, 8), new THREE.MeshLambertMaterial({ color: 0xb45309 }));
+  sbStern.position.set(0, 2.6, -15.5);
+  sbStern.rotateX(-0.4);
+  snakeBoat.add(sbHull, sbStern);
+  snakeBoat.position.set(14, 0, 8);
+  alappuzhaGroup.add(snakeBoat);
+
+  // 11D. Chinese Fishing Net (ചീനവല) on Canal Shore
+  const cNet = new THREE.Group();
+  const cBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 12, 8), woodMat);
+  cBeam.rotateZ(Math.PI / 3);
+  cBeam.position.set(4, 5, 0);
+  const netMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ color: 0xd4d4d8, wireframe: true }));
+  netMesh.rotateX(Math.PI / 2.2);
+  netMesh.position.set(9, 1.2, 0);
+  cNet.add(cBeam, netMesh);
+  cNet.position.set(38, 0, -15);
+  alappuzhaGroup.add(cNet);
+
+  mapGroup.add(alappuzhaGroup);
+
+  // =========================================================================
+  // 12. 🌲 PATHANAMTHITTA — PILGRIM FORESTS & PAMBA RIVER (X: 110, Z: 150)
+  // Dense Sabarimala Teak Forests, Holy Pamba River Bathing Ghats, Suspension Bridge
+  // =========================================================================
+  const pathanamthittaGroup = new THREE.Group();
+  pathanamthittaGroup.position.set(110, 0, 150);
+
+  // 12A. Holy Pamba River Waters & Stone Ghat Steps
+  const pambaWater = new THREE.Mesh(
+    new THREE.PlaneGeometry(80, 24),
+    new THREE.MeshPhongMaterial({ color: 0x0284c7, transparent: true, opacity: 0.85 })
+  );
+  pambaWater.rotateX(-Math.PI / 2);
+  pambaWater.position.set(0, -0.2, 0);
+  pathanamthittaGroup.add(pambaWater);
+  waterObjects.push(pambaWater);
+
+  // Stone Bathing Steps (കടവ്)
+  for (let s = 0; s < 4; s++) {
+    const step = new THREE.Mesh(new THREE.BoxGeometry(28, 0.35, 1.6), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+    step.position.set(0, 0.15 + s * 0.35, 12 + s * 1.6);
+    pathanamthittaGroup.add(step);
+  }
+
+  // 12B. Wooden Suspension Footbridge over Pamba River
+  const suspBridge = new THREE.Group();
+  const plankWay = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.35, 26), woodMat);
+  plankWay.position.set(0, 2.2, 0);
+  // Suspension Cables & Towers
+  for (let tx of [-2.4, 2.4]) {
+    const towerL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 6, 0.35), new THREE.MeshLambertMaterial({ color: 0x334155 }));
+    towerL.position.set(tx, 3, -12);
+    const towerR = towerL.clone();
+    towerR.position.set(tx, 3, 12);
+    suspBridge.add(towerL, towerR);
+  }
+  suspBridge.add(plankWay);
+  suspBridge.position.set(-20, 0, 0);
+  pathanamthittaGroup.add(suspBridge);
+
+  // 12C. Dense Teak Reserve Forest Canopy
+  for (let fx of [-28, -12, 12, 28]) {
+    for (let fz of [-24, -14, 18, 28]) {
+      const fTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 9, 8), woodMat);
+      fTrunk.position.set(fx, 4.5, fz);
+      const fLeaf = new THREE.Mesh(new THREE.SphereGeometry(3.2, 8, 8), new THREE.MeshLambertMaterial({ color: 0x14532d }));
+      fLeaf.position.set(fx, 10, fz);
+      pathanamthittaGroup.add(fTrunk, fLeaf);
+    }
+  }
+
+  mapGroup.add(pathanamthittaGroup);
+
+  // =========================================================================
+  // 13. 🌊 KOLLAM — HISTORIC PORT & ASHTAMUDI (X: 0, Z: 230)
+  // Ashtamudi 8-Arm Lake, Tangasseri Red-and-White Lighthouse, Fishing Harbour
+  // =========================================================================
+  const kollamGroup = new THREE.Group();
+  kollamGroup.position.set(0, 0, 230);
+
+  // 13A. Ashtamudi Lake Water Basin
+  const ashtamudi = new THREE.Mesh(
+    new THREE.PlaneGeometry(160, 65),
+    new THREE.MeshPhongMaterial({ color: 0x0891b2, emissive: 0x064e3b, shininess: 120, transparent: true, opacity: 0.88 })
+  );
+  ashtamudi.rotateX(-Math.PI / 2);
+  ashtamudi.position.set(0, -0.4, 0);
+  kollamGroup.add(ashtamudi);
+  waterObjects.push(ashtamudi);
+
+  // 13B. Tangasseri Iconic Red-and-White Striped Lighthouse (ലൈറ്റ്ഹൗസ്)
+  const lighthouse = new THREE.Group();
+  for (let s = 0; s < 6; s++) {
+    const sMat = s % 2 === 0 ? crimsonRedMat : whiteWallMat;
     const rBot = 3.6 - s * 0.22;
     const rTop = rBot - 0.22;
-    const stripe = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, 4.5, 14), sMat);
-    stripe.position.y = 2.25 + s * 4.5;
-    lighthouseGroup.add(stripe);
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, 4.2, 14), sMat);
+    cyl.position.y = 2.1 + s * 4.2;
+    lighthouse.add(cyl);
+  }
+  // Lantern Room & Balcony
+  const lhBalcony = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 0.5, 14), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+  lhBalcony.position.y = 25.4;
+  const lhGlass = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 2.8, 12), darkGlassMat);
+  lhGlass.position.y = 27.0;
+  const lhDome = new THREE.Mesh(new THREE.SphereGeometry(2.4, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2), crimsonRedMat);
+  lhDome.position.y = 28.4;
+
+  // Rotating Spotlight Beacon
+  const lhBeacon = new THREE.SpotLight(0xfffae6, 4.8, 160, Math.PI / 6, 0.35);
+  lhBeacon.position.set(0, 27.2, 0);
+  const lhTarget = new THREE.Object3D();
+  lhTarget.position.set(80, 0, 0);
+  lighthouse.add(lhBalcony, lhGlass, lhDome, lhBeacon, lhTarget);
+  lhBeacon.target = lhTarget;
+  animBeacons.push(lhBeacon);
+
+  lighthouse.position.set(45, 0, 8);
+  kollamGroup.add(lighthouse);
+  colliders.push({ minX: 40, maxX: 50, minZ: 233, maxZ: 243 });
+
+  // 13C. Fishing Harbour Wharf & Marine Trawlers
+  const wharf = new THREE.Mesh(new THREE.BoxGeometry(32, 1.2, 8), asphaltMat);
+  wharf.position.set(-35, 0.6, 0);
+  kollamGroup.add(wharf);
+
+  for (let b = 0; b < 2; b++) {
+    const trawler = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.2, 11), new THREE.MeshLambertMaterial({ color: b === 0 ? 0x0284c7 : 0xd97706 }));
+    trawler.position.set(-42 + b * 14, 0.6, -10);
+    kollamGroup.add(trawler);
   }
 
-  // Lantern Room & Balcony at Top
-  const balcony = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 0.6, 14), new THREE.MeshLambertMaterial({ color: 0x1f2937 }));
-  balcony.position.y = 27.3;
-  const lanternGlass = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 3.2, 12), new THREE.MeshLambertMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 }));
-  lanternGlass.position.y = 29.0;
-  const lhDome = new THREE.Mesh(new THREE.SphereGeometry(2.5, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2), lhRedMat);
-  lhDome.position.y = 30.6;
+  mapGroup.add(kollamGroup);
 
-  // Lighthouse Rotating Spotlight Beacon (ലൈറ്റ് ബീം)
-  const beaconLight = new THREE.SpotLight(0xfffae6, 4.5, 140, Math.PI / 6, 0.4);
-  beaconLight.position.set(0, 29.2, 0);
-  const beaconTarget = new THREE.Object3D();
-  beaconTarget.position.set(0, 0, 80);
-  lighthouseGroup.add(balcony, lanternGlass, lhDome, beaconLight, beaconTarget);
-  beaconLight.target = beaconTarget;
+  // =========================================================================
+  // 14. 🏛️ THIRUVANANTHAPURAM — SOUTHERN STATE CAPITAL (X: 0, Z: 320)
+  // Kerala Government Secretariat with Colonial Pillars & Clock Tower,
+  // Napier Cultural Museum Domes, Kovalam Crescent Beach, Southern Highway Terminal
+  // =========================================================================
+  const tvmGroup = new THREE.Group();
+  tvmGroup.position.set(0, 0, 320);
 
-  lighthouseGroup.position.set(65, 0, 10);
-  beachGroup.add(lighthouseGroup);
-  colliders.push({ minX: 60, maxX: 70, minZ: 325, maxZ: 335 });
+  // 14A. Grand Kerala Government Secretariat (സെക്രട്ടറിയേറ്റ്)
+  const secretariat = new THREE.Group();
+  // Central Main Administrative Wing
+  const secMain = new THREE.Mesh(new THREE.BoxGeometry(34, 11, 16), whiteWallMat);
+  secMain.position.set(0, 5.5, 0);
 
-  // Tender Coconut Stall (ഇളനീർ കട) on the beach
-  const cocoStall = new THREE.Group();
-  const csTarp = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 3.6), new THREE.MeshLambertMaterial({ color: 0x16a34a, side: THREE.DoubleSide }));
-  csTarp.rotateX(Math.PI / 2 + 0.1);
-  csTarp.position.set(0, 2.4, 0);
-  const csBench = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.9, 1.8), new THREE.MeshLambertMaterial({ color: 0x78350f }));
-  csBench.position.set(0, 0.45, 0);
-  // Green coconuts heap
-  const tenderNutMat = new THREE.MeshLambertMaterial({ color: 0x65a30d });
-  for (let n = 0; n < 8; n++) {
-    const nut = new THREE.Mesh(new THREE.SphereGeometry(0.3, 6, 6), tenderNutMat);
-    nut.position.set(-1.2 + (n % 4) * 0.8, 1.05 + Math.floor(n / 4) * 0.4, 0);
-    cocoStall.add(nut);
+  // Classical Colonial Pillar Portico
+  for (let px of [-12, -6, 0, 6, 12]) {
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 10.5, 12), whiteWallMat);
+    col.position.set(px, 5.25, 8.8);
+    secretariat.add(col);
   }
-  cocoStall.add(csTarp, csBench);
-  cocoStall.position.set(-20, 0, 5);
-  beachGroup.add(cocoStall);
+  // Classical Triangular Pediment Roof
+  const pediment = new THREE.Mesh(new THREE.ConeGeometry(17, 4.5, 4), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+  pediment.rotateY(Math.PI / 4);
+  pediment.position.set(0, 13.2, 8.8);
 
-  // Traditional Fishing Catamarans on Sand (ചെറിയ വള്ളങ്ങൾ)
-  const boatMat = new THREE.MeshLambertMaterial({ color: 0x1e3a8a });
-  for (let b = 0; b < 3; b++) {
-    const boat = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 7.5), boatMat);
-    boat.position.set(-45 + b * 9, 0.4, 18);
-    boat.rotateY(0.2 * (b - 1));
-    beachGroup.add(boat);
+  // Central Clock Tower & Indian Tricolor Flagstaff
+  const clockTower = new THREE.Mesh(new THREE.BoxGeometry(6.5, 8, 6.5), whiteWallMat);
+  clockTower.position.set(0, 15, 0);
+  const clockFace = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 0.3, 16), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+  clockFace.rotateX(Math.PI / 2);
+  clockFace.position.set(0, 15, 3.4);
+  const flagPoleTvm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6, 8), new THREE.MeshLambertMaterial({ color: 0xd4d4d8 }));
+  flagPoleTvm.position.set(0, 22, 0);
+  const flagTricolor = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 0.04), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
+  flagTricolor.position.set(1.1, 23.5, 0);
+  secretariat.add(secMain, pediment, clockTower, clockFace, flagPoleTvm, flagTricolor);
+  secretariat.position.set(0, 0, -20);
+  tvmGroup.add(secretariat);
+  colliders.push({ minX: -19, maxX: 19, minZ: 288, maxZ: 312 });
+
+  // 14B. Kovalam Crescent Beach & Ocean Waves
+  const kovalamSand = new THREE.Mesh(new THREE.PlaneGeometry(280, 55), new THREE.MeshLambertMaterial({ color: 0xfde047 }));
+  kovalamSand.rotateX(-Math.PI / 2);
+  kovalamSand.position.set(0, 0.04, 22);
+  tvmGroup.add(kovalamSand);
+
+  // Arabian Sea Waters
+  const seaWater = new THREE.Mesh(
+    new THREE.PlaneGeometry(360, 75),
+    new THREE.MeshPhongMaterial({ color: 0x0284c7, emissive: 0x082f49, shininess: 150, transparent: true, opacity: 0.9 })
+  );
+  seaWater.rotateX(-Math.PI / 2);
+  seaWater.position.set(0, -0.3, 72);
+  tvmGroup.add(seaWater);
+  waterObjects.push(seaWater);
+
+  mapGroup.add(tvmGroup);
+
+  // =========================================================================
+  // 🛣️ THE MEGA ROAD NETWORK (ALL 6 ROAD TYPES CONNECTING KERALA)
+  // 1. 🔴 Main Highway: Kasaragod → Kannur → Kozhikode → Malappuram → Thrissur → Ernakulam → Kollam → Thiruvananthapuram
+  // 2. 🟡 Coastal Road: Runs continuously along the Arabian Sea
+  // 3. 🟢 Hill Road: Western Ghats route (Wayanad → Idukki → Pathanamthitta)
+  // 4. 🔵 Village Roads: Connecting local houses, thattukadas, football ground
+  // 5. 🟤 Forest Roads: Teak and wildlife tracks
+  // 6. ⚪ City Roads: Multi-lane avenues in Ernakulam, Kozhikode, Thiruvananthapuram
+  // =========================================================================
+  const roadNetwork = new THREE.Group();
+
+  // 1. 🔴 Continuous North-South Main Highway (Z: -370 to Z: +350, Width 14m)
+  const hwayTotalLength = 720;
+  const mainHway = new THREE.Mesh(new THREE.PlaneGeometry(14, hwayTotalLength), asphaltMat);
+  mainHway.rotateX(-Math.PI / 2);
+  mainHway.position.set(0, 0.08, 0);
+  mainHway.receiveShadow = true;
+  roadNetwork.add(mainHway);
+
+  // Center Double Yellow Lines along Main Highway
+  const hLineL = new THREE.Mesh(new THREE.PlaneGeometry(0.32, hwayTotalLength), yellowLineMat);
+  hLineL.rotateX(-Math.PI / 2);
+  hLineL.position.set(-0.25, 0.09, 0);
+  const hLineR = new THREE.Mesh(new THREE.PlaneGeometry(0.32, hwayTotalLength), yellowLineMat);
+  hLineR.rotateX(-Math.PI / 2);
+  hLineR.position.set(0.25, 0.09, 0);
+  roadNetwork.add(hLineL, hLineR);
+
+  // 2. 🟡 Coastal Road (West Coast Highway from Z: -360 to +340 at X: -70 to -85)
+  const coastalRoad = new THREE.Mesh(new THREE.PlaneGeometry(10, 710), asphaltMat);
+  coastalRoad.rotateX(-Math.PI / 2);
+  coastalRoad.position.set(-78, 0.08, 0);
+  roadNetwork.add(coastalRoad);
+
+  // 3. 🟢 Western Ghats Hill Road (East Ghats Route connecting Wayanad, Idukki, Pathanamthitta)
+  const hillRoad1 = new THREE.Mesh(new THREE.PlaneGeometry(10, 240), asphaltMat);
+  hillRoad1.rotateX(-Math.PI / 2);
+  hillRoad1.position.set(-135, 0.08, -120);
+  roadNetwork.add(hillRoad1);
+
+  // 4. ⚪ Multi-lane City Cross Arterials
+  // Central Ernakulam MG Road (Z: 0, spanning X: -180 to +180)
+  const ernakulamMGRoad = new THREE.Mesh(new THREE.PlaneGeometry(360, 12), asphaltMat);
+  ernakulamMGRoad.rotateX(-Math.PI / 2);
+  ernakulamMGRoad.position.set(0, 0.085, 0);
+  roadNetwork.add(ernakulamMGRoad);
+
+  // Kozhikode Beach Road (Z: -280, X: -140 to +140)
+  const calicutCrossRoad = new THREE.Mesh(new THREE.PlaneGeometry(280, 11), asphaltMat);
+  calicutCrossRoad.rotateX(-Math.PI / 2);
+  calicutCrossRoad.position.set(0, 0.085, -280);
+  roadNetwork.add(calicutCrossRoad);
+
+  // Thiruvananthapuram Secretariat Boulevard (Z: 310, X: -140 to +140)
+  const tvmCrossRoad = new THREE.Mesh(new THREE.PlaneGeometry(280, 12), asphaltMat);
+  tvmCrossRoad.rotateX(-Math.PI / 2);
+  tvmCrossRoad.position.set(0, 0.085, 310);
+  roadNetwork.add(tvmCrossRoad);
+
+  // 5. 🟤 Forest Roads (Western Ghats & Sabarimala Pilgrim Trails)
+  const forestRoadWayanad = new THREE.Mesh(new THREE.PlaneGeometry(8, 120), lateriteDarkMat);
+  forestRoadWayanad.rotateX(-Math.PI / 2);
+  forestRoadWayanad.position.set(-110, 0.082, -220);
+  forestRoadWayanad.rotateY(0.4);
+  roadNetwork.add(forestRoadWayanad);
+
+  const forestRoadPamba = new THREE.Mesh(new THREE.PlaneGeometry(8, 90), lateriteDarkMat);
+  forestRoadPamba.rotateX(-Math.PI / 2);
+  forestRoadPamba.position.set(70, 0.082, 160);
+  forestRoadPamba.rotateY(-0.35);
+  roadNetwork.add(forestRoadPamba);
+
+  // 6. 🔵 Village Connecting Roads (Hospital spur, Thattukada lane, Sevens ground access)
+  const villageSpur1 = new THREE.Mesh(new THREE.PlaneGeometry(85, 8), asphaltMat);
+  villageSpur1.rotateX(-Math.PI / 2);
+  villageSpur1.position.set(45, 0.082, 65); // Leads right to Hospital & Kottayam
+  roadNetwork.add(villageSpur1);
+
+  // 7. 🟢 Overhead Highway Direction Gantries (Kerala PWD / NHAI Green Boards)
+  function createHighwayGantry(z: number, routeTitle: string, distA: string, distB: string) {
+    const gantry = new THREE.Group();
+    // Steel lattice support pillars
+    const poleL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 7.5, 0.5), new THREE.MeshLambertMaterial({ color: 0x64748b }));
+    poleL.position.set(-8.8, 3.75, 0);
+    const poleR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 7.5, 0.5), new THREE.MeshLambertMaterial({ color: 0x64748b }));
+    poleR.position.set(8.8, 3.75, 0);
+    // Overhead steel truss beam
+    const truss = new THREE.Mesh(new THREE.BoxGeometry(19, 0.55, 0.55), new THREE.MeshLambertMaterial({ color: 0x475569 }));
+    truss.position.set(0, 7.3, 0);
+    // Green PWD board
+    const board = new THREE.Mesh(new THREE.BoxGeometry(15.5, 2.4, 0.25), new THREE.MeshLambertMaterial({ color: 0x065f46 }));
+    board.position.set(0, 6.0, 0);
+    // White border outline
+    const boardBorder = new THREE.Mesh(new THREE.BoxGeometry(15.8, 2.6, 0.22), whiteWallMat);
+    boardBorder.position.set(0, 6.0, -0.02);
+    // Yellow Highway Emblem Box (NH-66 / SH-17)
+    const nhBadge = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.4, 0.35), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+    nhBadge.position.set(-6.0, 6.0, 0.08);
+
+    gantry.add(poleL, poleR, truss, boardBorder, board, nhBadge);
+    gantry.position.set(0, 0, z);
+    roadNetwork.add(gantry);
+    colliders.push({ minX: -9.5, maxX: -8.1, minZ: z - 0.5, maxZ: z + 0.5 });
+    colliders.push({ minX: 8.1, maxX: 9.5, minZ: z - 0.5, maxZ: z + 0.5 });
   }
 
-  mapGroup.add(beachGroup);
+  // Place overhead gantries at key Kerala highway junctions
+  createHighwayGantry(-335, 'NH-66 KASARAGOD ➔ KANNUR', 'Kasaragod Fort', 'Kannur Beach');
+  createHighwayGantry(-270, 'NH-66 KOZHIKODE ➔ WAYANAD GHATS', 'Calicut City', 'Wayanad High Range');
+  createHighwayGantry(-110, 'NH-544 THRISSUR ➔ PALAKKAD GAP', 'Thekkinkadu', 'Palakkad Gap');
+  createHighwayGantry(-25, 'NH-66 ERNAKULAM MEGA METRO', 'Marine Drive', 'Kochi Metro');
+  createHighwayGantry(90, 'NH-66 ALAPPUZHA ➔ KOLLAM PORT', 'Backwaters', 'Ashtamudi Lake');
+  createHighwayGantry(280, 'NH-66 THIRUVANANTHAPURAM CAPITAL', 'Secretariat', 'Kovalam Beach');
 
-  // ==========================================
-  // 12. 🛣️ CONTINUOUS HIGHWAY & ROAD SYSTEM
-  // ==========================================
-  const roadSystemGroup = new THREE.Group();
-  const hwayMat = new THREE.MeshLambertMaterial({ color: 0x1f2428 });
-  const markMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+  // 8. 🟡 Yellow & White Kerala Highway Milestone Posts (മൈൽക്കുറ്റികൾ)
+  const milestoneLocations = [
+    { x: -7.5, z: -350, nh: true },
+    { x: -7.5, z: -310, nh: true },
+    { x: -7.5, z: -270, nh: true },
+    { x: -7.5, z: -210, nh: true },
+    { x: -7.5, z: -140, nh: true },
+    { x: -7.5, z: -70, nh: true },
+    { x: -7.5, z: 0, nh: true },
+    { x: -7.5, z: 70, nh: true },
+    { x: -7.5, z: 140, nh: true },
+    { x: -7.5, z: 220, nh: true },
+    { x: -7.5, z: 310, nh: true },
+  ];
 
-  // Main North-South Highway (Spans Z: -300 up to Z: +310 across the entire map, width 14m)
-  const mainHighway = new THREE.Mesh(new THREE.PlaneGeometry(14, 610), hwayMat);
-  mainHighway.rotateX(-Math.PI / 2);
-  mainHighway.position.set(0, 0.08, 5);
-  mainHighway.receiveShadow = true;
-  roadSystemGroup.add(mainHighway);
+  milestoneLocations.forEach((m) => {
+    const stone = new THREE.Group();
+    // Lower rectangular white base
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.75, 0.35), whiteWallMat);
+    base.position.set(0, 0.375, 0);
+    // Rounded yellow top for National Highway
+    const topArc = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.27, 0.27, 0.35, 12, 1, false, 0, Math.PI),
+      new THREE.MeshLambertMaterial({ color: 0xfacc15 })
+    );
+    topArc.rotateZ(Math.PI / 2);
+    topArc.position.set(0, 0.75, 0);
+    stone.add(base, topArc);
+    stone.position.set(m.x, 0, m.z);
+    roadNetwork.add(stone);
+  });
 
-  // Center Line along Highway
-  const hwayLine = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 600), markMat);
-  hwayLine.rotateX(-Math.PI / 2);
-  hwayLine.position.set(0, 0.1, 5);
-  roadSystemGroup.add(hwayLine);
-
-  // East-West Arterial Roads
-  // 1. Central Town Cross Road (at Z: 0, spanning X: -180 to +180)
-  const townCrossRoad = new THREE.Mesh(new THREE.PlaneGeometry(360, 11), hwayMat);
-  townCrossRoad.rotateX(-Math.PI / 2);
-  townCrossRoad.position.set(0, 0.09, 0);
-  townCrossRoad.receiveShadow = true;
-  roadSystemGroup.add(townCrossRoad);
-
-  // 2. North Highland Ghat Road (curving up to Viewpoint at Z: -260)
-  const ghatRoad = new THREE.Mesh(new THREE.PlaneGeometry(11, 80), hwayMat);
-  ghatRoad.rotateX(-Math.PI / 2);
-  ghatRoad.position.set(0, 0.09, -240);
-  roadSystemGroup.add(ghatRoad);
-
-  // 3. South Coastal Beach Boulevard (at Z: +305, spanning X: -160 to +160)
-  const beachBoulevard = new THREE.Mesh(new THREE.PlaneGeometry(320, 10), hwayMat);
-  beachBoulevard.rotateX(-Math.PI / 2);
-  beachBoulevard.position.set(0, 0.09, 305);
-  beachBoulevard.receiveShadow = true;
-  roadSystemGroup.add(beachBoulevard);
-
-  // 4. Backwater Jetty Branch Road (curves East from Highway to Jetty)
-  const jettyBranchRoad = new THREE.Mesh(new THREE.PlaneGeometry(95, 8), hwayMat);
-  jettyBranchRoad.rotateX(-Math.PI / 2);
-  jettyBranchRoad.position.set(55, 0.09, 215);
-  roadSystemGroup.add(jettyBranchRoad);
-
-  mapGroup.add(roadSystemGroup);
+  mapGroup.add(roadNetwork);
 
   // Return composite object with animation update
   return {
@@ -1121,14 +1390,25 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
     colliders,
     waterObjects,
     updateAnimation: (time: number) => {
-      // Rotate coastal lighthouse beacon beam
-      beaconTarget.position.x = Math.sin(time * 0.0015) * 80;
-      beaconTarget.position.z = Math.cos(time * 0.0015) * 80;
+      // 1. Rotate Tangasseri Lighthouse Beacon Beam
+      animBeacons.forEach(b => {
+        if (b.target) {
+          b.target.position.x = 45 + Math.sin(time * 0.0018) * 90;
+          b.target.position.z = 8 + Math.cos(time * 0.0018) * 90;
+        }
+      });
 
-      // Gentle river & sea wave shimmer
-      const waveOffset = Math.sin(time * 0.002) * 0.06;
-      riverWater.position.y = -0.7 + waveOffset;
-      oceanWaves.position.y = -0.2 + Math.sin(time * 0.0025) * 0.08;
+      // 2. Aircraft Obstacle Warning Lights Blinking (Secretariat, Ernakulam, Hospital)
+      const flash = Math.sin(time * 0.006) > 0;
+      animObstacleLights.forEach(light => {
+        light.visible = flash;
+      });
+
+      // 3. Gentle Shimmer on Water Bodies
+      const waveShimmer = Math.sin(time * 0.0025) * 0.04;
+      waterObjects.forEach((w, idx) => {
+        w.position.y += Math.sin(time * 0.002 + idx) * 0.002;
+      });
     },
   };
 }

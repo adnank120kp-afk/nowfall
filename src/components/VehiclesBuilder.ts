@@ -1829,3 +1829,797 @@ export function buildWidebodyMustangGT(): THREE.Group {
 }
 
 export const buildWidebodyMustangCar = buildWidebodyMustangGT;
+
+// =============================================================================
+// 7. 🚚 AUTHENTIC KERALA TIPPER LORRY (ടാറ്റാ / ഭാരത് ബെൻസ് ടിപ്പർ ലോറി)
+// Authentic Kerala Heavy Hydraulic Dump Tipper Truck:
+// - Vibrant Kerala Tipper Canary Yellow & Industrial Steel Slate Grey
+// - Heavy C-channel chassis with tandem dual rear axles (10 chunky heavy-duty tires)
+// - Forward-control cab w/ curved cowl, chrome/mesh grille, crystal headlamps & fog lamps
+// - Distinctive overhead windshield sun-visor ("കണ്ണാടിത്തട്ട്") w/ "അമ്മേ നാരായണ"
+// - Roof fairing w/ twin chrome pneumatic air trumpet horns ("പാമ്പ് ഹോൺ") & amber roof lights
+// - Ergonomic 2-tier entry steps, vertical cab grab bars, twin tubular side mirrors
+// - High-strength ribbed steel hydraulic tipper dump scoop body w/ cab canopy protector
+// - Telescopic chrome hydraulic hoist cylinder ram ("ജാക്കി സിലിണ്ടർ") & hydraulic reservoir
+// - Loaded with authentic Kerala Blue Metal Quarry Granite Gravel (കരിങ്കല്ല് / ക്വാറി മെറ്റൽ)
+// - Automatic rear tailgate w/ "HORN PLEASE", "OK TATA", "KEEP DISTANCE" & hazard chevrons
+// - Tall vertical exhaust stack w/ perforated heat shield & rain cap
+// - Fuel tank, battery box, dual air brake cylinders, side guard barriers, mudflaps
+// =============================================================================
+
+function createTipperVisorTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+
+  // Deep maroon/red background with yellow racing borders
+  ctx.fillStyle = '#991b1b';
+  ctx.fillRect(0, 0, 512, 128);
+
+  // Top and bottom diagonal hazard striping
+  const stripeWidth = 20;
+  ctx.fillStyle = '#facc15';
+  for (let x = -128; x < 512 + 128; x += stripeWidth * 2) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + stripeWidth, 0);
+    ctx.lineTo(x + stripeWidth - 14, 18);
+    ctx.lineTo(x - 14, 18);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(x, 110);
+    ctx.lineTo(x + stripeWidth, 110);
+    ctx.lineTo(x + stripeWidth + 14, 128);
+    ctx.lineTo(x + 14, 128);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Inner decorative border
+  ctx.strokeStyle = '#fef08a';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(8, 22, 496, 84);
+
+  // Center text (Malayalam + English)
+  ctx.fillStyle = '#fef08a';
+  ctx.font = 'bold 24px "Noto Sans Malayalam", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.8)';
+  ctx.shadowBlur = 4;
+  ctx.fillText('|| അമ്മേ നാരായണ ||', 256, 44);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 28px sans-serif';
+  ctx.fillText('★ KERALA TIPPER ★', 256, 76);
+
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillStyle = '#fde047';
+  ctx.fillText('KIZHAKKUMPURAM • SPEED GOVERNOR 40 KM/H', 256, 96);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createTipperTailgateTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+
+  // Industrial dark slate panel
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Top & bottom bold caution chevron bands
+  const bandH = 28;
+  const drawChevronBand = (yOffset: number) => {
+    ctx.fillStyle = '#eab308';
+    ctx.fillRect(0, yOffset, 512, bandH);
+    ctx.fillStyle = '#dc2626';
+    const step = 28;
+    for (let x = -50; x < 512 + 50; x += step * 2) {
+      ctx.beginPath();
+      ctx.moveTo(x, yOffset);
+      ctx.lineTo(x + step, yOffset);
+      ctx.lineTo(x + step - 18, yOffset + bandH);
+      ctx.lineTo(x - 18, yOffset + bandH);
+      ctx.closePath();
+      ctx.fill();
+    }
+  };
+  drawChevronBand(0);
+  drawChevronBand(228);
+
+  // Inner yellow frame
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(12, 34, 488, 188);
+
+  ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 5;
+
+  // Upper warning
+  ctx.fillStyle = '#f87171';
+  ctx.font = 'bold 18px "Noto Sans Malayalam", sans-serif';
+  ctx.fillText('⚠️ വിദൂരത പാലിക്കുക • KEEP DISTANCE ⚠️', 256, 62);
+
+  // Main iconic "HORN PLEASE"
+  ctx.fillStyle = '#fde047';
+  ctx.font = '900 46px sans-serif';
+  ctx.fillText('H O R N   P L E A S E', 256, 116);
+
+  // Left & Right "SOUND" / "HORN" badges
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('SOUND', 80, 168);
+  ctx.fillText('HORN', 432, 168);
+
+  // Bottom classic "OK" "TATA"
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '900 32px sans-serif';
+  ctx.fillText('O K', 180, 168);
+  ctx.fillText('T A T A', 332, 168);
+
+  // Speed and regulation plate
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillText('SPEED GOVERNOR FITTED 40 KM/H • KL-14-T-8055', 256, 204);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createTipperDoorTexture(isDriverSide: boolean): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(0, 0, 256, 128);
+
+  // Decorative border
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(6, 6, 244, 116);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#1e1b4b';
+  ctx.font = '900 18px sans-serif';
+  ctx.fillText('GOODS CARRIER', 128, 34);
+
+  ctx.font = 'bold 14px "Noto Sans Malayalam", sans-serif';
+  ctx.fillText('ടിപ്പർ സർവീസ്', 128, 58);
+
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillStyle = '#991b1b';
+  ctx.fillText('G.V.W: 25,000 KG', 128, 82);
+  ctx.fillText(isDriverSide ? 'DRIVER CABIN' : 'KERALA PERMIT', 128, 102);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createTipperGrilleTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+
+  // Dark matte grille body
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(0, 0, 256, 128);
+
+  // Chrome slats
+  ctx.fillStyle = '#cbd5e1';
+  for (let y = 16; y < 120; y += 18) {
+    ctx.fillRect(16, y, 224, 7);
+  }
+
+  // Central Emblem Badge
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath();
+  ctx.arc(128, 64, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.arc(128, 64, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '900 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('T', 128, 64);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createTipperPlateTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d')!;
+
+  // Commercial yellow license plate
+  ctx.fillStyle = '#facc15';
+  ctx.fillRect(0, 0, 256, 64);
+
+  // Black border
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(3, 3, 250, 58);
+
+  // Blue IND strip on left
+  ctx.fillStyle = '#1d4ed8';
+  ctx.fillRect(3, 3, 24, 58);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('IND', 15, 36);
+
+  // Number
+  ctx.fillStyle = '#000000';
+  ctx.font = '900 30px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('KL 14 T 8055', 142, 42);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+export function buildKeralaTipper(customCabinColor = 0xf59e0b): THREE.Group {
+  const tipper = new THREE.Group();
+
+  // -----------------------------------------------------------
+  // Materials
+  // -----------------------------------------------------------
+  const cabinMat = new THREE.MeshStandardMaterial({
+    color: customCabinColor,
+    metalness: 0.35,
+    roughness: 0.35,
+  });
+  const darkChassisMat = new THREE.MeshStandardMaterial({
+    color: 0x18181b,
+    metalness: 0.8,
+    roughness: 0.5,
+  });
+  const blackTrimMat = new THREE.MeshStandardMaterial({
+    color: 0x27272a,
+    metalness: 0.4,
+    roughness: 0.6,
+  });
+  const steelBodyMat = new THREE.MeshStandardMaterial({
+    color: 0x334155, // Heavy industrial slate grey dump bucket
+    metalness: 0.5,
+    roughness: 0.5,
+  });
+  const chromeMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    metalness: 0.95,
+    roughness: 0.1,
+  });
+  const tireMat = new THREE.MeshStandardMaterial({
+    color: 0x141414,
+    roughness: 0.9,
+    metalness: 0.1,
+  });
+  const rimMat = new THREE.MeshStandardMaterial({
+    color: 0x94a3b8,
+    metalness: 0.6,
+    roughness: 0.3,
+  });
+  const tintedGlassMat = new THREE.MeshStandardMaterial({
+    color: 0x7dd3fc,
+    transparent: true,
+    opacity: 0.75,
+    roughness: 0.1,
+    metalness: 0.1,
+  });
+  const headlightMat = new THREE.MeshStandardMaterial({
+    color: 0xfffbeb,
+    emissive: 0xfff7ed,
+    emissiveIntensity: 0.7,
+  });
+  const fogLampMat = new THREE.MeshStandardMaterial({
+    color: 0xfacc15,
+    emissive: 0xeab308,
+    emissiveIntensity: 0.6,
+  });
+  const taillightMat = new THREE.MeshStandardMaterial({
+    color: 0xdc2626,
+    emissive: 0xb91c1c,
+    emissiveIntensity: 0.6,
+  });
+  const amberMat = new THREE.MeshStandardMaterial({
+    color: 0xf97316,
+    emissive: 0xea580c,
+    emissiveIntensity: 0.5,
+  });
+  const blueMetalGraniteMat = new THREE.MeshStandardMaterial({
+    color: 0x475569, // Kerala blue-metal quarry crushed stone
+    roughness: 0.95,
+    metalness: 0.1,
+  });
+
+  // Canvas Decal Materials
+  const visorTex = createTipperVisorTexture();
+  const visorMat = new THREE.MeshBasicMaterial({ map: visorTex });
+
+  const tailgateTex = createTipperTailgateTexture();
+  const tailgateMat = new THREE.MeshBasicMaterial({ map: tailgateTex });
+
+  const grilleTex = createTipperGrilleTexture();
+  const grilleMat = new THREE.MeshBasicMaterial({ map: grilleTex });
+
+  const plateTex = createTipperPlateTexture();
+  const plateMat = new THREE.MeshBasicMaterial({ map: plateTex });
+
+  const doorTexL = createTipperDoorTexture(true);
+  const doorMatL = new THREE.MeshBasicMaterial({ map: doorTexL });
+  const doorTexR = createTipperDoorTexture(false);
+  const doorMatR = new THREE.MeshBasicMaterial({ map: doorTexR });
+
+  // ===========================================================
+  // 1. HEAVY C-CHANNEL LADDER FRAME CHASSIS
+  // ===========================================================
+  // Twin main longitudinal beams (8.6m long)
+  [-0.52, 0.52].forEach((x) => {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 8.6), darkChassisMat);
+    beam.position.set(x, 0.85, -0.4);
+    beam.castShadow = true;
+    tipper.add(beam);
+  });
+
+  // Chassis Cross-members
+  [-3.8, -2.5, -1.2, 0.2, 1.8, 3.2].forEach((z) => {
+    const cross = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.22, 0.16), darkChassisMat);
+    cross.position.set(0, 0.85, z);
+    tipper.add(cross);
+  });
+
+  // Front Heavy Bumper & Crash Guard
+  const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.45, 0.35), darkChassisMat);
+  bumper.position.set(0, 0.65, 3.8);
+  bumper.castShadow = true;
+  tipper.add(bumper);
+
+  // Bumper rubber push pads
+  [-0.95, 0.95].forEach((bx) => {
+    const pad = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.4, 0.08), blackTrimMat);
+    pad.position.set(bx, 0.65, 3.99);
+    tipper.add(pad);
+  });
+
+  // Heavy Center Tow Hitch Pin
+  const towHitch = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.2, 12), chromeMat);
+  towHitch.rotation.x = Math.PI / 2;
+  towHitch.position.set(0, 0.55, 4.0);
+  tipper.add(towHitch);
+
+  // Front License Plate
+  const frontPlate = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.16), plateMat);
+  frontPlate.position.set(0, 0.48, 4.0);
+  tipper.add(frontPlate);
+
+  // Round Lower Yellow Fog Lamps with wire guards
+  [-0.65, 0.65].forEach((fx) => {
+    const fog = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16), fogLampMat);
+    fog.rotation.x = Math.PI / 2;
+    fog.position.set(fx, 0.65, 3.98);
+    tipper.add(fog);
+
+    const fogRim = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 8, 16), chromeMat);
+    fogRim.position.set(fx, 0.65, 4.02);
+    tipper.add(fogRim);
+  });
+
+  // -----------------------------------------------------------
+  // Chassis Auxiliaries: Fuel Tank, Battery Box, Air Cylinders
+  // -----------------------------------------------------------
+  // Right side 250L Cylindrical Diesel Tank
+  const fuelTank = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 1.45, 20), rimMat);
+  fuelTank.rotation.z = Math.PI / 2;
+  fuelTank.position.set(1.05, 0.85, 0.35);
+  fuelTank.castShadow = true;
+  tipper.add(fuelTank);
+
+  // Chrome Fuel Filler Cap
+  const fuelCap = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.12, 12), chromeMat);
+  fuelCap.position.set(1.05, 1.2, 0.8);
+  tipper.add(fuelCap);
+
+  // Left side Heavy Battery Box with diamond plate lid
+  const batteryBox = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.75), darkChassisMat);
+  batteryBox.position.set(-1.05, 0.85, 0.85);
+  tipper.add(batteryBox);
+
+  // Left side Dual Compressed Air Brake Tanks (Red & Silver)
+  [-0.1, 0.3].forEach((az) => {
+    const airTank = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.85, 16), darkChassisMat);
+    airTank.rotation.z = Math.PI / 2;
+    airTank.position.set(-1.05, 0.82, -0.4 + az);
+    tipper.add(airTank);
+  });
+
+  // Lateral Side Underrun Protective Barrier Rails (Yellow & Black)
+  [-1.22, 1.22].forEach((sx) => {
+    const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 2.4), blackTrimMat);
+    rail1.position.set(sx, 0.72, 0.2);
+    const rail2 = rail1.clone();
+    rail2.position.y = 0.52;
+    tipper.add(rail1, rail2);
+  });
+
+  // Rear Underrun Protection Beam (RUDP Crash Guard)
+  const rearCrashBeam = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.25, 0.18), darkChassisMat);
+  rearCrashBeam.position.set(0, 0.65, -4.42);
+  tipper.add(rearCrashBeam);
+
+  // Rear License Plate
+  const rearPlate = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.16), plateMat);
+  rearPlate.rotation.y = Math.PI;
+  rearPlate.position.set(0.45, 0.65, -4.53);
+  tipper.add(rearPlate);
+
+  // Rear 4-Chamber LED Tail Lamp Clusters
+  [-0.95, 0.95].forEach((rx) => {
+    const lampHousing = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.18, 0.1), blackTrimMat);
+    lampHousing.position.set(rx, 0.65, -4.5);
+    tipper.add(lampHousing);
+
+    // Red Brake Light
+    const brakeL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.04), taillightMat);
+    brakeL.position.set(rx - 0.16, 0.65, -4.56);
+    // Amber Blinker
+    const blinkerL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.04), amberMat);
+    blinkerL.position.set(rx, 0.65, -4.56);
+    // White Reverse Light
+    const revL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.04), headlightMat);
+    revL.position.set(rx + 0.16, 0.65, -4.56);
+    tipper.add(brakeL, blinkerL, revL);
+  });
+
+  // Heavy Full-Width Black Rubber Mudflaps behind Rear Axles
+  [-1.05, 1.05].forEach((mx) => {
+    const mudflap = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.55, 0.04), blackTrimMat);
+    mudflap.position.set(mx, 0.52, -4.1);
+    tipper.add(mudflap);
+  });
+
+  // ===========================================================
+  // 2. AUTHENTIC KERALA TIPPER CABIN (ടാറ്റാ / ഭാരത് ബെൻസ് ക്യാബിൻ)
+  // ===========================================================
+  const cabGroup = new THREE.Group();
+  cabGroup.position.set(0, 0, 0);
+
+  // Main Cab Shell
+  const cabLower = new THREE.Mesh(new THREE.BoxGeometry(2.44, 1.45, 1.95), cabinMat);
+  cabLower.position.set(0, 1.82, 2.75);
+  cabLower.castShadow = true;
+  cabGroup.add(cabLower);
+
+  // Slanted Aerodynamic Roof Structure
+  const cabRoof = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.65, 1.85), cabinMat);
+  cabRoof.position.set(0, 2.78, 2.7);
+  cabRoof.castShadow = true;
+  cabGroup.add(cabRoof);
+
+  // Front Fascia / Grille Assembly
+  const grilleMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.75), grilleMat);
+  grilleMesh.position.set(0, 1.72, 3.75);
+  cabGroup.add(grilleMesh);
+
+  // Rectangular Heavy Crystal Headlamps (Left & Right)
+  [-1.02, 1.02].forEach((hx) => {
+    const headlampBezel = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 0.1), chromeMat);
+    headlampBezel.position.set(hx, 1.68, 3.72);
+    cabGroup.add(headlampBezel);
+
+    const headlampGlass = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.04), headlightMat);
+    headlampGlass.position.set(hx, 1.68, 3.78);
+    cabGroup.add(headlampGlass);
+
+    // Corner Wrap-around Amber Indicator Lens
+    const cornerIndicator = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.24, 0.22), amberMat);
+    cornerIndicator.position.set(hx > 0 ? 1.22 : -1.22, 1.68, 3.65);
+    cabGroup.add(cornerIndicator);
+  });
+
+  // Large Slanted Windshield
+  const windshield = new THREE.Mesh(new THREE.BoxGeometry(2.28, 0.95, 0.08), tintedGlassMat);
+  windshield.position.set(0, 2.52, 3.62);
+  windshield.rotation.x = -0.15; // Realistic forward slant
+  cabGroup.add(windshield);
+
+  // Black Windshield Wipers (Twin Articulated Arms)
+  [-0.55, 0.55].forEach((wx) => {
+    const wiperArm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.42, 0.02), blackTrimMat);
+    wiperArm.rotation.z = -0.35;
+    wiperArm.position.set(wx, 2.32, 3.68);
+    cabGroup.add(wiperArm);
+  });
+
+  // Overhead Windshield Sun-Visor ("കണ്ണാടിത്തട്ട്")
+  const visorCanopy = new THREE.Mesh(new THREE.BoxGeometry(2.46, 0.36, 0.45), blackTrimMat);
+  visorCanopy.position.set(0, 3.05, 3.65);
+  visorCanopy.rotation.x = -0.12;
+  cabGroup.add(visorCanopy);
+
+  const visorDecal = new THREE.Mesh(new THREE.PlaneGeometry(2.42, 0.32), visorMat);
+  visorDecal.position.set(0, 3.05, 3.88);
+  visorDecal.rotation.x = -0.12;
+  cabGroup.add(visorDecal);
+
+  // 5 Amber Cab Roof Clearance Lights
+  [-0.9, -0.45, 0, 0.45, 0.9].forEach((lx) => {
+    const roofLight = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), amberMat);
+    roofLight.position.set(lx, 3.16, 3.4);
+    cabGroup.add(roofLight);
+  });
+
+  // Twin Chrome Pneumatic Trumpet Air Horns ("പാമ്പ് ഹോൺ") on Cab Roof
+  [-0.32, 0.32].forEach((hx) => {
+    const hornTube = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.08, 0.75, 12), chromeMat);
+    hornTube.rotation.x = Math.PI / 2;
+    hornTube.position.set(hx, 3.22, 2.85);
+    const hornFlare = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.18, 12), chromeMat);
+    hornFlare.rotation.x = -Math.PI / 2;
+    hornFlare.position.set(hx, 3.22, 3.28);
+    cabGroup.add(hornTube, hornFlare);
+  });
+
+  // Side Cabin Windows (Driver & Passenger)
+  [-1.23, 1.23].forEach((sx) => {
+    const sideGlass = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.75, 1.1), tintedGlassMat);
+    sideGlass.position.set(sx, 2.5, 2.85);
+    cabGroup.add(sideGlass);
+  });
+
+  // Door Lettering Panels (Kerala Goods Carrier)
+  const doorPanelL = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), doorMatL);
+  doorPanelL.rotation.y = -Math.PI / 2;
+  doorPanelL.position.set(-1.23, 1.82, 2.75);
+  cabGroup.add(doorPanelL);
+
+  const doorPanelR = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), doorMatR);
+  doorPanelR.rotation.y = Math.PI / 2;
+  doorPanelR.position.set(1.23, 1.82, 2.75);
+  cabGroup.add(doorPanelR);
+
+  // Dual Large Exterior Tubular Side-View Mirrors
+  [-1.38, 1.38].forEach((mx) => {
+    const mirrorFrame = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.85, 8), darkChassisMat);
+    mirrorFrame.position.set(mx, 2.45, 3.35);
+    const mirrorGlass = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.42, 0.22), chromeMat);
+    mirrorGlass.position.set(mx, 2.5, 3.35);
+    // Spot Convex Mirror
+    const spotMirror = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), chromeMat);
+    spotMirror.position.set(mx, 2.2, 3.35);
+    cabGroup.add(mirrorFrame, mirrorGlass, spotMirror);
+  });
+
+  // Ergonomic 2-Tier Perforated Steel Entry Steps (Left & Right)
+  [-1.28, 1.28].forEach((sx) => {
+    const step1 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.05, 0.45), darkChassisMat);
+    step1.position.set(sx, 0.75, 2.75);
+    const step2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.05, 0.45), darkChassisMat);
+    step2.position.set(sx, 1.05, 2.75);
+    // Vertical Grab Handles on Cab Pillars
+    const grabBar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.95, 8), chromeMat);
+    grabBar.position.set(sx, 1.85, 2.2);
+    cabGroup.add(step1, step2, grabBar);
+  });
+
+  // Driver Interior: Dashboard, Steering Wheel & Driver High-Back Seat
+  const dash = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.35, 0.6), blackTrimMat);
+  dash.position.set(0, 1.95, 3.25);
+  const steerColumn = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 8), darkChassisMat);
+  steerColumn.rotation.x = -0.55;
+  steerColumn.position.set(0.65, 2.05, 3.1);
+  const steerWheel = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.035, 8, 20), blackTrimMat);
+  steerWheel.rotation.x = -0.55;
+  steerWheel.position.set(0.65, 2.25, 2.95);
+
+  const driverSeat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.85, 0.55), blackTrimMat);
+  driverSeat.position.set(0.65, 1.95, 2.5);
+  const passBench = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.85, 0.55), blackTrimMat);
+  passBench.position.set(-0.55, 1.95, 2.5);
+  cabGroup.add(dash, steerColumn, steerWheel, driverSeat, passBench);
+
+  // Tall Vertical Heavy Exhaust Stack Pipe behind Cab (with Perforated Heat Guard)
+  const exhaustPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 2.6, 12), darkChassisMat);
+  exhaustPipe.position.set(0.85, 2.45, 1.62);
+  const heatGuard = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.6, 12), chromeMat);
+  heatGuard.position.set(0.85, 2.2, 1.62);
+  const exhaustTip = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.3, 12), chromeMat);
+  exhaustTip.rotation.z = 0.45;
+  exhaustTip.position.set(0.92, 3.78, 1.62);
+  cabGroup.add(exhaustPipe, heatGuard, exhaustTip);
+
+  tipper.add(cabGroup);
+
+  // ===========================================================
+  // 3. HEAVY HYDRAULIC TIPPER SCOOP DUMP BODY
+  // ===========================================================
+  const tipperBodyGroup = new THREE.Group();
+  tipperBodyGroup.position.set(0, 0, 0);
+
+  // Subframe / Tipping Cradle I-beams
+  const tippingBed = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.15, 5.6), steelBodyMat);
+  tippingBed.position.set(0, 1.18, -1.35);
+  tippingBed.castShadow = true;
+  tipperBodyGroup.add(tippingBed);
+
+  // Heavy Steel Tipper Body Floor (deep interior bed)
+  const tipperFloor = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.12, 5.4), steelBodyMat);
+  tipperFloor.position.set(0, 1.25, -1.35);
+  tipperBodyGroup.add(tipperFloor);
+
+  // Left & Right Heavy Ribbed Tipper Walls
+  [-1.25, 1.25].forEach((wx) => {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.75, 5.4), steelBodyMat);
+    wall.position.set(wx, 2.05, -1.35);
+    wall.castShadow = true;
+    tipperBodyGroup.add(wall);
+
+    // Top Reinforcing Coaming Rail
+    const coaming = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 5.45), darkChassisMat);
+    coaming.position.set(wx, 2.95, -1.35);
+    tipperBodyGroup.add(coaming);
+
+    // 5 Exterior Vertical Boxed Stiffening Posts / Ribs
+    [-2.4, -1.2, 0, 1.2, 2.4].forEach((rz) => {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.75, 0.16), darkChassisMat);
+      rib.position.set(wx > 0 ? wx + 0.08 : wx - 0.08, 2.05, -1.35 + rz);
+      tipperBodyGroup.add(rib);
+    });
+  });
+
+  // Front Bulkhead Wall of Dump Body
+  const frontWall = new THREE.Mesh(new THREE.BoxGeometry(2.52, 1.75, 0.14), steelBodyMat);
+  frontWall.position.set(0, 2.05, 1.35);
+  frontWall.castShadow = true;
+  tipperBodyGroup.add(frontWall);
+
+  // Iconic CAB PROTECTOR CANOPY (Steel Visor Shield extending over Cab Roof)
+  // Protects driver cabin from falling boulders during excavator/JCB loading!
+  const canopyShield = new THREE.Mesh(new THREE.BoxGeometry(2.54, 0.12, 1.45), steelBodyMat);
+  canopyShield.position.set(0, 3.02, 2.05);
+  canopyShield.rotation.x = -0.1;
+  canopyShield.castShadow = true;
+  tipperBodyGroup.add(canopyShield);
+
+  // Heavy Telescopic Chrome Hydraulic Hoist Cylinder Ram ("ജാക്കി സിലിണ്ടർ")
+  const hoistBase = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.8, 16), darkChassisMat);
+  hoistBase.position.set(0, 1.45, 1.52);
+  const hoistRam1 = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.9, 16), chromeMat);
+  hoistRam1.position.set(0, 1.95, 1.52);
+  const hoistRam2 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.8, 16), chromeMat);
+  hoistRam2.position.set(0, 2.45, 1.52);
+  tipperBodyGroup.add(hoistBase, hoistRam1, hoistRam2);
+
+  // Automatic Hinged Rear Tailgate (ടെയിൽ ഗേറ്റ്)
+  const tailgateMesh = new THREE.Mesh(new THREE.BoxGeometry(2.46, 1.65, 0.15), steelBodyMat);
+  tailgateMesh.position.set(0, 2.05, -4.08);
+  tailgateMesh.castShadow = true;
+  tipperBodyGroup.add(tailgateMesh);
+
+  // Tailgate Decal with "HORN PLEASE", chevrons, speed limit
+  const tailgateBanner = new THREE.Mesh(new THREE.PlaneGeometry(2.42, 1.58), tailgateMat);
+  tailgateBanner.rotation.y = Math.PI;
+  tailgateBanner.position.set(0, 2.05, -4.17);
+  tipperBodyGroup.add(tailgateBanner);
+
+  // Heavy Tailgate Top Hinge Pins & Safety Chains
+  [-1.15, 1.15].forEach((hx) => {
+    const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.22, 12), darkChassisMat);
+    hinge.rotation.z = Math.PI / 2;
+    hinge.position.set(hx, 2.88, -4.08);
+    tipperBodyGroup.add(hinge);
+
+    // Dangling steel safety chain
+    const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.65, 6), chromeMat);
+    chain.position.set(hx, 1.95, -4.12);
+    chain.rotation.z = hx > 0 ? -0.2 : 0.2;
+    tipperBodyGroup.add(chain);
+  });
+
+  // Authentic Cargo Load: Kerala Blue Metal Quarry Granite Gravel (കരിങ്കല്ല് / ക്വാറി മെറ്റൽ)
+  const gravelMound = new THREE.Mesh(new THREE.ConeGeometry(1.05, 1.15, 8), blueMetalGraniteMat);
+  gravelMound.rotation.x = Math.PI / 2;
+  gravelMound.scale.set(1.1, 2.4, 0.7);
+  gravelMound.position.set(0, 2.05, -1.35);
+  tipperBodyGroup.add(gravelMound);
+
+  // Individual Faceted Granite Quarry Boulders in the Bed
+  [
+    { x: -0.4, y: 2.35, z: -0.8, s: 0.35 },
+    { x: 0.35, y: 2.42, z: -1.6, s: 0.42 },
+    { x: -0.25, y: 2.38, z: -2.4, s: 0.38 },
+    { x: 0.45, y: 2.30, z: -0.2, s: 0.32 },
+    { x: -0.5, y: 2.28, z: -3.0, s: 0.36 },
+  ].forEach((b) => {
+    const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(b.s, 1), blueMetalGraniteMat);
+    boulder.position.set(b.x, b.y, b.z);
+    boulder.rotation.set(Math.random(), Math.random(), Math.random());
+    boulder.castShadow = true;
+    tipperBodyGroup.add(boulder);
+  });
+
+  tipper.add(tipperBodyGroup);
+
+  // ===========================================================
+  // 4. HEAVY RUNNING GEAR: 10 CHUNKY WHEELS (6 WHEEL HUBS)
+  // Steer Axle (Z = +2.75) w/ 2 single tires
+  // Tandem Dual Drive Axles (Z = -1.8, Z = -3.2) w/ 4 dual wheel pairs (8 tires!)
+  // ===========================================================
+  const tireGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.38, 20);
+  tireGeo.rotateZ(Math.PI / 2);
+
+  const rimGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.4, 16);
+  rimGeo.rotateZ(Math.PI / 2);
+
+  const hubGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.44, 12);
+  hubGeo.rotateZ(Math.PI / 2);
+
+  // Helper to build a complete detailed commercial truck wheel
+  const createHeavyTruckWheel = (isOuter = true) => {
+    const wg = new THREE.Group();
+    const tire = new THREE.Mesh(tireGeo, tireMat);
+    tire.castShadow = true;
+    const rim = new THREE.Mesh(rimGeo, rimMat);
+    const hub = new THREE.Mesh(hubGeo, isOuter ? chromeMat : darkChassisMat);
+    wg.add(tire, rim, hub);
+
+    // 10 Chrome Wheel Studs/Lug Nuts on outer rims
+    if (isOuter) {
+      for (let i = 0; i < 10; i++) {
+        const angle = (Math.PI * 2 / 10) * i;
+        const stud = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.44, 6), chromeMat);
+        stud.rotation.z = Math.PI / 2;
+        stud.position.set(0, Math.sin(angle) * 0.25, Math.cos(angle) * 0.25);
+        wg.add(stud);
+      }
+    }
+    return wg;
+  };
+
+  // 1. Front Steer Axle (Z = 2.75)
+  [-1.18, 1.18].forEach((wx) => {
+    const frontWheel = createHeavyTruckWheel(true);
+    frontWheel.position.set(wx, 0.56, 2.75);
+    tipper.add(frontWheel);
+  });
+
+  // 2. Rear Tandem Dual Axles (Z = -1.8 and Z = -3.2)
+  // Each axle has DUAL tires on Left & Right = 4 tires per axle = 8 rear tires!
+  [-1.8, -3.2].forEach((az) => {
+    // Left Duals
+    const outL = createHeavyTruckWheel(true);
+    outL.position.set(-1.26, 0.56, az);
+    const inL = createHeavyTruckWheel(false);
+    inL.position.set(-0.88, 0.56, az);
+
+    // Right Duals
+    const outR = createHeavyTruckWheel(true);
+    outR.position.set(1.26, 0.56, az);
+    const inR = createHeavyTruckWheel(false);
+    inR.position.set(0.88, 0.56, az);
+
+    tipper.add(outL, inL, outR, inR);
+  });
+
+  tipper.scale.set(1.0, 1.0, 1.0);
+  return tipper;
+}
