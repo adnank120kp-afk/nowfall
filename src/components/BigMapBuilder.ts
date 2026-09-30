@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { buildAmericanBoxAmbulance, buildKeralaTipper } from './VehiclesBuilder';
+import { buildPuneMetroTrain } from './MetroBuilder';
+import { buildRealisticSculptedElephant } from './ElephantBuilder';
 
 export interface DistrictInfo {
   id: string;
@@ -175,6 +177,7 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
   // Animated elements references
   const animObstacleLights: THREE.Mesh[] = [];
   const animBeacons: THREE.SpotLight[] = [];
+  let animMetroTrain: { group: THREE.Group; leadCar: THREE.Group; update: (time: number) => void } | null = null;
 
   // =========================================================================
   // 1. 🌴 KASARAGOD — THE NORTHERN START (X: -80, Z: -350)
@@ -403,41 +406,17 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
   wayanadGroup.add(vHut, vRoof);
   colliders.push({ minX: -168, maxX: -156, minZ: -242, maxZ: -232 });
 
-  // 4D. Wild Asiatic Elephant (കാട്ടാന) in Wayanad Bamboo Forest
-  const elephantGroup = new THREE.Group();
-  const eBody = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.4, 5.2), new THREE.MeshLambertMaterial({ color: 0x475569 }));
-  eBody.position.set(0, 3.0, 0);
-  const eHead = new THREE.Mesh(new THREE.SphereGeometry(1.8, 10, 10), new THREE.MeshLambertMaterial({ color: 0x475569 }));
-  eHead.position.set(0, 4.0, 3.2);
-  // Trunk
-  const eTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.6, 3.4, 8), new THREE.MeshLambertMaterial({ color: 0x475569 }));
-  eTrunk.position.set(0, 2.4, 4.3);
-  eTrunk.rotateX(0.35);
-  // Ivory Tusks
-  for (let side of [-0.7, 0.7]) {
-    const tusk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.16, 2.2, 8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
-    tusk.position.set(side, 2.8, 3.9);
-    tusk.rotateX(0.5);
-    elephantGroup.add(tusk);
-  }
-  // Ears
-  for (let side of [-1.9, 1.9]) {
-    const ear = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.4, 1.8), new THREE.MeshLambertMaterial({ color: 0x334155 }));
-    ear.position.set(side, 4.0, 2.8);
-    ear.rotateZ(side > 0 ? 0.35 : -0.35);
-    elephantGroup.add(ear);
-  }
-  // Legs
-  for (let lx of [-1.15, 1.15]) {
-    for (let lz of [-1.7, 1.7]) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.62, 3.0, 8), new THREE.MeshLambertMaterial({ color: 0x334155 }));
-      leg.position.set(lx, 1.5, lz);
-      elephantGroup.add(leg);
-    }
-  }
-  elephantGroup.add(eBody, eHead, eTrunk);
-  elephantGroup.position.set(8, 0, 16);
-  wayanadGroup.add(elephantGroup);
+  // 4D. Realistic Sculpted Asian Elephant (6 அடி சிமெண்ட் யானை சிலை / കാട്ടാന)
+  // Faithfully constructed to the 72" architectural cement statue blueprint
+  const elephant = buildRealisticSculptedElephant({
+    scale: 1.15,
+    hasPedestal: true,
+    hasNettipattam: true,
+    skinColor: 0x52525b,
+  });
+  elephant.position.set(8, 0, 16);
+  elephant.rotation.y = -Math.PI / 4; // Angled naturally toward the visitor pathway
+  wayanadGroup.add(elephant);
   colliders.push({ minX: -136, maxX: -124, minZ: -238, maxZ: -226 });
 
   // Elephant Warning Sign (മുന്നറിയിപ്പ്: കാട്ടാന ശല്യം! 🐘)
@@ -652,30 +631,294 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
     animObstacleLights.push(bLight);
   });
 
-  // 8B. Elevated Kochi Metro Viaduct & Sleek Metro Train
+  // 8B. 🚇 Elevated Pune Metro Purple Line Viaduct & High-Speed Train
+  // =========================================================================
+  // 8B. 🚇 COLOSSAL DUAL-SIDED CONNECTED METRO SYSTEM & 734M TRANSIT LOOP
+  // Spanning both sides of the metropolis:
+  // - North Viaduct Corridor at Z = -15 (Length 320m, X: -160 to +160)
+  // - South Viaduct Corridor on the OTHER SIDE at Z = +15 (Length 320m, X: -160 to +160)
+  // - East 180° Sweeping Curved Connector Viaduct attaching North to South (R = 15m)
+  // - West 180° Sweeping Curved Connector Viaduct attaching South to North (R = 15m)
+  // - Overhead Pedestrian Concourse Skybridge attaching stations across the street
+  // - Animated High-Speed Metro Train cruising continuously around the full loop!
+  // =========================================================================
   const metroGroup = new THREE.Group();
-  // Concrete Viaduct Deck spanning East-West across Central Town (Span 160m at Z: -15)
-  const viaductDeck = new THREE.Mesh(new THREE.BoxGeometry(160, 1.2, 5.5), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
-  viaductDeck.position.set(0, 9.5, -15);
-  metroGroup.add(viaductDeck);
 
-  // Viaduct Heavy Support Concrete Pillars
-  for (let px = -70; px <= 70; px += 28) {
-    const pMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 9.5, 2.4), new THREE.MeshLambertMaterial({ color: 0x64748b }));
-    pMesh.position.set(px, 4.75, -15);
-    metroGroup.add(pMesh);
-    colliders.push({ minX: px - 1.5, maxX: px + 1.5, minZ: -16.5, maxZ: -13.5 });
+  const viaductY = 9.5;
+  const straightLength = 320;
+  const halfSpan = straightLength / 2; // 160
+  const curveRadius = 15;
+  const deckW = 6.4;
+
+  const deckMat = new THREE.MeshLambertMaterial({ color: 0x94a3b8 });
+  const parapetMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
+  const purpleTrimMat = new THREE.MeshLambertMaterial({ color: 0xc026d3 });
+  const railMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.1 });
+  const sleeperMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
+  const pillarMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
+  const pierCapMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
+  const mastMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6 });
+  const copperWireMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.8, roughness: 0.2 });
+
+  // -------------------------------------------------------------------------
+  // Helper: Build a Straight Viaduct Section (Used for North & South corridors)
+  // -------------------------------------------------------------------------
+  function buildStraightViaduct(zLine: number, isNorth: boolean) {
+    const section = new THREE.Group();
+
+    // 1. Concrete Viaduct Deck Slab
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(straightLength, 1.2, deckW), deckMat);
+    deck.position.set(0, viaductY, zLine);
+    deck.receiveShadow = true;
+    section.add(deck);
+
+    // 2. Parapet Crash Barriers with Glowing Purple Line LED Strip
+    [-deckW / 2 + 0.16, deckW / 2 - 0.16].forEach((edgeZ) => {
+      const parapet = new THREE.Mesh(new THREE.BoxGeometry(straightLength, 1.15, 0.32), parapetMat);
+      parapet.position.set(0, viaductY + 1.15, zLine + edgeZ);
+
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(straightLength, 0.14, 0.36), purpleTrimMat);
+      trim.position.set(0, viaductY + 1.2, zLine + edgeZ);
+
+      section.add(parapet, trim);
+    });
+
+    // 3. Steel Rails
+    [-0.72, 0.72].forEach((trackZ) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(straightLength, 0.12, 0.08), railMat);
+      rail.position.set(0, viaductY + 0.66, zLine + trackZ);
+      section.add(rail);
+    });
+
+    // 4. Concrete Railway Sleepers
+    for (let sx = -halfSpan + 2; sx <= halfSpan - 2; sx += 2.0) {
+      const sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.08, 2.5), sleeperMat);
+      sleeper.position.set(sx, viaductY + 0.62, zLine);
+      section.add(sleeper);
+    }
+
+    // 5. Heavy Hammerhead Concrete Support Pillars (spaced every 24m)
+    for (let px = -halfSpan + 16; px <= halfSpan - 16; px += 24) {
+      const pCol = new THREE.Mesh(new THREE.BoxGeometry(2.4, viaductY, 2.4), pillarMat);
+      pCol.position.set(px, viaductY / 2, zLine);
+      pCol.castShadow = true;
+      section.add(pCol);
+      colliders.push({ minX: px - 1.5, maxX: px + 1.5, minZ: zLine - 1.5, maxZ: zLine + 1.5 });
+
+      const pCap = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.9, deckW), pierCapMat);
+      pCap.position.set(px, viaductY - 0.45, zLine);
+      section.add(pCap);
+
+      // Catenary Portal Mast Gantry
+      const mastL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 5.2, 0.18), mastMat);
+      mastL.position.set(px, viaductY + 3.1, zLine - 2.9);
+      const mastR = mastL.clone();
+      mastR.position.set(px, viaductY + 3.1, zLine + 2.9);
+      const crossBeam = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 6.0), mastMat);
+      crossBeam.position.set(px, viaductY + 5.6, zLine);
+      const dropper = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8), new THREE.MeshLambertMaterial({ color: 0x7c2d12 }));
+      dropper.position.set(px, viaductY + 5.3, zLine);
+      section.add(mastL, mastR, crossBeam, dropper);
+    }
+
+    // 6. Overhead Contact Wire
+    const wire = new THREE.Mesh(new THREE.BoxGeometry(straightLength, 0.03, 0.03), copperWireMat);
+    wire.position.set(0, viaductY + 5.1, zLine);
+    section.add(wire);
+
+    return section;
   }
 
-  // Sleek Kochi Metro Train Coach (Cyan & Metallic White) on Track
-  const trainBody = new THREE.Mesh(new THREE.BoxGeometry(28, 3.4, 3.6), new THREE.MeshLambertMaterial({ color: 0x06b6d4 }));
-  trainBody.position.set(12, 11.8, -15);
-  const trainRoof = new THREE.Mesh(new THREE.BoxGeometry(28.2, 0.4, 3.8), whiteWallMat);
-  trainRoof.position.set(12, 13.6, -15);
-  // Tinted Train Windows Band
-  const trainGlass = new THREE.Mesh(new THREE.BoxGeometry(27.5, 1.2, 3.7), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
-  trainGlass.position.set(12, 12.2, -15);
-  metroGroup.add(trainBody, trainRoof, trainGlass);
+  // 1. North Viaduct Corridor (Z = -15)
+  metroGroup.add(buildStraightViaduct(-15, true));
+
+  // 2. South Viaduct Corridor ON THE OTHER SIDE (Z = +15)
+  metroGroup.add(buildStraightViaduct(15, false));
+
+  // -------------------------------------------------------------------------
+  // Helper: Build a Sweeping 180° Curved Viaduct (Attaching North to South!)
+  // -------------------------------------------------------------------------
+  function buildCurvedConnectorViaduct(centerX: number, isEast: boolean) {
+    const curveGroup = new THREE.Group();
+    const segments = 16;
+    const angleStart = isEast ? -Math.PI / 2 : Math.PI / 2;
+    const angleSweep = Math.PI;
+    const segAngle = angleSweep / segments;
+
+    for (let i = 0; i < segments; i++) {
+      const a1 = angleStart + i * segAngle;
+      const a2 = angleStart + (i + 1) * segAngle;
+      const midA = (a1 + a2) / 2;
+      const segLen = curveRadius * segAngle * 1.04;
+
+      const segX = centerX + Math.cos(midA) * curveRadius;
+      const segZ = Math.sin(midA) * curveRadius;
+      const rotY = -midA + Math.PI / 2;
+
+      // Curved Deck Segment
+      const deckSeg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 1.2, deckW), deckMat);
+      deckSeg.position.set(segX, viaductY, segZ);
+      deckSeg.rotation.y = rotY;
+      curveGroup.add(deckSeg);
+
+      // Outer & Inner Parapets with Purple Trim
+      [-deckW / 2 + 0.16, deckW / 2 - 0.16].forEach((rOffset) => {
+        const rad = curveRadius + (isEast ? rOffset : -rOffset);
+        const pX = centerX + Math.cos(midA) * rad;
+        const pZ = Math.sin(midA) * rad;
+
+        const pSeg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 1.15, 0.32), parapetMat);
+        pSeg.position.set(pX, viaductY + 1.15, pZ);
+        pSeg.rotation.y = rotY;
+
+        const trimSeg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 0.14, 0.36), purpleTrimMat);
+        trimSeg.position.set(pX, viaductY + 1.2, pZ);
+        trimSeg.rotation.y = rotY;
+
+        curveGroup.add(pSeg, trimSeg);
+      });
+
+      // Curved Dual Steel Rails
+      [-0.72, 0.72].forEach((trackOffset) => {
+        const rRad = curveRadius + (isEast ? trackOffset : -trackOffset);
+        const rX = centerX + Math.cos(midA) * rRad;
+        const rZ = Math.sin(midA) * rRad;
+
+        const railSeg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 0.12, 0.08), railMat);
+        railSeg.position.set(rX, viaductY + 0.66, rZ);
+        railSeg.rotation.y = rotY;
+        curveGroup.add(railSeg);
+      });
+
+      // Concrete Sleepers
+      const sleeperSeg = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.08, 2.5), sleeperMat);
+      sleeperSeg.position.set(segX, viaductY + 0.62, segZ);
+      sleeperSeg.rotation.y = rotY;
+      curveGroup.add(sleeperSeg);
+
+      // Support Columns at Quarter Points
+      if (i % 4 === 0) {
+        const pCol = new THREE.Mesh(new THREE.BoxGeometry(2.4, viaductY, 2.4), pillarMat);
+        pCol.position.set(segX, viaductY / 2, segZ);
+        pCol.castShadow = true;
+        curveGroup.add(pCol);
+        colliders.push({ minX: segX - 1.5, maxX: segX + 1.5, minZ: segZ - 1.5, maxZ: segZ + 1.5 });
+
+        const pCap = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.9, deckW), pierCapMat);
+        pCap.position.set(segX, viaductY - 0.45, segZ);
+        pCap.rotation.y = rotY;
+        curveGroup.add(pCap);
+      }
+    }
+
+    return curveGroup;
+  }
+
+  // 3. East Curved Connector Viaduct (attaching North track at Z = -15 across to South track at Z = +15!)
+  metroGroup.add(buildCurvedConnectorViaduct(halfSpan, true));
+
+  // 4. West Curved Connector Viaduct (attaching South track at Z = +15 across to North track at Z = -15!)
+  metroGroup.add(buildCurvedConnectorViaduct(-halfSpan, false));
+
+  // 5. Cable-Stayed Metro Bridge Pylon where viaduct crosses Eastern Canal (X = 90)
+  const pylonMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.4 });
+  const cableMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.6 });
+
+  // A-Frame Cable Stayed Tower on canal bank between North & South lines
+  const towerA = new THREE.Mesh(new THREE.BoxGeometry(2.2, 28, 2.2), pylonMat);
+  towerA.position.set(90, 14, 0);
+  towerA.castShadow = true;
+  metroGroup.add(towerA);
+
+  // Radiant Harp Stay Cables attaching tower to North & South viaduct decks
+  [-1, 1].forEach((dirZ) => {
+    for (let c = 0; c < 5; c++) {
+      const cableY = 18 + c * 2.2;
+      const targetX = 90 + (c - 2) * 16;
+      const targetZ = dirZ * 15;
+
+      const cLen = Math.sqrt(Math.pow(targetX - 90, 2) + Math.pow(cableY - viaductY, 2) + Math.pow(targetZ, 2));
+      const stayCable = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, cLen, 6), cableMat);
+      stayCable.position.set((90 + targetX) / 2, (cableY + viaductY) / 2, targetZ / 2);
+      stayCable.lookAt(targetX, viaductY, targetZ);
+      stayCable.rotateX(Math.PI / 2);
+      metroGroup.add(stayCable);
+    }
+  });
+
+  // =========================================================================
+  // ELEVATED PASSENGER STATIONS ON BOTH SIDES & CONNECTING CROSS-AVENUE SKYBRIDGE
+  // =========================================================================
+
+  // Station 1: North Elevated MG Road Central Station (Z = -15)
+  const st1Deck = new THREE.Mesh(new THREE.BoxGeometry(64, 0.8, 4.2), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+  st1Deck.position.set(0, viaductY + 0.8, -10.8);
+  const st1Canopy = new THREE.Mesh(new THREE.BoxGeometry(66, 0.25, 5.2), new THREE.MeshStandardMaterial({ color: 0x0284c7, transparent: true, opacity: 0.65 }));
+  st1Canopy.position.set(0, viaductY + 4.7, -10.8);
+  st1Canopy.rotation.x = -0.06;
+  metroGroup.add(st1Deck, st1Canopy);
+
+  // Station 2: South Elevated Marine Drive Promenade Station ON THE OTHER SIDE (Z = +15)
+  const st2Deck = new THREE.Mesh(new THREE.BoxGeometry(64, 0.8, 4.2), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+  st2Deck.position.set(0, viaductY + 0.8, 10.8);
+  const st2Canopy = new THREE.Mesh(new THREE.BoxGeometry(66, 0.25, 5.2), new THREE.MeshStandardMaterial({ color: 0x7c3aed, transparent: true, opacity: 0.65 }));
+  st2Canopy.position.set(0, viaductY + 4.7, 10.8);
+  st2Canopy.rotation.x = 0.06;
+  metroGroup.add(st2Deck, st2Canopy);
+
+  // Modern Cross-Avenue Pedestrian Concourse Glass Skybridge (Attaching North to South across the street!)
+  const skybridgeGlass = new THREE.Mesh(
+    new THREE.BoxGeometry(5.4, 3.2, 30.0),
+    new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.55 })
+  );
+  skybridgeGlass.position.set(0, viaductY + 2.2, 0);
+
+  const skybridgeFloor = new THREE.Mesh(
+    new THREE.BoxGeometry(5.4, 0.45, 30.0),
+    new THREE.MeshLambertMaterial({ color: 0x1e293b })
+  );
+  skybridgeFloor.position.set(0, viaductY + 0.75, 0);
+  metroGroup.add(skybridgeGlass, skybridgeFloor);
+
+  // Center Street Elevator Shaft & Covered Stairs descending to road level (X: 0, Z: 0)
+  const centerStairs = new THREE.Mesh(
+    new THREE.BoxGeometry(4.8, viaductY + 1.2, 3.8),
+    new THREE.MeshLambertMaterial({ color: 0x475569 })
+  );
+  centerStairs.position.set(0, (viaductY + 1.2) / 2, 0);
+  centerStairs.castShadow = true;
+  metroGroup.add(centerStairs);
+  colliders.push({ minX: -2.8, maxX: 2.8, minZ: -2.2, maxZ: 2.2 });
+
+  // Station Bilingual Neon Signboard
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 512;
+  signCanvas.height = 96;
+  const sCtx = signCanvas.getContext('2d')!;
+  sCtx.fillStyle = '#7e22ce';
+  sCtx.fillRect(0, 0, 512, 96);
+  sCtx.fillStyle = '#ffffff';
+  sCtx.font = '900 30px sans-serif';
+  sCtx.textAlign = 'center';
+  sCtx.fillText('KOCHI METRO CENTRAL INTERCHANGE', 256, 40);
+  sCtx.font = 'bold 18px sans-serif';
+  sCtx.fillStyle = '#fde047';
+  sCtx.fillText('★ PURPLE LOOP LINE • പർപ്പിൾ ലൂപ്പ് ലൈൻ ★', 256, 72);
+  const signTex = new THREE.CanvasTexture(signCanvas);
+  const signMesh = new THREE.Mesh(new THREE.PlaneGeometry(8.8, 1.6), new THREE.MeshBasicMaterial({ map: signTex }));
+  signMesh.position.set(0, viaductY + 3.2, -8.6);
+  metroGroup.add(signMesh);
+
+  // Modern Pune Metro Purple Line 3-Car Trainset (Titagarh Firema coach model)
+  const metroTrainData = buildPuneMetroTrain();
+  const metroTrain = metroTrainData.group;
+  metroTrain.rotation.y = Math.PI / 2;
+  metroTrain.position.set(0, viaductY + 0.72, -15);
+  metroGroup.add(metroTrain);
+
+  // Save reference for animation updates
+  animMetroTrain = metroTrainData;
+
   ernakulamGroup.add(metroGroup);
 
   // 8C. Marine Drive Rainbow Bridge Walkway Arch
@@ -1409,6 +1652,54 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
       waterObjects.forEach((w, idx) => {
         w.position.y += Math.sin(time * 0.002 + idx) * 0.002;
       });
+
+      // 4. 🚇 Pune Metro Purple Line High-Speed Loop Transit Animation
+      if (animMetroTrain) {
+        animMetroTrain.update(time);
+
+        // Continuous circulation around the complete 734-meter dual-corridor loop
+        const straightL = 320;
+        const curveR = 15;
+        const curveL = Math.PI * curveR; // ~47.12m
+        const totalP = straightL * 2 + curveL * 2; // ~734.25m
+
+        // Train speed: smoothly glides around the entire city loop
+        const s = ((time * 0.016) % totalP + totalP) % totalP;
+
+        let px = 0;
+        let pz = 0;
+        let rotY = 0;
+
+        if (s < straightL) {
+          // 1. North Straight Track (cruising East along Z: -15)
+          px = -160 + s;
+          pz = -15;
+          rotY = Math.PI / 2;
+        } else if (s < straightL + curveL) {
+          // 2. East Sweeping Curve (crossing over to the South side!)
+          const frac = (s - straightL) / curveL;
+          const ang = -Math.PI / 2 + frac * Math.PI;
+          px = 160 + Math.cos(ang) * curveR;
+          pz = Math.sin(ang) * curveR;
+          rotY = Math.PI / 2 - frac * Math.PI;
+        } else if (s < straightL * 2 + curveL) {
+          // 3. South Straight Track on THE OTHER SIDE (cruising West along Z: +15)
+          const distS = s - (straightL + curveL);
+          px = 160 - distS;
+          pz = 15;
+          rotY = -Math.PI / 2;
+        } else {
+          // 4. West Sweeping Curve (attaching South back to North!)
+          const frac = (s - (straightL * 2 + curveL)) / curveL;
+          const ang = Math.PI / 2 + frac * Math.PI;
+          px = -160 + Math.cos(ang) * curveR;
+          pz = Math.sin(ang) * curveR;
+          rotY = -Math.PI / 2 - frac * Math.PI;
+        }
+
+        animMetroTrain.group.position.set(px, 9.5 + 0.72, pz);
+        animMetroTrain.group.rotation.y = rotY;
+      }
     },
   };
 }

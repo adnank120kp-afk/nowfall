@@ -207,11 +207,11 @@ export const RANDOM_NAATTILE_SCENES: RandomSceneEvent[] = [
   // 8. ERNAKULAM
   {
     id: 'scene_ernakulam_metro',
-    title: '8. Ernakulam — Marine Drive Heavy Traffic & Metro Overhead (കൊച്ചി നഗരത്തിരക്ക്!)',
-    malayalamTitle: 'എറണാകുളം: മറൈൻ ഡ്രൈവിലെ മെട്രോ നഗരത്തിരക്ക്! 🚕',
-    desc: 'Along the bustling high-rise coastal boulevard, the sleek Kochi Metro roars overhead while evening commuter traffic moves at a crawl.',
-    malayalamDesc: 'മെട്രോ ട്രെയിൻ മുകളിലൂടെ ചീറിപ്പായുന്നു! താഴെ മറൈൻ ഡ്രൈവിലെ തിരക്കിൽ ടാക്സികളും ബസുകളും സാവധാനം നീങ്ങുന്നു.',
-    avatar: '🏙️',
+    title: '8. Ernakulam — Marine Drive & Pune Purple Line Metro Overhead (പർപ്പിൾ ലൈൻ മെട്രോ!)',
+    malayalamTitle: 'എറണാകുളം: മറൈൻ ഡ്രൈവിലെ പർപ്പിൾ ലൈൻ മെട്രോ! 🚇',
+    desc: 'Along the bustling high-rise coastal boulevard, the striking Pune Metro Purple Line train (Titagarh Firema coach) roars overhead with glowing amber destination displays and pantograph.',
+    malayalamDesc: 'പർപ്പിൾ ലൈൻ മെട്രോ ട്രെയിൻ മുകളിലൂടെ ചീറിപ്പായുന്നു! താഴെ മറൈൻ ഡ്രൈവിലെ തിരക്കിൽ ടാക്സികളും ബസുകളും സാവധാനം നീങ്ങുന്നു.',
+    avatar: '🚇',
     location: 'Ernakulam • Marine Drive Metro Viaduct',
     choices: [
       {

@@ -398,7 +398,8 @@ export function HeaderHUD({
           {onSelectVehicle && (
             <div className="flex items-center gap-1 pl-1 border-l border-emerald-800/40">
               {[
-                { type: 'tipper', icon: '🚚', title: 'Kerala Tipper Lorry (ടിപ്പർ ലോറി)' },
+                { type: 'bus', icon: '🚌', title: 'Varahi Tourist Bus (വാരാഹി • KL 47 M 5100 Kerala Coach)' },
+                { type: 'tipper', icon: '🛻', title: 'Classic Vintage Lorry (വിന്റേജ് ലോറി • 1956 Stepside Pickup Truck)' },
                 { type: 'mustang', icon: '🏎️', title: 'Widebody Mustang GT (മുസ്തങ്)' },
                 { type: 'tractor', icon: '🚜', title: 'Paddy Tractor' },
                 { type: 'jeep', icon: '🚙', title: 'Mountain Jeep' },

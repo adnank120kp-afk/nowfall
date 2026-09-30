@@ -162,12 +162,12 @@ export function ControlsHUD({
         <span className="px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40">H</span> Air Horn
         <span className="text-zinc-600">|</span>
         <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-100 border border-zinc-500/40 font-bold">V</span>
-        <span className="text-zinc-200">{inVehicle && vehicleType === 'bus' ? 'Exit Bus' : '🚌 Bus Mode'}</span>
+        <span className="text-zinc-200">{inVehicle && vehicleType === 'bus' ? '🚌 Exit Varahi Bus' : '🚌 Varahi Bus [V]'}</span>
         <span className="text-zinc-600">|</span>
         <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-bold">F</span>
         <span className="text-emerald-300">
           {inVehicle && vehicleType === 'tipper'
-            ? '🚚 Exit Tipper'
+            ? '🛻 Exit Lorry'
             : inVehicle && vehicleType === 'mustang'
             ? '🏎️ Exit Mustang'
             : inVehicle && vehicleType === 'auto'

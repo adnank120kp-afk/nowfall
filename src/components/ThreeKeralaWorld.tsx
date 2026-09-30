@@ -243,29 +243,88 @@ export function ThreeKeralaWorld({
     const livingWorld = buildLivingTrafficAndFauna();
     worldGroup.add(livingWorld.group);
 
-    // Wooden bridges over canal
+    // 4. BRIDGE OVER CANAL (Seamlessly fitted to the 14m Roadway)
     function createBridge(zPos: number) {
       const bridge = new THREE.Group();
-      const plankMat = new THREE.MeshLambertMaterial({ color: 0x5a361c });
-      const plank = new THREE.Mesh(new THREE.BoxGeometry(26, 0.5, 7), plankMat);
-      plank.castShadow = true;
-      plank.receiveShadow = true;
-      bridge.add(plank);
 
-      const railMat = new THREE.MeshLambertMaterial({ color: 0x3d220e });
-      const rail1 = new THREE.Mesh(new THREE.BoxGeometry(26, 0.9, 0.25), railMat);
-      rail1.position.set(0, 0.7, 3.2);
-      const rail2 = rail1.clone();
-      rail2.position.set(0, 0.7, -3.2);
-      bridge.add(rail1, rail2);
+      // Main Reinforced Concrete Bridge Deck (Length 28m spanning 24m canal, Width 15.4m)
+      const deckMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(28, 0.45, 15.4), deckMat);
+      deck.position.y = 0.08;
+      deck.castShadow = true;
+      deck.receiveShadow = true;
+      bridge.add(deck);
 
-      bridge.position.set(80, 0.35, zPos);
+      // Smooth Asphalt Roadway Surface across bridge (Width 14.0m, perfectly fitted to road)
+      const asphaltMat = new THREE.MeshLambertMaterial({ color: 0x2e3236 });
+      const bridgeRoad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.04, 14.0), asphaltMat);
+      bridgeRoad.position.y = 0.31;
+      bridgeRoad.receiveShadow = true;
+      bridge.add(bridgeRoad);
+
+      // Yellow Center Dividing Line on Bridge Road
+      const yellowLineMat = new THREE.MeshBasicMaterial({ color: 0xefca3d });
+      const centerLine = new THREE.Mesh(new THREE.BoxGeometry(28, 0.05, 0.35), yellowLineMat);
+      centerLine.position.y = 0.33;
+      bridge.add(centerLine);
+
+      // Concrete Pedestrian Curbs on North & South edges
+      const curbMat = new THREE.MeshLambertMaterial({ color: 0x94a3b8 });
+      [-7.35, 7.35].forEach((cz) => {
+        const curb = new THREE.Mesh(new THREE.BoxGeometry(28, 0.22, 0.7), curbMat);
+        curb.position.set(0, 0.36, cz);
+        bridge.add(curb);
+      });
+
+      // Sturdy Kerala Bridge Guardrails / Balustrades along outer edges (at Z = ±7.4m)
+      const railMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.4, roughness: 0.3 });
+      const postMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.5 });
+      [-7.45, 7.45].forEach((rz) => {
+        // Horizontal top guardrail
+        const railTop = new THREE.Mesh(new THREE.BoxGeometry(28, 0.15, 0.15), railMat);
+        railTop.position.set(0, 1.15, rz);
+        // Horizontal mid guardrail
+        const railMid = new THREE.Mesh(new THREE.BoxGeometry(28, 0.12, 0.12), railMat);
+        railMid.position.set(0, 0.75, rz);
+        bridge.add(railTop, railMid);
+
+        // Vertical bridge balustrade posts
+        for (let bx = -13; bx <= 13; bx += 2.6) {
+          const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.95, 0.2), postMat);
+          post.position.set(bx, 0.78, rz);
+          bridge.add(post);
+        }
+      });
+
+      // Heavy Canal Stone Abutments on Canal Banks (X: -13m and +13m from center)
+      const stoneMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
+      [-13, 13].forEach((ax) => {
+        const abutment = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 16.0), stoneMat);
+        abutment.position.set(ax, -1.2, 0);
+        bridge.add(abutment);
+      });
+
+      // Underwater Central Bridge Piers in Canal
+      [-5.5, 5.5].forEach((px) => {
+        const pier = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.0, 3.8, 12), stoneMat);
+        pier.position.set(px, -1.4, 0);
+        bridge.add(pier);
+      });
+
+      // Smooth Gentle Approach Aprons to prevent any collision step
+      [-14.5, 14.5].forEach((rx) => {
+        const apron = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, 14.0), asphaltMat);
+        apron.position.set(rx, 0.18, 0);
+        bridge.add(apron);
+      });
+
+      bridge.position.set(80, 0, zPos);
       worldGroup.add(bridge);
     }
     createBridge(0);
     createBridge(70);
 
-    // Paddy fields (പാടം)
+    // Paddy fields (പാടം) - Kept safely away from all roads
     function createPaddyField(x: number, z: number, w: number, d: number) {
       const paddy = new THREE.Group();
       const soilMat = new THREE.MeshLambertMaterial({ color: 0x2b571e });
@@ -301,9 +360,10 @@ export function ThreeKeralaWorld({
       paddy.position.set(x, 0.1, z);
       worldGroup.add(paddy);
     }
-    createPaddyField(115, -15, 48, 40);
-    createPaddyField(115, 35, 48, 50);
-    createPaddyField(-105, 35, 50, 55);
+    // Fields positioned safely North and South, completely clear of the East-West Road (Z: -7 to +7)
+    createPaddyField(115, -46, 48, 36);
+    createPaddyField(115, 48, 48, 40);
+    createPaddyField(-105, 45, 50, 45);
 
     // Roads
     function createRoad(x: number, z: number, w: number, d: number, angle = 0, type = 'asphalt') {
@@ -511,19 +571,24 @@ export function ThreeKeralaWorld({
       worldGroup.add(tree);
     }
 
-    // Plant trees
+    // Plant trees (Carefully kept clear of roads, buildings, and elevated metro viaduct track)
     const palmCoordinates = [
-      [-22, 22], [-42, 20], [-64, 24], [-84, 18], [-104, 25],
-      [24, 20], [46, 22], [66, 18], [92, 20],
-      [-22, -22], [-44, -20], [-72, -22],
-      [22, -22], [42, -24], [62, -20],
-      [72, -15], [74, 12], [73, 35], [71, 62], [74, 90], [72, 115],
-      [90, -18], [91, 18], [88, 50], [92, 82], [90, 110],
+      [-22, 32], [-42, 32], [-64, 34], [-84, 32], [-104, 35],
+      [24, 32], [46, 32], [66, 34], [92, 32],
+      [-22, -28], [-44, -28], [-72, -28],
+      [22, -28], [42, -28], [62, -28],
+      [74, 35], [73, 55], [71, 62], [74, 90], [72, 115],
+      [95, -28], [91, 35], [88, 50], [92, 82], [90, 110],
       [-90, 65], [-115, 75], [-48, 105], [-22, 84],
       [18, -65], [38, -85], [48, -105], [-32, -72]
     ];
     palmCoordinates.forEach(([px, pz]) => {
-      createCoconutPalm(px + (Math.random() - 0.5) * 3, pz + (Math.random() - 0.5) * 3, 0.9 + Math.random() * 0.35);
+      // Safety Clearance: Ensure NO tree ever spawns inside or clips into the Metro Viaduct track corridors
+      // North Track at Z = -15, South Track at Z = +15 across X: -220 to +220
+      if (Math.abs(px) < 225 && ((pz > -24 && pz < -6) || (pz > 6 && pz < 24))) {
+        return; // Skip planting near or under both metro viaduct tracks
+      }
+      createCoconutPalm(px + (Math.random() - 0.5) * 2, pz + (Math.random() - 0.5) * 2, 0.9 + Math.random() * 0.35);
     });
 
     for (let a = 0; a < 14; a++) {
@@ -534,7 +599,7 @@ export function ThreeKeralaWorld({
     const bananaCoords = [
       [-30, 24], [-33, 27], [-28, 28],
       [32, 25], [35, 28], [30, 30],
-      [-52, -16], [-56, -18], [-54, -22],
+      [-52, -32], [-56, -34], [-54, -36],
       [60, -42], [64, -40], [62, -45]
     ];
     bananaCoords.forEach(([bx, bz]) => createBananaPlant(bx, bz, 0.9 + Math.random() * 0.25));
@@ -1859,9 +1924,9 @@ export function ThreeKeralaWorld({
               maxRev = -0.28;
               turnRate = 0.054;
             } else if (v.type === 'tipper') {
-              maxFwd = 0.44;
-              maxRev = -0.18;
-              turnRate = 0.034;
+              maxFwd = 0.52;
+              maxRev = -0.22;
+              turnRate = 0.046;
             }
 
             if (keys['w'] || keys['arrowup']) vSpeed = maxFwd;
@@ -2051,9 +2116,9 @@ export function ThreeKeralaWorld({
           lookHeight = 3.2;
         } else if (playerState.vehicleType === 'tipper') {
           focusPos = playerTipperMesh.position;
-          baseDist = 24;
-          baseHeight = 13.5;
-          lookHeight = 2.8;
+          baseDist = 18;
+          baseHeight = 10;
+          lookHeight = 1.9;
         } else if (playerState.vehicleType === 'mustang') {
           focusPos = playerMustangMesh.position;
           baseDist = 16;

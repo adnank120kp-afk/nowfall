@@ -1847,779 +1847,892 @@ export const buildWidebodyMustangCar = buildWidebodyMustangGT;
 // - Fuel tank, battery box, dual air brake cylinders, side guard barriers, mudflaps
 // =============================================================================
 
-function createTipperVisorTexture(): THREE.CanvasTexture {
+function createVintageBedWoodTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
-  canvas.height = 128;
+  canvas.height = 512;
   const ctx = canvas.getContext('2d')!;
 
-  // Deep maroon/red background with yellow racing borders
-  ctx.fillStyle = '#991b1b';
-  ctx.fillRect(0, 0, 512, 128);
+  // Warm varnished teak/oak base
+  ctx.fillStyle = '#b45309';
+  ctx.fillRect(0, 0, 512, 512);
 
-  // Top and bottom diagonal hazard striping
-  const stripeWidth = 20;
-  ctx.fillStyle = '#facc15';
-  for (let x = -128; x < 512 + 128; x += stripeWidth * 2) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x + stripeWidth, 0);
-    ctx.lineTo(x + stripeWidth - 14, 18);
-    ctx.lineTo(x - 14, 18);
-    ctx.closePath();
-    ctx.fill();
+  // 7 Wood planks with distinct grain and shadows
+  const plankCount = 7;
+  const plankH = 512 / plankCount;
+  for (let i = 0; i < plankCount; i++) {
+    const y = i * plankH;
+    const tone = i % 2 === 0 ? '#92400e' : '#b45309';
+    ctx.fillStyle = tone;
+    ctx.fillRect(0, y, 512, plankH);
 
-    ctx.beginPath();
-    ctx.moveTo(x, 110);
-    ctx.lineTo(x + stripeWidth, 110);
-    ctx.lineTo(x + stripeWidth + 14, 128);
-    ctx.lineTo(x + 14, 128);
-    ctx.closePath();
-    ctx.fill();
+    // Subtle wood grain lines
+    ctx.strokeStyle = 'rgba(69, 26, 3, 0.35)';
+    ctx.lineWidth = 1.5;
+    for (let g = 0; g < 4; g++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y + 8 + g * 16 + (Math.sin(i * 3 + g) * 4));
+      ctx.bezierCurveTo(
+        150, y + 12 + g * 16,
+        350, y + 6 + g * 16,
+        512, y + 10 + g * 16
+      );
+      ctx.stroke();
+    }
+
+    // Polished steel divider strip between planks
+    if (i > 0) {
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(0, y - 3, 512, 6);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(0, y - 1, 512, 2.5);
+
+      // Chrome carriage bolt heads along the metal strips
+      ctx.fillStyle = '#f8fafc';
+      for (let bx = 32; bx < 512; bx += 64) {
+        ctx.beginPath();
+        ctx.arc(bx, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   }
 
-  // Inner decorative border
-  ctx.strokeStyle = '#fef08a';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(8, 22, 496, 84);
-
-  // Center text (Malayalam + English)
-  ctx.fillStyle = '#fef08a';
-  ctx.font = 'bold 24px "Noto Sans Malayalam", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowColor = 'rgba(0,0,0,0.8)';
-  ctx.shadowBlur = 4;
-  ctx.fillText('|| അമ്മേ നാരായണ ||', 256, 44);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 28px sans-serif';
-  ctx.fillText('★ KERALA TIPPER ★', 256, 76);
-
-  ctx.font = 'bold 13px sans-serif';
-  ctx.fillStyle = '#fde047';
-  ctx.fillText('KIZHAKKUMPURAM • SPEED GOVERNOR 40 KM/H', 256, 96);
+  // Outer border trim
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, 506, 506);
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
   texture.needsUpdate = true;
   return texture;
 }
 
-function createTipperTailgateTexture(): THREE.CanvasTexture {
+function createVintageTruckGrilleTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 256;
   const ctx = canvas.getContext('2d')!;
 
-  // Industrial dark slate panel
-  ctx.fillStyle = '#1e293b';
+  // Deep matte black radiator mesh backing
+  ctx.fillStyle = '#0f172a';
   ctx.fillRect(0, 0, 512, 256);
 
-  // Top & bottom bold caution chevron bands
-  const bandH = 28;
-  const drawChevronBand = (yOffset: number) => {
-    ctx.fillStyle = '#eab308';
-    ctx.fillRect(0, yOffset, 512, bandH);
-    ctx.fillStyle = '#dc2626';
-    const step = 28;
-    for (let x = -50; x < 512 + 50; x += step * 2) {
-      ctx.beginPath();
-      ctx.moveTo(x, yOffset);
-      ctx.lineTo(x + step, yOffset);
-      ctx.lineTo(x + step - 18, yOffset + bandH);
-      ctx.lineTo(x - 18, yOffset + bandH);
-      ctx.closePath();
-      ctx.fill();
-    }
-  };
-  drawChevronBand(0);
-  drawChevronBand(228);
-
-  // Inner yellow frame
-  ctx.strokeStyle = '#facc15';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(12, 34, 488, 188);
-
-  ctx.textAlign = 'center';
-  ctx.shadowColor = 'rgba(0,0,0,0.9)';
-  ctx.shadowBlur = 5;
-
-  // Upper warning
-  ctx.fillStyle = '#f87171';
-  ctx.font = 'bold 18px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('⚠️ വിദൂരത പാലിക്കുക • KEEP DISTANCE ⚠️', 256, 62);
-
-  // Main iconic "HORN PLEASE"
-  ctx.fillStyle = '#fde047';
-  ctx.font = '900 46px sans-serif';
-  ctx.fillText('H O R N   P L E A S E', 256, 116);
-
-  // Left & Right "SOUND" / "HORN" badges
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillText('SOUND', 80, 168);
-  ctx.fillText('HORN', 432, 168);
-
-  // Bottom classic "OK" "TATA"
-  ctx.fillStyle = '#38bdf8';
-  ctx.font = '900 32px sans-serif';
-  ctx.fillText('O K', 180, 168);
-  ctx.fillText('T A T A', 332, 168);
-
-  // Speed and regulation plate
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = 'bold 15px sans-serif';
-  ctx.fillText('SPEED GOVERNOR FITTED 40 KM/H • KL-14-T-8055', 256, 204);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function createTipperDoorTexture(isDriverSide: boolean): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d')!;
-
-  ctx.fillStyle = '#f59e0b';
-  ctx.fillRect(0, 0, 256, 128);
-
-  // Decorative border
-  ctx.strokeStyle = '#78350f';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(6, 6, 244, 116);
-
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#1e1b4b';
-  ctx.font = '900 18px sans-serif';
-  ctx.fillText('GOODS CARRIER', 128, 34);
-
-  ctx.font = 'bold 14px "Noto Sans Malayalam", sans-serif';
-  ctx.fillText('ടിപ്പർ സർവീസ്', 128, 58);
-
-  ctx.font = 'bold 12px sans-serif';
-  ctx.fillStyle = '#991b1b';
-  ctx.fillText('G.V.W: 25,000 KG', 128, 82);
-  ctx.fillText(isDriverSide ? 'DRIVER CABIN' : 'KERALA PERMIT', 128, 102);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function createTipperGrilleTexture(): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d')!;
-
-  // Dark matte grille body
-  ctx.fillStyle = '#111827';
-  ctx.fillRect(0, 0, 256, 128);
-
-  // Chrome slats
-  ctx.fillStyle = '#cbd5e1';
-  for (let y = 16; y < 120; y += 18) {
-    ctx.fillRect(16, y, 224, 7);
+  // Radiator core fine mesh pattern
+  ctx.fillStyle = '#1e293b';
+  for (let x = 8; x < 504; x += 12) {
+    ctx.fillRect(x, 10, 6, 236);
   }
 
-  // Central Emblem Badge
+  // Heavy chrome outer aerodynamic surround
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 14;
+  ctx.strokeRect(16, 24, 480, 208);
+
+  // Center bold horizontal chrome wing bar
+  const grad = ctx.createLinearGradient(0, 90, 0, 166);
+  grad.addColorStop(0, '#f8fafc');
+  grad.addColorStop(0.5, '#cbd5e1');
+  grad.addColorStop(1, '#64748b');
+  ctx.fillStyle = grad;
+  ctx.fillRect(20, 104, 472, 48);
+
+  // Center vintage bullet / emblem shield
   ctx.fillStyle = '#e2e8f0';
   ctx.beginPath();
-  ctx.arc(128, 64, 22, 0, Math.PI * 2);
+  ctx.arc(256, 128, 36, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#0f172a';
+
+  ctx.fillStyle = '#dc2626';
   ctx.beginPath();
-  ctx.arc(128, 64, 18, 0, Math.PI * 2);
+  ctx.arc(256, 128, 28, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#38bdf8';
-  ctx.font = '900 16px sans-serif';
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = '900 24px serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('T', 128, 64);
+  ctx.fillText('V8', 256, 128);
+
+  // Secondary chrome horizontal teeth / slats
+  ctx.fillStyle = '#cbd5e1';
+  ctx.fillRect(36, 52, 440, 12);
+  ctx.fillRect(36, 192, 440, 12);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
 }
 
-function createTipperPlateTexture(): THREE.CanvasTexture {
+function createVintageTailgateTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 64;
+  canvas.width = 512;
+  canvas.height = 256;
   const ctx = canvas.getContext('2d')!;
 
-  // Commercial yellow license plate
-  ctx.fillStyle = '#facc15';
-  ctx.fillRect(0, 0, 256, 64);
+  // Body color base
+  ctx.fillStyle = '#b45309';
+  ctx.fillRect(0, 0, 512, 256);
 
-  // Black border
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(3, 3, 250, 58);
+  // Stamped rectangular recessed center panel
+  ctx.fillStyle = '#92400e';
+  ctx.fillRect(28, 32, 456, 192);
 
-  // Blue IND strip on left
-  ctx.fillStyle = '#1d4ed8';
-  ctx.fillRect(3, 3, 24, 58);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 10px sans-serif';
+  ctx.strokeStyle = '#fef3c7';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(32, 36, 448, 184);
+
+  // Embossed bold vintage "K E R A L A" lettering
   ctx.textAlign = 'center';
-  ctx.fillText('IND', 15, 36);
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#fef3c7';
+  ctx.font = '900 48px sans-serif';
+  ctx.fillText('K  E  R  A  L  A', 256, 120);
 
-  // Number
-  ctx.fillStyle = '#000000';
-  ctx.font = '900 30px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('KL 14 T 8055', 142, 42);
+  ctx.shadowBlur = 0;
+  ctx.font = 'bold 15px sans-serif';
+  ctx.fillStyle = '#fde68a';
+  ctx.fillText('★ 1 9 5 6   S T E P S I D E   V I N T A G E ★', 256, 172);
+
+  // Metal stamping crease highlights
+  ctx.fillStyle = '#d97706';
+  ctx.fillRect(28, 224, 456, 12);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   return texture;
 }
 
-export function buildKeralaTipper(customCabinColor = 0xf59e0b): THREE.Group {
-  const tipper = new THREE.Group();
+function createVintageTruckPlateTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 80;
+  const ctx = canvas.getContext('2d')!;
+
+  // Vintage black background with white embossed characters
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, 256, 80);
+
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(4, 4, 248, 72);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 32px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('KL-14-1956', 128, 40);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createVintageGaugesTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 96;
+  const ctx = canvas.getContext('2d')!;
+
+  // Vintage painted metal dash
+  ctx.fillStyle = '#1c1917';
+  ctx.fillRect(0, 0, 256, 96);
+
+  // Center round speedometer
+  ctx.fillStyle = '#e2e8f0';
+  ctx.beginPath();
+  ctx.arc(128, 48, 36, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#020617';
+  ctx.beginPath();
+  ctx.arc(128, 48, 31, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Speedo dial ticks and red needle
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('100 MPH', 128, 38);
+
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(128, 48);
+  ctx.lineTo(142, 34);
+  ctx.stroke();
+
+  // Left & right secondary gauges (Fuel / Oil / Temp)
+  [56, 200].forEach((gx) => {
+    ctx.fillStyle = '#e2e8f0';
+    ctx.beginPath();
+    ctx.arc(gx, 48, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#020617';
+    ctx.beginPath();
+    ctx.arc(gx, 48, 17, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(gx, 48);
+    ctx.lineTo(gx + 8, 42);
+    ctx.stroke();
+  });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+export function buildKeralaTipper(customCabinColor = 0xd97706): THREE.Group {
+  const truck = new THREE.Group();
 
   // -----------------------------------------------------------
-  // Materials
+  // Materials Palette
   // -----------------------------------------------------------
-  const cabinMat = new THREE.MeshStandardMaterial({
+  // Body paint material (warm classic vintage enamel finish)
+  const bodyPaintMat = new THREE.MeshStandardMaterial({
     color: customCabinColor,
-    metalness: 0.35,
-    roughness: 0.35,
+    metalness: 0.25,
+    roughness: 0.3,
   });
-  const darkChassisMat = new THREE.MeshStandardMaterial({
-    color: 0x18181b,
-    metalness: 0.8,
-    roughness: 0.5,
-  });
-  const blackTrimMat = new THREE.MeshStandardMaterial({
-    color: 0x27272a,
-    metalness: 0.4,
-    roughness: 0.6,
-  });
-  const steelBodyMat = new THREE.MeshStandardMaterial({
-    color: 0x334155, // Heavy industrial slate grey dump bucket
-    metalness: 0.5,
-    roughness: 0.5,
-  });
+
+  // Mirror chrome for bumpers, grille, hubcaps, mirrors & trim
   const chromeMat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    metalness: 0.95,
-    roughness: 0.1,
+    metalness: 0.98,
+    roughness: 0.08,
   });
-  const tireMat = new THREE.MeshStandardMaterial({
-    color: 0x141414,
+
+  // Chassis & frame matte dark steel
+  const chassisMat = new THREE.MeshStandardMaterial({
+    color: 0x18181b,
+    metalness: 0.7,
+    roughness: 0.55,
+  });
+
+  // Black trim / rubber / step pads
+  const rubberMat = new THREE.MeshStandardMaterial({
+    color: 0x171717,
     roughness: 0.9,
     metalness: 0.1,
   });
-  const rimMat = new THREE.MeshStandardMaterial({
-    color: 0x94a3b8,
-    metalness: 0.6,
-    roughness: 0.3,
+
+  // Vintage deep black tire rubber
+  const tireMat = new THREE.MeshStandardMaterial({
+    color: 0x121212,
+    roughness: 0.95,
+    metalness: 0.05,
   });
-  const tintedGlassMat = new THREE.MeshStandardMaterial({
-    color: 0x7dd3fc,
+
+  // Tinted automotive glass
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0xbae6fd,
     transparent: true,
-    opacity: 0.75,
-    roughness: 0.1,
+    opacity: 0.65,
+    roughness: 0.05,
     metalness: 0.1,
   });
+
+  // Sealed beam warm headlight glass (emissive)
   const headlightMat = new THREE.MeshStandardMaterial({
     color: 0xfffbeb,
-    emissive: 0xfff7ed,
-    emissiveIntensity: 0.7,
+    emissive: 0xffedd5,
+    emissiveIntensity: 0.85,
+    roughness: 0.1,
   });
-  const fogLampMat = new THREE.MeshStandardMaterial({
-    color: 0xfacc15,
-    emissive: 0xeab308,
+
+  // Amber turn indicator lamps
+  const amberLampMat = new THREE.MeshStandardMaterial({
+    color: 0xf97316,
+    emissive: 0xea580c,
     emissiveIntensity: 0.6,
   });
+
+  // Vintage red glass taillights
   const taillightMat = new THREE.MeshStandardMaterial({
     color: 0xdc2626,
     emissive: 0xb91c1c,
-    emissiveIntensity: 0.6,
+    emissiveIntensity: 0.65,
   });
-  const amberMat = new THREE.MeshStandardMaterial({
-    color: 0xf97316,
-    emissive: 0xea580c,
-    emissiveIntensity: 0.5,
-  });
-  const blueMetalGraniteMat = new THREE.MeshStandardMaterial({
-    color: 0x475569, // Kerala blue-metal quarry crushed stone
-    roughness: 0.95,
+
+  // Vintage saddle tan leather interior
+  const leatherMat = new THREE.MeshStandardMaterial({
+    color: 0x854d0e,
+    roughness: 0.8,
     metalness: 0.1,
   });
 
-  // Canvas Decal Materials
-  const visorTex = createTipperVisorTexture();
-  const visorMat = new THREE.MeshBasicMaterial({ map: visorTex });
+  // Textures
+  const woodBedTex = createVintageBedWoodTexture();
+  const woodBedMat = new THREE.MeshStandardMaterial({
+    map: woodBedTex,
+    roughness: 0.4,
+    metalness: 0.1,
+  });
 
-  const tailgateTex = createTipperTailgateTexture();
-  const tailgateMat = new THREE.MeshBasicMaterial({ map: tailgateTex });
-
-  const grilleTex = createTipperGrilleTexture();
+  const grilleTex = createVintageTruckGrilleTexture();
   const grilleMat = new THREE.MeshBasicMaterial({ map: grilleTex });
 
-  const plateTex = createTipperPlateTexture();
+  const tailgateTex = createVintageTailgateTexture();
+  const tailgateMat = new THREE.MeshBasicMaterial({ map: tailgateTex });
+
+  const plateTex = createVintageTruckPlateTexture();
   const plateMat = new THREE.MeshBasicMaterial({ map: plateTex });
 
-  const doorTexL = createTipperDoorTexture(true);
-  const doorMatL = new THREE.MeshBasicMaterial({ map: doorTexL });
-  const doorTexR = createTipperDoorTexture(false);
-  const doorMatR = new THREE.MeshBasicMaterial({ map: doorTexR });
+  const gaugeTex = createVintageGaugesTexture();
+  const gaugeMat = new THREE.MeshBasicMaterial({ map: gaugeTex });
 
   // ===========================================================
-  // 1. HEAVY C-CHANNEL LADDER FRAME CHASSIS
+  // 1. STEEL LADDER CHASSIS & SUSPENSION UNDERPINNINGS
   // ===========================================================
-  // Twin main longitudinal beams (8.6m long)
-  [-0.52, 0.52].forEach((x) => {
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 8.6), darkChassisMat);
-    beam.position.set(x, 0.85, -0.4);
-    beam.castShadow = true;
-    tipper.add(beam);
+  // Twin C-Channel Rails extending full length (~5.0m)
+  [-0.45, 0.45].forEach((cx) => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, 5.0), chassisMat);
+    rail.position.set(cx, 0.44, 0);
+    rail.castShadow = true;
+    truck.add(rail);
   });
 
-  // Chassis Cross-members
-  [-3.8, -2.5, -1.2, 0.2, 1.8, 3.2].forEach((z) => {
-    const cross = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.22, 0.16), darkChassisMat);
-    cross.position.set(0, 0.85, z);
-    tipper.add(cross);
+  // Tubular Crossmembers
+  [-2.2, -1.3, -0.2, 0.9, 1.8, 2.3].forEach((cz) => {
+    const cm = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.14, 0.1), chassisMat);
+    cm.position.set(0, 0.44, cz);
+    truck.add(cm);
   });
 
-  // Front Heavy Bumper & Crash Guard
-  const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.45, 0.35), darkChassisMat);
-  bumper.position.set(0, 0.65, 3.8);
-  bumper.castShadow = true;
-  tipper.add(bumper);
+  // Front Dropped I-Beam Axle & Leaf Springs (Z = +1.45)
+  const frontAxle = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.1, 0.08), chassisMat);
+  frontAxle.position.set(0, 0.42, 1.45);
+  truck.add(frontAxle);
 
-  // Bumper rubber push pads
-  [-0.95, 0.95].forEach((bx) => {
-    const pad = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.4, 0.08), blackTrimMat);
-    pad.position.set(bx, 0.65, 3.99);
-    tipper.add(pad);
+  [-0.52, 0.52].forEach((lx) => {
+    const spring = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.95), chassisMat);
+    spring.position.set(lx, 0.48, 1.45);
+    truck.add(spring);
   });
 
-  // Heavy Center Tow Hitch Pin
-  const towHitch = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.2, 12), chromeMat);
-  towHitch.rotation.x = Math.PI / 2;
-  towHitch.position.set(0, 0.55, 4.0);
-  tipper.add(towHitch);
+  // Rear Heavy-Duty Live Axle Housing with Differential Pumpkin (Z = -1.45)
+  const rearAxleTube = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.68, 12), chassisMat);
+  rearAxleTube.rotation.z = Math.PI / 2;
+  rearAxleTube.position.set(0, 0.42, -1.45);
+  const diffPumpkin = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), chassisMat);
+  diffPumpkin.position.set(0, 0.42, -1.45);
+  truck.add(rearAxleTube, diffPumpkin);
 
-  // Front License Plate
-  const frontPlate = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.16), plateMat);
-  frontPlate.position.set(0, 0.48, 4.0);
-  tipper.add(frontPlate);
-
-  // Round Lower Yellow Fog Lamps with wire guards
-  [-0.65, 0.65].forEach((fx) => {
-    const fog = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16), fogLampMat);
-    fog.rotation.x = Math.PI / 2;
-    fog.position.set(fx, 0.65, 3.98);
-    tipper.add(fog);
-
-    const fogRim = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 8, 16), chromeMat);
-    fogRim.position.set(fx, 0.65, 4.02);
-    tipper.add(fogRim);
+  [-0.52, 0.52].forEach((lx) => {
+    const rearSpring = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, 1.15), chassisMat);
+    rearSpring.position.set(lx, 0.48, -1.45);
+    truck.add(rearSpring);
   });
 
-  // -----------------------------------------------------------
-  // Chassis Auxiliaries: Fuel Tank, Battery Box, Air Cylinders
-  // -----------------------------------------------------------
-  // Right side 250L Cylindrical Diesel Tank
-  const fuelTank = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 1.45, 20), rimMat);
-  fuelTank.rotation.z = Math.PI / 2;
-  fuelTank.position.set(1.05, 0.85, 0.35);
-  fuelTank.castShadow = true;
-  tipper.add(fuelTank);
+  // Dual Exhaust System with Side-exit Chrome Tips ahead of rear wheels
+  [-0.38, 0.38].forEach((ex) => {
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.2, 8), chassisMat);
+    pipe.rotation.x = Math.PI / 2;
+    pipe.position.set(ex, 0.38, 0.2);
+    truck.add(pipe);
 
-  // Chrome Fuel Filler Cap
-  const fuelCap = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.12, 12), chromeMat);
-  fuelCap.position.set(1.05, 1.2, 0.8);
-  tipper.add(fuelCap);
-
-  // Left side Heavy Battery Box with diamond plate lid
-  const batteryBox = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.75), darkChassisMat);
-  batteryBox.position.set(-1.05, 0.85, 0.85);
-  tipper.add(batteryBox);
-
-  // Left side Dual Compressed Air Brake Tanks (Red & Silver)
-  [-0.1, 0.3].forEach((az) => {
-    const airTank = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.85, 16), darkChassisMat);
-    airTank.rotation.z = Math.PI / 2;
-    airTank.position.set(-1.05, 0.82, -0.4 + az);
-    tipper.add(airTank);
+    // Turned-out chrome exhaust tip
+    const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.4, 12), chromeMat);
+    tip.rotation.z = ex > 0 ? 0.4 : -0.4;
+    tip.rotation.x = Math.PI / 2;
+    tip.position.set(ex > 0 ? 0.72 : -0.72, 0.35, -0.85);
+    truck.add(tip);
   });
 
-  // Lateral Side Underrun Protective Barrier Rails (Yellow & Black)
-  [-1.22, 1.22].forEach((sx) => {
-    const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 2.4), blackTrimMat);
-    rail1.position.set(sx, 0.72, 0.2);
-    const rail2 = rail1.clone();
-    rail2.position.y = 0.52;
-    tipper.add(rail1, rail2);
-  });
+  // Spare Tire mounted under rear bed
+  const spareTire = new THREE.Mesh(new THREE.CylinderGeometry(0.40, 0.40, 0.22, 16), tireMat);
+  spareTire.rotation.x = Math.PI / 2;
+  spareTire.position.set(0, 0.38, -2.05);
+  truck.add(spareTire);
 
-  // Rear Underrun Protection Beam (RUDP Crash Guard)
-  const rearCrashBeam = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.25, 0.18), darkChassisMat);
-  rearCrashBeam.position.set(0, 0.65, -4.42);
-  tipper.add(rearCrashBeam);
+  // ===========================================================
+  // 2. BULBOUS ALLIGATOR HOOD & FRONT PONTOON FENDERS
+  // ===========================================================
+  // Main Hood Body (tapering curved alligator bonnet)
+  const hoodGeo = new THREE.BoxGeometry(1.24, 0.46, 1.45);
+  const hood = new THREE.Mesh(hoodGeo, bodyPaintMat);
+  hood.position.set(0, 1.06, 1.55);
+  hood.castShadow = true;
+  truck.add(hood);
 
-  // Rear License Plate
-  const rearPlate = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.16), plateMat);
-  rearPlate.rotation.y = Math.PI;
-  rearPlate.position.set(0.45, 0.65, -4.53);
-  tipper.add(rearPlate);
+  // Domed Hood Top Curved Crown
+  const hoodCrown = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 1.42, 16, 1, false, 0, Math.PI), bodyPaintMat);
+  hoodCrown.rotation.z = Math.PI / 2;
+  hoodCrown.position.set(0, 1.28, 1.55);
+  hoodCrown.castShadow = true;
+  truck.add(hoodCrown);
 
-  // Rear 4-Chamber LED Tail Lamp Clusters
-  [-0.95, 0.95].forEach((rx) => {
-    const lampHousing = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.18, 0.1), blackTrimMat);
-    lampHousing.position.set(rx, 0.65, -4.5);
-    tipper.add(lampHousing);
+  // Hood Nose Curvature (sloping down to the grille)
+  const hoodNose = new THREE.Mesh(new THREE.CylinderGeometry(0.60, 0.52, 1.22, 16), bodyPaintMat);
+  hoodNose.rotation.z = Math.PI / 2;
+  hoodNose.rotation.x = 0.25;
+  hoodNose.position.set(0, 1.08, 2.22);
+  hoodNose.castShadow = true;
+  truck.add(hoodNose);
 
-    // Red Brake Light
-    const brakeL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.04), taillightMat);
-    brakeL.position.set(rx - 0.16, 0.65, -4.56);
-    // Amber Blinker
-    const blinkerL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.04), amberMat);
-    blinkerL.position.set(rx, 0.65, -4.56);
-    // White Reverse Light
-    const revL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.04), headlightMat);
-    revL.position.set(rx + 0.16, 0.65, -4.56);
-    tipper.add(brakeL, blinkerL, revL);
-  });
+  // Raised Center Spine / Chrome Hood Spear
+  const hoodSpear = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 1.48), chromeMat);
+  hoodSpear.position.set(0, 1.34, 1.62);
+  truck.add(hoodSpear);
 
-  // Heavy Full-Width Black Rubber Mudflaps behind Rear Axles
-  [-1.05, 1.05].forEach((mx) => {
-    const mudflap = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.55, 0.04), blackTrimMat);
-    mudflap.position.set(mx, 0.52, -4.1);
-    tipper.add(mudflap);
+  // Front Hood Chrome V8 Crest Emblem
+  const hoodOrnament = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.16, 8), chromeMat);
+  hoodOrnament.rotation.x = -Math.PI / 3;
+  hoodOrnament.position.set(0, 1.24, 2.32);
+  truck.add(hoodOrnament);
+
+  // Massive Curved Front Pontoon Fenders (Left & Right)
+  [-0.82, 0.82].forEach((fx) => {
+    // Upper fender crown
+    const fCrown = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.42, 1.85), bodyPaintMat);
+    fCrown.position.set(fx, 1.02, 1.55);
+    fCrown.castShadow = true;
+    truck.add(fCrown);
+
+    // Front rounded nose of pontoon fender
+    const fNose = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.44, 16), bodyPaintMat);
+    fNose.rotation.z = Math.PI / 2;
+    fNose.position.set(fx, 0.92, 2.42);
+    fNose.castShadow = true;
+    truck.add(fNose);
+
+    // Outer wheel arch skirt flare
+    const fSkirt = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.06, 8, 16, Math.PI), bodyPaintMat);
+    fSkirt.position.set(fx > 0 ? fx + 0.18 : fx - 0.18, 0.52, 1.45);
+    fSkirt.rotation.y = fx > 0 ? Math.PI / 2 : -Math.PI / 2;
+    truck.add(fSkirt);
+
+    // Chrome Side Script Badges on fender sides
+    const badge = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, 0.28), chromeMat);
+    badge.position.set(fx > 0 ? fx + 0.23 : fx - 0.23, 1.06, 1.35);
+    truck.add(badge);
   });
 
   // ===========================================================
-  // 2. AUTHENTIC KERALA TIPPER CABIN (ടാറ്റാ / ഭാരത് ബെൻസ് ക്യാബിൻ)
+  // 3. VINTAGE SPLIT GRILLE, HEADLIGHTS & CHROME FRONT BUMPER
+  // ===========================================================
+  // Center Grille Recess Panel
+  const grilleMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.22, 0.46), grilleMat);
+  grilleMesh.position.set(0, 0.88, 2.38);
+  truck.add(grilleMesh);
+
+  // 3D Chrome Center Grille Wing Bar
+  const grilleWing = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.1, 0.1), chromeMat);
+  grilleWing.position.set(0, 0.88, 2.42);
+  truck.add(grilleWing);
+
+  // Chrome Bullet Center Emblem
+  const grilleBullet = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), chromeMat);
+  grilleBullet.position.set(0, 0.88, 2.47);
+  truck.add(grilleBullet);
+
+  // Large Round Vintage Chrome Sealed-Beam Headlights
+  [-0.78, 0.78].forEach((hx) => {
+    // Chrome Bezel Housing
+    const bezel = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.03, 12, 24), chromeMat);
+    bezel.position.set(hx, 0.90, 2.46);
+    truck.add(bezel);
+
+    // Warm Emissive Glass Lens
+    const lens = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), headlightMat);
+    lens.rotation.x = Math.PI / 2;
+    lens.position.set(hx, 0.90, 2.46);
+    truck.add(lens);
+
+    // Chrome Headlight Bucket Canister
+    const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.12, 0.12, 16), chromeMat);
+    bucket.rotation.x = Math.PI / 2;
+    bucket.position.set(hx, 0.90, 2.41);
+    truck.add(bucket);
+
+    // Small Round Amber Parking / Turn Indicator Light beneath headlight
+    const indBezel = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.015, 8, 16), chromeMat);
+    indBezel.position.set(hx, 0.68, 2.44);
+    const indLens = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 12), amberLampMat);
+    indLens.rotation.x = Math.PI / 2;
+    indLens.position.set(hx, 0.68, 2.45);
+    truck.add(indBezel, indLens);
+  });
+
+  // Sturdy Curved Vintage Chrome Blade Front Bumper
+  const frontBumper = new THREE.Mesh(new THREE.BoxGeometry(2.08, 0.16, 0.12), chromeMat);
+  frontBumper.position.set(0, 0.48, 2.58);
+  frontBumper.castShadow = true;
+  truck.add(frontBumper);
+
+  // Curved Bumper Outer Wraparounds
+  [-1.02, 1.02].forEach((bx) => {
+    const wrap = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 12), chromeMat);
+    wrap.position.set(bx, 0.48, 2.54);
+    truck.add(wrap);
+  });
+
+  // Twin Vertical Bumper Guards (Bumperettes)
+  [-0.48, 0.48].forEach((gx) => {
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.14), chromeMat);
+    guard.position.set(gx, 0.54, 2.62);
+    truck.add(guard);
+  });
+
+  // Vintage Front License Plate
+  const fPlate = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.15), plateMat);
+  fPlate.position.set(0, 0.48, 2.65);
+  truck.add(fPlate);
+
+  // ===========================================================
+  // 4. ROUNDED VINTAGE CABIN, CURVED WINDSHIELD & INTERIOR
   // ===========================================================
   const cabGroup = new THREE.Group();
-  cabGroup.position.set(0, 0, 0);
 
-  // Main Cab Shell
-  const cabLower = new THREE.Mesh(new THREE.BoxGeometry(2.44, 1.45, 1.95), cabinMat);
-  cabLower.position.set(0, 1.82, 2.75);
+  // Lower Cab Body Tub (Z = +0.25)
+  const cabLower = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.68, 1.45), bodyPaintMat);
+  cabLower.position.set(0, 0.88, 0.25);
   cabLower.castShadow = true;
   cabGroup.add(cabLower);
 
-  // Slanted Aerodynamic Roof Structure
-  const cabRoof = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.65, 1.85), cabinMat);
-  cabRoof.position.set(0, 2.78, 2.7);
-  cabRoof.castShadow = true;
-  cabGroup.add(cabRoof);
+  // Rounded Upper Cab Roof & Pillars
+  const cabUpper = new THREE.Mesh(new THREE.BoxGeometry(1.64, 0.62, 1.28), bodyPaintMat);
+  cabUpper.position.set(0, 1.45, 0.18);
+  cabUpper.castShadow = true;
+  cabGroup.add(cabUpper);
 
-  // Front Fascia / Grille Assembly
-  const grilleMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.75), grilleMat);
-  grilleMesh.position.set(0, 1.72, 3.75);
-  cabGroup.add(grilleMesh);
+  // Curved Dome Roof Cap
+  const roofDome = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.82, 0.82, 1.25, 20, 1, false, 0, Math.PI),
+    bodyPaintMat
+  );
+  roofDome.rotation.z = Math.PI / 2;
+  roofDome.position.set(0, 1.76, 0.18);
+  roofDome.castShadow = true;
+  cabGroup.add(roofDome);
 
-  // Rectangular Heavy Crystal Headlamps (Left & Right)
-  [-1.02, 1.02].forEach((hx) => {
-    const headlampBezel = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.28, 0.1), chromeMat);
-    headlampBezel.position.set(hx, 1.68, 3.72);
-    cabGroup.add(headlampBezel);
-
-    const headlampGlass = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.24, 0.04), headlightMat);
-    headlampGlass.position.set(hx, 1.68, 3.78);
-    cabGroup.add(headlampGlass);
-
-    // Corner Wrap-around Amber Indicator Lens
-    const cornerIndicator = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.24, 0.22), amberMat);
-    cornerIndicator.position.set(hx > 0 ? 1.22 : -1.22, 1.68, 3.65);
-    cabGroup.add(cornerIndicator);
+  // Stamped Drip Rails / Rain Gutters along roof edge
+  [-0.83, 0.83].forEach((rx) => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 1.28), chromeMat);
+    rail.position.set(rx, 1.74, 0.18);
+    cabGroup.add(rail);
   });
 
-  // Large Slanted Windshield
-  const windshield = new THREE.Mesh(new THREE.BoxGeometry(2.28, 0.95, 0.08), tintedGlassMat);
-  windshield.position.set(0, 2.52, 3.62);
-  windshield.rotation.x = -0.15; // Realistic forward slant
-  cabGroup.add(windshield);
+  // Curved Panoramic Front Windshield with Chrome Frame
+  const windshieldFrame = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.48, 0.04), chromeMat);
+  windshieldFrame.position.set(0, 1.46, 0.83);
+  windshieldFrame.rotation.x = -0.22;
+  const windshieldGlass = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.44, 0.05), glassMat);
+  windshieldGlass.position.set(0, 1.46, 0.84);
+  windshieldGlass.rotation.x = -0.22;
+  cabGroup.add(windshieldFrame, windshieldGlass);
 
-  // Black Windshield Wipers (Twin Articulated Arms)
-  [-0.55, 0.55].forEach((wx) => {
-    const wiperArm = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.42, 0.02), blackTrimMat);
-    wiperArm.rotation.z = -0.35;
-    wiperArm.position.set(wx, 2.32, 3.68);
-    cabGroup.add(wiperArm);
+  // Delicate Center Windshield Divider Bar (classic 1950s two-piece glass)
+  const centerDivider = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.46, 0.06), rubberMat);
+  centerDivider.position.set(0, 1.46, 0.85);
+  centerDivider.rotation.x = -0.22;
+  cabGroup.add(centerDivider);
+
+  // Twin Chrome Windshield Wipers parked at bottom of windshield
+  [-0.32, 0.32].forEach((wx) => {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.24, 0.02), chromeMat);
+    arm.rotation.z = -0.55;
+    arm.rotation.x = -0.22;
+    arm.position.set(wx, 1.34, 0.85);
+    cabGroup.add(arm);
   });
 
-  // Overhead Windshield Sun-Visor ("കണ്ണാടിത്തട്ട്")
-  const visorCanopy = new THREE.Mesh(new THREE.BoxGeometry(2.46, 0.36, 0.45), blackTrimMat);
-  visorCanopy.position.set(0, 3.05, 3.65);
-  visorCanopy.rotation.x = -0.12;
-  cabGroup.add(visorCanopy);
+  // Curved Rear Cab Window with Rubber Weatherstrip Gasket
+  const rearWinGasket = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.38, 0.04), rubberMat);
+  rearWinGasket.position.set(0, 1.48, -0.46);
+  const rearWinGlass = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.34, 0.05), glassMat);
+  rearWinGlass.position.set(0, 1.48, -0.46);
+  cabGroup.add(rearWinGasket, rearWinGlass);
 
-  const visorDecal = new THREE.Mesh(new THREE.PlaneGeometry(2.42, 0.32), visorMat);
-  visorDecal.position.set(0, 3.05, 3.88);
-  visorDecal.rotation.x = -0.12;
-  cabGroup.add(visorDecal);
+  // Left & Right Doors with Windows, Chrome Paddle Handles & Round Swan-neck Mirrors
+  [-0.87, 0.87].forEach((dx) => {
+    // Door Window Glass
+    const dGlass = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.42, 0.68), glassMat);
+    dGlass.position.set(dx > 0 ? dx - 0.04 : dx + 0.04, 1.46, 0.22);
+    cabGroup.add(dGlass);
 
-  // 5 Amber Cab Roof Clearance Lights
-  [-0.9, -0.45, 0, 0.45, 0.9].forEach((lx) => {
-    const roofLight = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), amberMat);
-    roofLight.position.set(lx, 3.16, 3.4);
-    cabGroup.add(roofLight);
+    // Front Vent Wing Window (Quarter Glass) Divider Bar
+    const ventBar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.44, 0.02), chromeMat);
+    ventBar.position.set(dx > 0 ? dx - 0.04 : dx + 0.04, 1.46, 0.46);
+    cabGroup.add(ventBar);
+
+    // Vintage Exterior Chrome Paddle Door Handle
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.16), chromeMat);
+    handle.position.set(dx > 0 ? dx + 0.02 : dx - 0.02, 0.98, -0.15);
+    cabGroup.add(handle);
+
+    // Circular Door Lock Keyhole
+    const lock = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.03, 8), chromeMat);
+    lock.rotation.z = Math.PI / 2;
+    lock.position.set(dx > 0 ? dx + 0.015 : dx - 0.015, 0.92, -0.15);
+    cabGroup.add(lock);
+
+    // Classic Circular Chrome Rearview Mirror on Curved Swan-neck Stem
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.22, 8), chromeMat);
+    stem.rotation.z = dx > 0 ? 0.8 : -0.8;
+    stem.position.set(dx > 0 ? dx + 0.12 : dx - 0.12, 1.35, 0.64);
+    const mirrorHead = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.02, 16), chromeMat);
+    mirrorHead.rotation.x = Math.PI / 2;
+    mirrorHead.position.set(dx > 0 ? dx + 0.21 : dx - 0.21, 1.42, 0.62);
+    cabGroup.add(stem, mirrorHead);
   });
 
-  // Twin Chrome Pneumatic Trumpet Air Horns ("പാമ്പ് ഹോൺ") on Cab Roof
-  [-0.32, 0.32].forEach((hx) => {
-    const hornTube = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.08, 0.75, 12), chromeMat);
-    hornTube.rotation.x = Math.PI / 2;
-    hornTube.position.set(hx, 3.22, 2.85);
-    const hornFlare = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.18, 12), chromeMat);
-    hornFlare.rotation.x = -Math.PI / 2;
-    hornFlare.position.set(hx, 3.22, 3.28);
-    cabGroup.add(hornTube, hornFlare);
-  });
+  // Cab Interior: Bench Seat, Painted Dashboard, Gauges, Steering Wheel & Shifter
+  const benchSeat = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.38, 0.46), leatherMat);
+  benchSeat.position.set(0, 0.82, -0.05);
+  const benchBack = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.46, 0.14), leatherMat);
+  benchBack.position.set(0, 1.15, -0.32);
+  benchBack.rotation.x = 0.12;
+  cabGroup.add(benchSeat, benchBack);
 
-  // Side Cabin Windows (Driver & Passenger)
-  [-1.23, 1.23].forEach((sx) => {
-    const sideGlass = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.75, 1.1), tintedGlassMat);
-    sideGlass.position.set(sx, 2.5, 2.85);
-    cabGroup.add(sideGlass);
-  });
+  // Painted Steel Dashboard
+  const dash = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.26, 0.28), bodyPaintMat);
+  dash.position.set(0, 1.14, 0.62);
+  const gaugePanel = new THREE.Mesh(new THREE.PlaneGeometry(0.68, 0.18), gaugeMat);
+  gaugePanel.position.set(-0.25, 1.16, 0.76);
+  cabGroup.add(dash, gaugePanel);
 
-  // Door Lettering Panels (Kerala Goods Carrier)
-  const doorPanelL = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), doorMatL);
-  doorPanelL.rotation.y = -Math.PI / 2;
-  doorPanelL.position.set(-1.23, 1.82, 2.75);
-  cabGroup.add(doorPanelL);
+  // 3-Spoke Vintage Steering Wheel with Chrome Horn Ring
+  const steeringCol = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.42, 8), chassisMat);
+  steeringCol.rotation.x = -0.55;
+  steeringCol.position.set(-0.38, 1.12, 0.44);
+  const steeringWheel = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.022, 8, 20), rubberMat);
+  steeringWheel.rotation.x = -0.55;
+  steeringWheel.position.set(-0.38, 1.24, 0.35);
+  const hornRing = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.012, 8, 16), chromeMat);
+  hornRing.rotation.x = -0.55;
+  hornRing.position.set(-0.38, 1.24, 0.35);
+  cabGroup.add(steeringCol, steeringWheel, hornRing);
 
-  const doorPanelR = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.45), doorMatR);
-  doorPanelR.rotation.y = Math.PI / 2;
-  doorPanelR.position.set(1.23, 1.82, 2.75);
-  cabGroup.add(doorPanelR);
+  // Floor-mounted Manual 4-Speed Gear Shifter with Ivory Ball Knob
+  const shiftStick = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.36, 8), chromeMat);
+  shiftStick.rotation.x = 0.25;
+  shiftStick.position.set(0.08, 0.84, 0.25);
+  const shiftKnob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), headlightMat);
+  shiftKnob.position.set(0.08, 1.01, 0.21);
+  cabGroup.add(shiftStick, shiftKnob);
 
-  // Dual Large Exterior Tubular Side-View Mirrors
-  [-1.38, 1.38].forEach((mx) => {
-    const mirrorFrame = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.85, 8), darkChassisMat);
-    mirrorFrame.position.set(mx, 2.45, 3.35);
-    const mirrorGlass = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.42, 0.22), chromeMat);
-    mirrorGlass.position.set(mx, 2.5, 3.35);
-    // Spot Convex Mirror
-    const spotMirror = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), chromeMat);
-    spotMirror.position.set(mx, 2.2, 3.35);
-    cabGroup.add(mirrorFrame, mirrorGlass, spotMirror);
-  });
-
-  // Ergonomic 2-Tier Perforated Steel Entry Steps (Left & Right)
-  [-1.28, 1.28].forEach((sx) => {
-    const step1 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.05, 0.45), darkChassisMat);
-    step1.position.set(sx, 0.75, 2.75);
-    const step2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.05, 0.45), darkChassisMat);
-    step2.position.set(sx, 1.05, 2.75);
-    // Vertical Grab Handles on Cab Pillars
-    const grabBar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.95, 8), chromeMat);
-    grabBar.position.set(sx, 1.85, 2.2);
-    cabGroup.add(step1, step2, grabBar);
-  });
-
-  // Driver Interior: Dashboard, Steering Wheel & Driver High-Back Seat
-  const dash = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.35, 0.6), blackTrimMat);
-  dash.position.set(0, 1.95, 3.25);
-  const steerColumn = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 8), darkChassisMat);
-  steerColumn.rotation.x = -0.55;
-  steerColumn.position.set(0.65, 2.05, 3.1);
-  const steerWheel = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.035, 8, 20), blackTrimMat);
-  steerWheel.rotation.x = -0.55;
-  steerWheel.position.set(0.65, 2.25, 2.95);
-
-  const driverSeat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.85, 0.55), blackTrimMat);
-  driverSeat.position.set(0.65, 1.95, 2.5);
-  const passBench = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.85, 0.55), blackTrimMat);
-  passBench.position.set(-0.55, 1.95, 2.5);
-  cabGroup.add(dash, steerColumn, steerWheel, driverSeat, passBench);
-
-  // Tall Vertical Heavy Exhaust Stack Pipe behind Cab (with Perforated Heat Guard)
-  const exhaustPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 2.6, 12), darkChassisMat);
-  exhaustPipe.position.set(0.85, 2.45, 1.62);
-  const heatGuard = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.6, 12), chromeMat);
-  heatGuard.position.set(0.85, 2.2, 1.62);
-  const exhaustTip = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.3, 12), chromeMat);
-  exhaustTip.rotation.z = 0.45;
-  exhaustTip.position.set(0.92, 3.78, 1.62);
-  cabGroup.add(exhaustPipe, heatGuard, exhaustTip);
-
-  tipper.add(cabGroup);
+  truck.add(cabGroup);
 
   // ===========================================================
-  // 3. HEAVY HYDRAULIC TIPPER SCOOP DUMP BODY
+  // 5. RUNNING BOARDS (STEP-SIDE FEATURE)
   // ===========================================================
-  const tipperBodyGroup = new THREE.Group();
-  tipperBodyGroup.position.set(0, 0, 0);
+  // Wide stamped steel running boards between front and rear fenders
+  [-0.88, 0.88].forEach((rx) => {
+    // Main steel step board
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.04, 1.45), bodyPaintMat);
+    board.position.set(rx, 0.46, 0.15);
+    board.castShadow = true;
+    truck.add(board);
 
-  // Subframe / Tipping Cradle I-beams
-  const tippingBed = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.15, 5.6), steelBodyMat);
-  tippingBed.position.set(0, 1.18, -1.35);
-  tippingBed.castShadow = true;
-  tipperBodyGroup.add(tippingBed);
+    // Ribbed anti-slip rubber tread pad on top of step
+    const pad = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.02, 1.35), rubberMat);
+    pad.position.set(rx, 0.485, 0.15);
+    truck.add(pad);
 
-  // Heavy Steel Tipper Body Floor (deep interior bed)
-  const tipperFloor = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.12, 5.4), steelBodyMat);
-  tipperFloor.position.set(0, 1.25, -1.35);
-  tipperBodyGroup.add(tipperFloor);
-
-  // Left & Right Heavy Ribbed Tipper Walls
-  [-1.25, 1.25].forEach((wx) => {
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.75, 5.4), steelBodyMat);
-    wall.position.set(wx, 2.05, -1.35);
-    wall.castShadow = true;
-    tipperBodyGroup.add(wall);
-
-    // Top Reinforcing Coaming Rail
-    const coaming = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 5.45), darkChassisMat);
-    coaming.position.set(wx, 2.95, -1.35);
-    tipperBodyGroup.add(coaming);
-
-    // 5 Exterior Vertical Boxed Stiffening Posts / Ribs
-    [-2.4, -1.2, 0, 1.2, 2.4].forEach((rz) => {
-      const rib = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.75, 0.16), darkChassisMat);
-      rib.position.set(wx > 0 ? wx + 0.08 : wx - 0.08, 2.05, -1.35 + rz);
-      tipperBodyGroup.add(rib);
+    // Stamped steel step brackets connecting to chassis
+    [-0.35, 0.45].forEach((bz) => {
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 0.08), chassisMat);
+      bracket.position.set(rx > 0 ? rx - 0.16 : rx + 0.16, 0.44, 0.15 + bz);
+      truck.add(bracket);
     });
   });
 
-  // Front Bulkhead Wall of Dump Body
-  const frontWall = new THREE.Mesh(new THREE.BoxGeometry(2.52, 1.75, 0.14), steelBodyMat);
-  frontWall.position.set(0, 2.05, 1.35);
-  frontWall.castShadow = true;
-  tipperBodyGroup.add(frontWall);
+  // ===========================================================
+  // 6. STEP-SIDE CARGO BED, WOOD FLOOR & TEARDROP REAR FENDERS
+  // ===========================================================
+  const bedGroup = new THREE.Group();
 
-  // Iconic CAB PROTECTOR CANOPY (Steel Visor Shield extending over Cab Roof)
-  // Protects driver cabin from falling boulders during excavator/JCB loading!
-  const canopyShield = new THREE.Mesh(new THREE.BoxGeometry(2.54, 0.12, 1.45), steelBodyMat);
-  canopyShield.position.set(0, 3.02, 2.05);
-  canopyShield.rotation.x = -0.1;
-  canopyShield.castShadow = true;
-  tipperBodyGroup.add(canopyShield);
+  // Narrower Cargo Box Body (centered between the steps)
+  // Bed Dimensions: W = 1.32m, L = 2.25m, H = 0.54m (Z = -1.55)
+  // Front Bed Bulkhead
+  const bedFront = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.54, 0.06), bodyPaintMat);
+  bedFront.position.set(0, 0.84, -0.44);
+  bedFront.castShadow = true;
+  bedGroup.add(bedFront);
 
-  // Heavy Telescopic Chrome Hydraulic Hoist Cylinder Ram ("ജാക്കി സിലിണ്ടർ")
-  const hoistBase = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.8, 16), darkChassisMat);
-  hoistBase.position.set(0, 1.45, 1.52);
-  const hoistRam1 = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.9, 16), chromeMat);
-  hoistRam1.position.set(0, 1.95, 1.52);
-  const hoistRam2 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.8, 16), chromeMat);
-  hoistRam2.position.set(0, 2.45, 1.52);
-  tipperBodyGroup.add(hoistBase, hoistRam1, hoistRam2);
+  // Left & Right Bed Side Walls with Rolled Top Rails
+  [-0.64, 0.64].forEach((sx) => {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.54, 2.22), bodyPaintMat);
+    wall.position.set(sx, 0.84, -1.55);
+    wall.castShadow = true;
+    bedGroup.add(wall);
 
-  // Automatic Hinged Rear Tailgate (ടെയിൽ ഗേറ്റ്)
-  const tailgateMesh = new THREE.Mesh(new THREE.BoxGeometry(2.46, 1.65, 0.15), steelBodyMat);
-  tailgateMesh.position.set(0, 2.05, -4.08);
+    // Rolled Top Tubular Steel Bed Rail
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.24, 12), bodyPaintMat);
+    rail.rotation.x = Math.PI / 2;
+    rail.position.set(sx, 1.12, -1.55);
+    bedGroup.add(rail);
+
+    // Vertical Stake Pockets at front, center and rear corners
+    [-2.62, -1.55, -0.46].forEach((pz) => {
+      const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.54, 0.08), bodyPaintMat);
+      pocket.position.set(sx > 0 ? sx + 0.02 : sx - 0.02, 0.84, pz);
+      bedGroup.add(pocket);
+    });
+  });
+
+  // Hardwood Plank Floor with Polished Steel Skid Strips
+  const bedFloor = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.04, 2.18), woodBedMat);
+  bedFloor.position.set(0, 0.59, -1.55);
+  bedFloor.receiveShadow = true;
+  bedGroup.add(bedFloor);
+
+  // Flared Teardrop Rear Fenders (Left & Right wrapping over rear wheels)
+  [-0.82, 0.82].forEach((fx) => {
+    // Upper curved fender dome
+    const rFender = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.44, 1.35), bodyPaintMat);
+    rFender.position.set(fx, 0.94, -1.45);
+    rFender.castShadow = true;
+    bedGroup.add(rFender);
+
+    // Voluptuous curved wheel arch skirt flare
+    const rSkirt = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.06, 8, 16, Math.PI), bodyPaintMat);
+    rSkirt.position.set(fx > 0 ? fx + 0.14 : fx - 0.14, 0.52, -1.45);
+    rSkirt.rotation.y = fx > 0 ? Math.PI / 2 : -Math.PI / 2;
+    bedGroup.add(rSkirt);
+  });
+
+  // Stamped Steel Rear Tailgate with Embossed "KERALA" & Hinge Brackets
+  const tailgateMesh = new THREE.Mesh(new THREE.BoxGeometry(1.26, 0.52, 0.06), bodyPaintMat);
+  tailgateMesh.position.set(0, 0.83, -2.66);
   tailgateMesh.castShadow = true;
-  tipperBodyGroup.add(tailgateMesh);
+  bedGroup.add(tailgateMesh);
 
-  // Tailgate Decal with "HORN PLEASE", chevrons, speed limit
-  const tailgateBanner = new THREE.Mesh(new THREE.PlaneGeometry(2.42, 1.58), tailgateMat);
+  // Tailgate Embossed Decal Texture Panel
+  const tailgateBanner = new THREE.Mesh(new THREE.PlaneGeometry(1.24, 0.50), tailgateMat);
   tailgateBanner.rotation.y = Math.PI;
-  tailgateBanner.position.set(0, 2.05, -4.17);
-  tipperBodyGroup.add(tailgateBanner);
+  tailgateBanner.position.set(0, 0.83, -2.70);
+  bedGroup.add(tailgateBanner);
 
-  // Heavy Tailgate Top Hinge Pins & Safety Chains
-  [-1.15, 1.15].forEach((hx) => {
-    const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.22, 12), darkChassisMat);
-    hinge.rotation.z = Math.PI / 2;
-    hinge.position.set(hx, 2.88, -4.08);
-    tipperBodyGroup.add(hinge);
+  // Tailgate Safety Latch Chains with Protective Sleeves & Hooks
+  [-0.62, 0.62].forEach((hx) => {
+    const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.08, 8), chromeMat);
+    hook.rotation.z = Math.PI / 2;
+    hook.position.set(hx, 1.05, -2.67);
+    bedGroup.add(hook);
 
-    // Dangling steel safety chain
-    const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.65, 6), chromeMat);
-    chain.position.set(hx, 1.95, -4.12);
-    chain.rotation.z = hx > 0 ? -0.2 : 0.2;
-    tipperBodyGroup.add(chain);
+    // Dangling chain link segment
+    const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.28, 6), rubberMat);
+    chain.position.set(hx > 0 ? hx - 0.06 : hx + 0.06, 0.92, -2.68);
+    chain.rotation.z = hx > 0 ? 0.35 : -0.35;
+    bedGroup.add(chain);
   });
 
-  // Authentic Cargo Load: Kerala Blue Metal Quarry Granite Gravel (കരിങ്കല്ല് / ക്വാറി മെറ്റൽ)
-  const gravelMound = new THREE.Mesh(new THREE.ConeGeometry(1.05, 1.15, 8), blueMetalGraniteMat);
-  gravelMound.rotation.x = Math.PI / 2;
-  gravelMound.scale.set(1.1, 2.4, 0.7);
-  gravelMound.position.set(0, 2.05, -1.35);
-  tipperBodyGroup.add(gravelMound);
+  truck.add(bedGroup);
 
-  // Individual Faceted Granite Quarry Boulders in the Bed
-  [
-    { x: -0.4, y: 2.35, z: -0.8, s: 0.35 },
-    { x: 0.35, y: 2.42, z: -1.6, s: 0.42 },
-    { x: -0.25, y: 2.38, z: -2.4, s: 0.38 },
-    { x: 0.45, y: 2.30, z: -0.2, s: 0.32 },
-    { x: -0.5, y: 2.28, z: -3.0, s: 0.36 },
-  ].forEach((b) => {
-    const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(b.s, 1), blueMetalGraniteMat);
-    boulder.position.set(b.x, b.y, b.z);
-    boulder.rotation.set(Math.random(), Math.random(), Math.random());
-    boulder.castShadow = true;
-    tipperBodyGroup.add(boulder);
+  // ===========================================================
+  // 7. REAR BUMPER, VINTAGE ROUND STOP TAILLIGHTS & LICENSE PLATE
+  // ===========================================================
+  // Curved Chrome Blade Rear Bumper
+  const rearBumper = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.14, 0.08), chromeMat);
+  rearBumper.position.set(0, 0.48, -2.76);
+  rearBumper.castShadow = true;
+  truck.add(rearBumper);
+
+  // Rear Bumper Mounting Brackets
+  [-0.45, 0.45].forEach((bx) => {
+    const bBracket = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.24), chassisMat);
+    bBracket.position.set(bx, 0.48, -2.64);
+    truck.add(bBracket);
   });
 
-  tipper.add(tipperBodyGroup);
+  // Vintage Round Red "STOP" Glass Taillight Pods on Stalk Brackets
+  [-0.72, 0.72].forEach((tx) => {
+    // Black mounting bracket
+    const tBracket = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.12), chassisMat);
+    tBracket.position.set(tx, 0.68, -2.64);
+    truck.add(tBracket);
+
+    // Chrome Bezel
+    const tBezel = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.015, 8, 16), chromeMat);
+    tBezel.position.set(tx, 0.68, -2.71);
+    truck.add(tBezel);
+
+    // Red Glass Lens
+    const tLens = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.04, 16), taillightMat);
+    tLens.rotation.x = Math.PI / 2;
+    tLens.position.set(tx, 0.68, -2.71);
+    truck.add(tLens);
+  });
+
+  // Rear Vintage License Plate & Chrome License Lamp
+  const rPlate = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.14), plateMat);
+  rPlate.rotation.y = Math.PI;
+  rPlate.position.set(-0.25, 0.62, -2.73);
+  const rLamp = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 8), chromeMat);
+  rLamp.rotation.x = Math.PI / 2;
+  rLamp.position.set(-0.25, 0.71, -2.73);
+  truck.add(rPlate, rLamp);
 
   // ===========================================================
-  // 4. HEAVY RUNNING GEAR: 10 CHUNKY WHEELS (6 WHEEL HUBS)
-  // Steer Axle (Z = +2.75) w/ 2 single tires
-  // Tandem Dual Drive Axles (Z = -1.8, Z = -3.2) w/ 4 dual wheel pairs (8 tires!)
+  // 8. VINTAGE STEEL WHEELS WITH MIRROR-CHROME BABY MOON HUBCAPS
+  // Front Axle (Z = +1.45) & Rear Axle (Z = -1.45)
+  // Wheel radius: 0.42m (diameter 0.84m)
   // ===========================================================
-  const tireGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.38, 20);
+  const tireGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.24, 24);
   tireGeo.rotateZ(Math.PI / 2);
 
-  const rimGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.4, 16);
+  const rimGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.25, 20);
   rimGeo.rotateZ(Math.PI / 2);
 
-  const hubGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.44, 12);
-  hubGeo.rotateZ(Math.PI / 2);
+  const babyMoonGeo = new THREE.SphereGeometry(0.20, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+  babyMoonGeo.rotateZ(Math.PI / 2);
 
-  // Helper to build a complete detailed commercial truck wheel
-  const createHeavyTruckWheel = (isOuter = true) => {
+  const createVintageTruckWheel = (isLeft: boolean) => {
     const wg = new THREE.Group();
+
+    // Tire Rubber with Rounded Shoulder Profile
     const tire = new THREE.Mesh(tireGeo, tireMat);
     tire.castShadow = true;
-    const rim = new THREE.Mesh(rimGeo, rimMat);
-    const hub = new THREE.Mesh(hubGeo, isOuter ? chromeMat : darkChassisMat);
-    wg.add(tire, rim, hub);
+    wg.add(tire);
 
-    // 10 Chrome Wheel Studs/Lug Nuts on outer rims
-    if (isOuter) {
-      for (let i = 0; i < 10; i++) {
-        const angle = (Math.PI * 2 / 10) * i;
-        const stud = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.44, 6), chromeMat);
-        stud.rotation.z = Math.PI / 2;
-        stud.position.set(0, Math.sin(angle) * 0.25, Math.cos(angle) * 0.25);
-        wg.add(stud);
-      }
+    // Deep-dish Stamped Steel Rim
+    const rim = new THREE.Mesh(rimGeo, chromeMat);
+    wg.add(rim);
+
+    // Iconic Mirror-Chrome "Baby Moon" Domed Hubcap
+    const babyMoon = new THREE.Mesh(babyMoonGeo, chromeMat);
+    if (!isLeft) {
+      babyMoon.rotation.z = Math.PI;
+      babyMoon.position.x = 0.08;
+    } else {
+      babyMoon.position.x = -0.08;
     }
+    wg.add(babyMoon);
+
+    // 5 Chrome Wheel Lug Nuts around hubcap perimeter
+    for (let i = 0; i < 5; i++) {
+      const angle = (Math.PI * 2 / 5) * i;
+      const lug = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.26, 6), chromeMat);
+      lug.rotation.z = Math.PI / 2;
+      lug.position.set(0, Math.sin(angle) * 0.22, Math.cos(angle) * 0.22);
+      wg.add(lug);
+    }
+
     return wg;
   };
 
-  // 1. Front Steer Axle (Z = 2.75)
-  [-1.18, 1.18].forEach((wx) => {
-    const frontWheel = createHeavyTruckWheel(true);
-    frontWheel.position.set(wx, 0.56, 2.75);
-    tipper.add(frontWheel);
+  // Front Wheels (Track X = ±0.88, Z = +1.45)
+  [-0.88, 0.88].forEach((wx) => {
+    const fw = createVintageTruckWheel(wx < 0);
+    fw.position.set(wx, 0.42, 1.45);
+    truck.add(fw);
   });
 
-  // 2. Rear Tandem Dual Axles (Z = -1.8 and Z = -3.2)
-  // Each axle has DUAL tires on Left & Right = 4 tires per axle = 8 rear tires!
-  [-1.8, -3.2].forEach((az) => {
-    // Left Duals
-    const outL = createHeavyTruckWheel(true);
-    outL.position.set(-1.26, 0.56, az);
-    const inL = createHeavyTruckWheel(false);
-    inL.position.set(-0.88, 0.56, az);
-
-    // Right Duals
-    const outR = createHeavyTruckWheel(true);
-    outR.position.set(1.26, 0.56, az);
-    const inR = createHeavyTruckWheel(false);
-    inR.position.set(0.88, 0.56, az);
-
-    tipper.add(outL, inL, outR, inR);
+  // Rear Wheels (Track X = ±0.88, Z = -1.45)
+  [-0.88, 0.88].forEach((wx) => {
+    const rw = createVintageTruckWheel(wx < 0);
+    rw.position.set(wx, 0.42, -1.45);
+    truck.add(rw);
   });
 
-  tipper.scale.set(1.0, 1.0, 1.0);
-  return tipper;
+  truck.scale.set(1.0, 1.0, 1.0);
+  return truck;
 }
