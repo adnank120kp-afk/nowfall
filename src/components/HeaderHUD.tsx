@@ -23,6 +23,7 @@ interface HeaderHUDProps {
   isSpotsOpen: boolean;
   onToggleSpots: () => void;
   onOpenKSRTC: () => void;
+  onOpenKeralaLife?: () => void;
   onOpenBigMap?: () => void;
   isBigMapOpen?: boolean;
   playerModel?: 'unni' | 'babu';
@@ -74,6 +75,7 @@ export function HeaderHUD({
   isSpotsOpen,
   onToggleSpots,
   onOpenKSRTC,
+  onOpenKeralaLife,
   onOpenBigMap,
   isBigMapOpen = false,
   playerModel = 'babu',
@@ -288,6 +290,23 @@ export function HeaderHUD({
             ₹
           </span>
         </button>
+
+        {/* 🌴 KERALA LIFE: FARMS, PRODUCE MARKET, DREAM HOME, FAITH & SHOWROOM */}
+        {onOpenKeralaLife && (
+          <button
+            onClick={onOpenKeralaLife}
+            className="px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-mono font-black transition-all border border-amber-400/80 bg-gradient-to-r from-emerald-700 via-teal-700 to-green-700 hover:from-emerald-600 hover:to-teal-600 text-white flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-lg shadow-emerald-950/60"
+            title="Open Kerala Life: Farmlands, Produce Market, Dream House, Faith & Showroom"
+          >
+            <span className="text-sm">🌾</span>
+            <span className="font-malayalam font-extrabold text-amber-300 text-xs sm:text-sm">
+              കേരള ജീവിതം
+            </span>
+            <span className="hidden lg:inline text-[10px] font-mono text-emerald-100 font-medium">
+              (Kerala Life)
+            </span>
+          </button>
+        )}
 
         {/* 👓 CHARACTER SKIN TOGGLE (BABU DIAGRAM TECHIE / TRADITIONAL UNNI) */}
         {onTogglePlayerModel && (

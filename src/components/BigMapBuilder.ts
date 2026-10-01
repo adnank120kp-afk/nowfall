@@ -740,7 +740,7 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
   // -------------------------------------------------------------------------
   function buildCurvedConnectorViaduct(centerX: number, isEast: boolean) {
     const curveGroup = new THREE.Group();
-    const segments = 16;
+    const segments = 32;
     const angleStart = isEast ? -Math.PI / 2 : Math.PI / 2;
     const angleSweep = Math.PI;
     const segAngle = angleSweep / segments;
@@ -796,8 +796,14 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
       sleeperSeg.rotation.y = rotY;
       curveGroup.add(sleeperSeg);
 
-      // Support Columns at Quarter Points
-      if (i % 4 === 0) {
+      // Overhead Curved Contact Wire (Overhead Catenary Electrification)
+      const wireSeg = new THREE.Mesh(new THREE.BoxGeometry(segLen, 0.03, 0.03), copperWireMat);
+      wireSeg.position.set(segX, viaductY + 5.1, segZ);
+      wireSeg.rotation.y = rotY;
+      curveGroup.add(wireSeg);
+
+      // Support Columns and Catenary Masts at Octant Points
+      if (i % 8 === 0) {
         const pCol = new THREE.Mesh(new THREE.BoxGeometry(2.4, viaductY, 2.4), pillarMat);
         pCol.position.set(segX, viaductY / 2, segZ);
         pCol.castShadow = true;
@@ -808,6 +814,15 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
         pCap.position.set(segX, viaductY - 0.45, segZ);
         pCap.rotation.y = rotY;
         curveGroup.add(pCap);
+
+        // Curved Outer Catenary Cantilever Mast
+        const mast = new THREE.Mesh(new THREE.BoxGeometry(0.18, 5.2, 0.18), mastMat);
+        const mastOffset = isEast ? 2.9 : -2.9;
+        mast.position.set(segX, viaductY + 3.1, segZ + mastOffset);
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 3.0), mastMat);
+        arm.position.set(segX, viaductY + 5.4, segZ + mastOffset / 2);
+        arm.rotation.y = rotY;
+        curveGroup.add(mast, arm);
       }
     }
 
@@ -910,11 +925,9 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
   metroGroup.add(signMesh);
 
   // Modern Pune Metro Purple Line 3-Car Trainset (Titagarh Firema coach model)
-  const metroTrainData = buildPuneMetroTrain();
-  const metroTrain = metroTrainData.group;
-  metroTrain.rotation.y = Math.PI / 2;
-  metroTrain.position.set(0, viaductY + 0.72, -15);
-  metroGroup.add(metroTrain);
+  // Articulated real-train kinematics: each car and bogie turns independently along the track curve!
+  const metroTrainData = buildPuneMetroTrain({ viaductY });
+  metroGroup.add(metroTrainData.group);
 
   // Save reference for animation updates
   animMetroTrain = metroTrainData;
@@ -1654,51 +1667,9 @@ export function buildBigKizhakkumpuramMap(): BigMapResult {
       });
 
       // 4. 🚇 Pune Metro Purple Line High-Speed Loop Transit Animation
+      // Authentic train turning: each coach and bogie articulates along the track curve independently!
       if (animMetroTrain) {
         animMetroTrain.update(time);
-
-        // Continuous circulation around the complete 734-meter dual-corridor loop
-        const straightL = 320;
-        const curveR = 15;
-        const curveL = Math.PI * curveR; // ~47.12m
-        const totalP = straightL * 2 + curveL * 2; // ~734.25m
-
-        // Train speed: smoothly glides around the entire city loop
-        const s = ((time * 0.016) % totalP + totalP) % totalP;
-
-        let px = 0;
-        let pz = 0;
-        let rotY = 0;
-
-        if (s < straightL) {
-          // 1. North Straight Track (cruising East along Z: -15)
-          px = -160 + s;
-          pz = -15;
-          rotY = Math.PI / 2;
-        } else if (s < straightL + curveL) {
-          // 2. East Sweeping Curve (crossing over to the South side!)
-          const frac = (s - straightL) / curveL;
-          const ang = -Math.PI / 2 + frac * Math.PI;
-          px = 160 + Math.cos(ang) * curveR;
-          pz = Math.sin(ang) * curveR;
-          rotY = Math.PI / 2 - frac * Math.PI;
-        } else if (s < straightL * 2 + curveL) {
-          // 3. South Straight Track on THE OTHER SIDE (cruising West along Z: +15)
-          const distS = s - (straightL + curveL);
-          px = 160 - distS;
-          pz = 15;
-          rotY = -Math.PI / 2;
-        } else {
-          // 4. West Sweeping Curve (attaching South back to North!)
-          const frac = (s - (straightL * 2 + curveL)) / curveL;
-          const ang = Math.PI / 2 + frac * Math.PI;
-          px = -160 + Math.cos(ang) * curveR;
-          pz = Math.sin(ang) * curveR;
-          rotY = -Math.PI / 2 - frac * Math.PI;
-        }
-
-        animMetroTrain.group.position.set(px, 9.5 + 0.72, pz);
-        animMetroTrain.group.rotation.y = rotY;
       }
     },
   };

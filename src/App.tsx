@@ -14,6 +14,16 @@ import { BusinessesModal } from './components/BusinessesModal';
 import { RandomSceneModal } from './components/RandomSceneModal';
 import { PhotoModeModal } from './components/PhotoModeModal';
 import { BGMModal } from './components/BGMModal';
+import { KeralaLifeModal } from './components/KeralaLifeModal';
+import { ThattukadaModal } from './components/ThattukadaModal';
+import {
+  FarmlandPlot,
+  HouseModelType,
+  PlayerHouse,
+  PlayerInventory,
+  ReligionType,
+  INITIAL_FARMLANDS,
+} from './components/KeralaLifeSystem';
 import { INITIAL_KERALA_MISSIONS } from './components/MissionsSystem';
 import { RANDOM_NAATTILE_SCENES } from './components/RandomScenesData';
 import { DistrictInfo, KERALA_14_DISTRICTS } from './components/BigMapBuilder';
@@ -125,6 +135,28 @@ export default function App() {
   const [isPhotoModeOpen, setIsPhotoModeOpen] = useState<boolean>(false);
   const [isBGMOpen, setIsBGMOpen] = useState<boolean>(false);
   const [isBGMPlaying, setIsBGMPlaying] = useState<boolean>(soundSynth.isBGMPlaying());
+
+  // Kerala Life Simulator States (Farms, House Building, Faith & Showroom)
+  const [isKeralaLifeOpen, setIsKeralaLifeOpen] = useState<boolean>(false);
+  const [isThattukadaOpen, setIsThattukadaOpen] = useState<boolean>(false);
+  const [farmlands, setFarmlands] = useState<FarmlandPlot[]>(INITIAL_FARMLANDS);
+  const [inventory, setInventory] = useState<PlayerInventory>({
+    coconuts: 18,
+    bananas: 12,
+    riceSacks: 6,
+    stones: 10,
+    cementBags: 2,
+  });
+  const [playerHouse, setPlayerHouse] = useState<PlayerHouse>({
+    isBuilt: false,
+    isConstructing: false,
+    constructionStage: 0,
+    district: 'Kasaragod',
+    model: 'nalukettu',
+    coords: { x: -15, z: -30 },
+  });
+  const [currentReligion, setCurrentReligion] = useState<ReligionType>('universal');
+  const [ownedVehicles, setOwnedVehicles] = useState<VehicleType[]>(['auto', 'bus']);
 
   useEffect(() => {
     const unsub = soundSynth.subscribeBGM((playing) => {
@@ -336,6 +368,149 @@ export default function App() {
       malayalamName: 'കണ്ടക്ടർ സുകുമാരൻ',
       role: 'Super Fast Conductor (RPK 992)',
       dialogue: `“ഇറങ്ങിക്കോളൂ! ${dest.name} എത്തിയിട്ടുണ്ട്! അടുത്ത സ്റ്റോപ്പിലേക്ക് ബസ് ഉടൻ പുറപ്പെടുകയാണ്!”`,
+    });
+  }, []);
+
+  const handleHarvest = useCallback((plotId: 'coconut' | 'banana' | 'rice') => {
+    const plot = farmlands.find((p) => p.id === plotId);
+    if (!plot) return;
+
+    soundSynth.playSound('splash');
+    soundSynth.playSound('bell');
+
+    if (plotId === 'coconut') {
+      setInventory((prev) => ({ ...prev, coconuts: prev.coconuts + plot.yieldAmount }));
+    } else if (plotId === 'banana') {
+      setInventory((prev) => ({ ...prev, bananas: prev.bananas + plot.yieldAmount }));
+    } else if (plotId === 'rice') {
+      setInventory((prev) => ({ ...prev, riceSacks: prev.riceSacks + plot.yieldAmount }));
+    }
+
+    setActiveDialogue({
+      id: `harvest-${plotId}`,
+      avatar: plot.cropIcon,
+      tag: 'HARVEST',
+      name: `വിളവെടുപ്പ് • ${plot.cropName}`,
+      malayalamName: plot.malayalamName,
+      role: 'Kerala Agriculture Dept',
+      dialogue: `“${plot.name}-ൽ നിന്ന് ${plot.yieldAmount} ${plot.cropUnit} ${plot.cropName} വിളവെടുത്തു! ഇത് മാർക്കറ്റിൽ കൊണ്ടുപോയി നല്ല വിലയ്ക്ക് വിൽക്കാം!”`,
+    });
+  }, [farmlands]);
+
+  const handleBuildHouse = useCallback((district: string, model: HouseModelType) => {
+    setPlayerHouse((prev) => ({
+      ...prev,
+      isConstructing: true,
+      constructionStage: 1,
+      district,
+      model,
+    }));
+    soundSynth.playSound('workshop');
+    soundSynth.playSound('bell');
+
+    window.dispatchEvent(
+      new CustomEvent('keralaBuildHouseStage', {
+        detail: { stage: 1, model, coords: { x: -15, z: -30 } },
+      })
+    );
+
+    setTimeout(() => {
+      setPlayerHouse((prev) => ({ ...prev, constructionStage: 2 }));
+      soundSynth.playSound('workshop');
+      window.dispatchEvent(
+        new CustomEvent('keralaBuildHouseStage', {
+          detail: { stage: 2, model },
+        })
+      );
+
+      setTimeout(() => {
+        setPlayerHouse((prev) => ({ ...prev, constructionStage: 3 }));
+        soundSynth.playSound('workshop');
+        window.dispatchEvent(
+          new CustomEvent('keralaBuildHouseStage', {
+            detail: { stage: 3, model },
+          })
+        );
+
+        setTimeout(() => {
+          setPlayerHouse((prev) => ({
+            ...prev,
+            isBuilt: true,
+            isConstructing: false,
+            constructionStage: 4,
+          }));
+          soundSynth.playSound('bell');
+          soundSynth.playSound('chenda');
+          window.dispatchEvent(
+            new CustomEvent('keralaBuildHouseStage', {
+              detail: { stage: 4, model },
+            })
+          );
+
+          setActiveDialogue({
+            id: 'house-built',
+            avatar: '🏡',
+            tag: 'HOME',
+            name: 'വീട് പൂർത്തിയായി (Dream House Built)',
+            malayalamName: `${district} • സ്വന്തം വീട്`,
+            role: 'Kerala Home Architect',
+            dialogue: `“അഭിനന്ദനങ്ങൾ! നിങ്ങളുടെ ${model === 'nalukettu' ? 'നാലുകെട്ട്' : model === 'modern_villa' ? 'മോഡേൺ വില്ല' : 'കോട്ടേജ്'} ${district} ജില്ലയിൽ പൂർത്തിയായി! ഡ്രസ്സിംഗ് റൂമിൽ കയറി വസ്ത്രങ്ങൾ മാറ്റാം!”`,
+          });
+        }, 1600);
+      }, 1600);
+    }, 1600);
+  }, []);
+
+  const handlePray = useCallback((place: 'masjid' | 'temple' | 'church') => {
+    if (place === 'masjid') {
+      soundSynth.playSound('bell');
+      setActiveDialogue({
+        id: 'prayer-masjid',
+        avatar: '🕌',
+        tag: 'PRAYER',
+        name: 'ജുമാ മസ്ജിദ് • പ്രാർത്ഥന',
+        malayalamName: 'ജുമാ മസ്ജിദ്',
+        role: 'Peace & Blessing',
+        dialogue: '“അല്ലാഹുവിന്റെ അനുഗ്രഹത്താൽ സമാധാനവും ഐശ്വര്യവും കൈവരട്ടെ! പ്രാർത്ഥന നിർവഹിച്ചു. 🤲”',
+      });
+    } else if (place === 'temple') {
+      soundSynth.playSound('bell');
+      soundSynth.playSound('chenda');
+      setActiveDialogue({
+        id: 'prayer-temple',
+        avatar: '🛕',
+        tag: 'PRAYER',
+        name: 'ക്ഷേത്ര പൂജ • പ്രസാദം',
+        malayalamName: 'ക്ഷേത്രം',
+        role: 'Sacred Pooja',
+        dialogue: '“ക്ഷേത്ര ദർശനം നടത്തി പ്രസാദം സ്വീകരിച്ചു. മനസ്സിന് ശാന്തിയും ഐശ്വര്യവും! 🙏”',
+      });
+    } else {
+      soundSynth.playSound('bell');
+      setActiveDialogue({
+        id: 'prayer-church',
+        avatar: '⛪',
+        tag: 'PRAYER',
+        name: 'പള്ളി പ്രാർത്ഥന • ഗീതം',
+        malayalamName: 'ക്രൈസ്തവ ദേവാലയം',
+        role: 'Holy Blessing',
+        dialogue: '“തിരുസന്നിധിയിൽ മെഴുകുതിരി കത്തിച്ച് പ്രാർത്ഥിച്ചു. സമാധാനം ഉണ്ടാകട്ടെ! ✝️”',
+      });
+    }
+  }, []);
+
+  const handleFastTravelCoords = useCallback((x: number, z: number, locName: string) => {
+    setTeleportTarget({ x, z });
+    soundSynth.playSound('bell');
+    soundSynth.playSound('airhorn');
+    setActiveDialogue({
+      id: 'fast-travel-loc',
+      avatar: '🛺',
+      tag: 'TRAVEL',
+      name: `യാത്ര • ${locName}`,
+      malayalamName: locName,
+      role: 'Kerala Navigator',
+      dialogue: `“നിങ്ങൾ ${locName}-ൽ എത്തിയിരിക്കുന്നു!”`,
     });
   }, []);
 
@@ -557,13 +732,15 @@ export default function App() {
       const k = e.key.toLowerCase();
       if (k === 'm') {
         setIsBigMapOpen((prev) => !prev);
+      } else if (k === 'l') {
+        setIsKeralaLifeOpen((prev) => !prev);
       } else if (k === 'r') {
         setIsMapOpen((prev) => !prev);
       } else if (k === 'b') {
         setIsKSRTCOpen((prev) => !prev);
       } else if (k === 't') {
         setIsStadiumTicketOpen((prev) => !prev);
-      } else if (k === 'c') {
+      } else if (k === 'k') {
         setIsSpotsOpen((prev) => !prev);
       } else if (k === 'j') {
         setIsMissionsOpen((prev) => !prev);
@@ -611,6 +788,7 @@ export default function App() {
         onClearTeleport={() => setTeleportTarget(null)}
         playerModel={playerModel}
         onDistrictChange={handleDistrictProximity}
+        onOpenThattukada={() => setIsThattukadaOpen(true)}
       />
 
       {/* TOP HUD: KERALA OPEN WORLD STATUS & AUDIO CONSOLE */}
@@ -636,6 +814,7 @@ export default function App() {
         isSpotsOpen={isSpotsOpen}
         onToggleSpots={() => setIsSpotsOpen((prev) => !prev)}
         onOpenKSRTC={() => setIsKSRTCOpen(true)}
+        onOpenKeralaLife={() => setIsKeralaLifeOpen(true)}
         onOpenBigMap={() => setIsBigMapOpen(true)}
         isBigMapOpen={isBigMapOpen}
         playerModel={playerModel}
@@ -746,6 +925,8 @@ export default function App() {
           onInteract={() => handleFocusPOI('chaya')}
           onOpenKSRTC={() => setIsKSRTCOpen(true)}
           onOpenStadiumTicket={() => setIsStadiumTicketOpen(true)}
+          onOpenThattukada={() => setIsThattukadaOpen(true)}
+          onOpenKeralaLife={() => setIsKeralaLifeOpen(true)}
           inVehicle={inVehicle}
           vehicleType={vehicleType}
         />
@@ -833,6 +1014,53 @@ export default function App() {
       <BGMModal
         isOpen={isBGMOpen}
         onClose={() => setIsBGMOpen(false)}
+      />
+
+      {/* MODAL: KERALA LIFE SIMULATOR (FARMLANDS, PRODUCE MARKET, DREAM HOUSE, FAITH & SHOWROOM) */}
+      <KeralaLifeModal
+        isOpen={isKeralaLifeOpen}
+        onClose={() => setIsKeralaLifeOpen(false)}
+        wallet={wallet}
+        onUpdateWallet={(delta) => setWallet((w) => Math.max(0, w + delta))}
+        farmlands={farmlands}
+        onHarvest={handleHarvest}
+        inventory={inventory}
+        onUpdateInventory={setInventory}
+        playerHouse={playerHouse}
+        onBuildHouse={handleBuildHouse}
+        currentOutfit={playerOutfit}
+        onChangeOutfit={handleChangeOutfit}
+        currentReligion={currentReligion}
+        onChangeReligion={setCurrentReligion}
+        onPray={handlePray}
+        onBuyVehicle={(type) => {
+          setOwnedVehicles((prev) => [...prev, type]);
+          handleSelectVehicle(type);
+        }}
+        ownedVehicles={ownedVehicles}
+        onFastTravel={handleFastTravelCoords}
+      />
+
+      {/* MODAL: THATTUKADA CHAYA KADA & LOCAL SPECIALTIES */}
+      <ThattukadaModal
+        isOpen={isThattukadaOpen}
+        onClose={() => setIsThattukadaOpen(false)}
+        wallet={wallet}
+        onDeductMoney={handleDeductMoney}
+        totalOrdersCount={5}
+        onOrderSuccess={(item) => {
+          soundSynth.playSound('teaglass');
+          window.dispatchEvent(new CustomEvent('keralaEatOrDrink', { detail: { item: item.name } }));
+          setActiveDialogue({
+            id: 'thattukada-order',
+            avatar: item.icon,
+            tag: 'CHAYA',
+            name: 'മോഹനൻ നായർ (Mohanan Nair)',
+            malayalamName: 'നായർ ചേട്ടൻ',
+            role: 'Thattukada Master',
+            dialogue: `“ഇതാ നല്ല ചൂട് ${item.malayalamName}! കഴിച്ചോളൂ ഉണ്ണീ! ആസ്വദിക്കൂ!”`,
+          });
+        }}
       />
     </div>
   );

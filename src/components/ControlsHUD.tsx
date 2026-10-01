@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { VehicleType } from '../types';
 
 interface ControlsHUDProps {
@@ -9,6 +9,7 @@ interface ControlsHUDProps {
   onOpenKSRTC?: () => void;
   onOpenStadiumTicket?: () => void;
   onOpenThattukada?: () => void;
+  onOpenKeralaLife?: () => void;
   inVehicle: boolean;
   vehicleType?: VehicleType;
 }
@@ -21,10 +22,24 @@ export function ControlsHUD({
   onOpenKSRTC,
   onOpenStadiumTicket,
   onOpenThattukada,
+  onOpenKeralaLife,
   inVehicle,
   vehicleType = 'auto',
 }: ControlsHUDProps) {
   const [show360Panel, setShow360Panel] = useState<boolean>(true);
+  const [driveViewMode, setDriveViewMode] = useState<'exterior' | 'interior'>('exterior');
+
+  useEffect(() => {
+    const handleCamChange = (e: any) => {
+      if (e.detail?.mode) setDriveViewMode(e.detail.mode);
+    };
+    window.addEventListener('keralaCameraViewChanged', handleCamChange);
+    return () => window.removeEventListener('keralaCameraViewChanged', handleCamChange);
+  }, []);
+
+  const handleToggleCameraView = () => {
+    window.dispatchEvent(new CustomEvent('keralaToggleCameraView'));
+  };
 
   const handle360Camera = () => {
     window.dispatchEvent(new CustomEvent('kerala360Camera'));
@@ -56,7 +71,7 @@ export function ControlsHUD({
             <div className="flex items-center justify-between pb-1.5 border-b border-cyan-500/30">
               <div className="flex items-center gap-1.5">
                 <span className="text-base text-cyan-400 animate-spin" style={{ animationDuration: '6s' }}>🔄</span>
-                <span className="font-mono text-xs font-bold text-cyan-300 tracking-wider">360° CONTROLS</span>
+                <span className="font-mono text-xs font-bold text-cyan-300 tracking-wider">360° & CAMERA</span>
               </div>
               <button
                 onClick={() => setShow360Panel(false)}
@@ -67,8 +82,21 @@ export function ControlsHUD({
               </button>
             </div>
 
-            {/* Primary 360 Actions */}
+            {/* Primary Actions */}
             <div className="flex flex-col gap-1.5">
+              {/* Interior Cockpit vs Exterior Chase Camera Toggle */}
+              <button
+                onClick={handleToggleCameraView}
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-extrabold text-xs shadow-md transition-all active:scale-95 flex items-center justify-between cursor-pointer border border-amber-400/40"
+                title="Toggle between Driver Cockpit (Interior) and Chase Cam (Exterior) [Key: C]"
+              >
+                <span className="flex items-center gap-1.5">
+                  <span>{driveViewMode === 'interior' ? '🏎️' : '🎥'}</span>
+                  <span>{driveViewMode === 'interior' ? 'Cockpit (Interior)' : 'Chase Cam (Exterior)'}</span>
+                </span>
+                <span className="px-1.5 py-0.5 rounded bg-black/30 font-mono text-[10px] text-amber-200">[C]</span>
+              </button>
+
               <button
                 onClick={handle360Camera}
                 className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs shadow-md transition-all active:scale-95 flex items-center justify-between cursor-pointer border border-cyan-400/40"
@@ -121,17 +149,17 @@ export function ControlsHUD({
 
             {/* Drag & Tip Hint */}
             <p className="text-[9.5px] font-mono text-cyan-200/70 text-center leading-tight">
-              🖱️ Drag view to orbit 360° freely • Double-click to reset
+              🖱️ Drag to look around • Scroll to zoom • Double-click reset
             </p>
           </div>
         ) : (
           <button
             onClick={() => setShow360Panel(true)}
             className="px-3 py-2 rounded-2xl bg-[#051710e6] hover:bg-[#0c2e22] text-cyan-300 border border-cyan-500/60 shadow-2xl backdrop-blur-xl flex items-center gap-2 font-mono text-xs font-bold active:scale-95 transition-all cursor-pointer group"
-            title="Open 360° Turning Controls"
+            title="Open 360° & Camera Controls"
           >
             <span className="text-base group-hover:rotate-180 transition-transform duration-500">🔄</span>
-            <span>360° Turn</span>
+            <span>{driveViewMode === 'interior' ? '🏎️ Cockpit' : '🎥 Camera'}</span>
           </button>
         )}
       </div>
@@ -142,6 +170,20 @@ export function ControlsHUD({
         <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200">W A S D</span> {inVehicle ? 'Drive' : 'Walk'}
         <span className="text-zinc-600">|</span>
         <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200">SPACE</span> Jump
+        <span className="text-zinc-600">|</span>
+        {/* Interior / Exterior Camera View Button */}
+        <button
+          onClick={handleToggleCameraView}
+          className={`px-2 py-0.5 rounded border flex items-center gap-1 cursor-pointer font-bold transition-colors ${
+            driveViewMode === 'interior'
+              ? 'bg-amber-900/90 text-amber-300 border-amber-400/60'
+              : 'bg-zinc-800 text-cyan-300 border-cyan-500/40 hover:bg-zinc-700'
+          }`}
+          title="Switch Interior Cockpit / Exterior Chase Camera View [C]"
+        >
+          <span>{driveViewMode === 'interior' ? '🏎️ Cockpit' : '🎥 Exterior'}</span>
+          <span className="px-1 py-0.2 rounded bg-black/40 font-mono text-[9px]">[C]</span>
+        </button>
         <span className="text-zinc-600">|</span>
         <button
           onClick={handle360Camera}
@@ -175,13 +217,25 @@ export function ControlsHUD({
             : '🛺 Auto'}
         </span>
         <span className="text-zinc-600">|</span>
+        {onOpenKeralaLife && (
+          <>
+            <button
+              onClick={onOpenKeralaLife}
+              className="px-2.5 py-0.5 rounded bg-gradient-to-r from-emerald-800 to-teal-800 text-amber-300 border border-emerald-400/60 hover:brightness-110 transition-colors flex items-center gap-1 cursor-pointer font-bold shadow-sm"
+              title="Open Kerala Life Simulator: Farms, Produce Mandi, Dream House, Faith & Showroom [L]"
+            >
+              <span>🌾</span> [L] കേരള ജീവിതം (Life)
+            </button>
+            <span className="text-zinc-600">|</span>
+          </>
+        )}
         {onOpenThattukada && (
           <>
             <button
               onClick={onOpenThattukada}
               className="px-2 py-0.5 rounded bg-emerald-950 text-amber-300 border border-emerald-500/50 hover:bg-emerald-900 transition-colors flex items-center gap-1 cursor-pointer font-bold"
             >
-              <span>C</span> 🍵 തട്ടുകട (Menu)
+              <span>🍵</span> തട്ടുകട (Menu)
             </button>
             <span className="text-zinc-600">|</span>
           </>
@@ -232,6 +286,18 @@ export function ControlsHUD({
           >
             🎺
           </button>
+          {/* Mobile Camera Toggle */}
+          <button
+            className={`w-11 h-11 rounded-xl border text-base font-bold flex items-center justify-center shadow-lg active:scale-95 ${
+              driveViewMode === 'interior'
+                ? 'bg-amber-800/90 border-amber-400/70 text-amber-200'
+                : 'bg-zinc-900/90 border-zinc-500/60 text-zinc-200'
+            }`}
+            onClick={handleToggleCameraView}
+            title={driveViewMode === 'interior' ? 'Switch to Exterior View' : 'Switch to Cockpit View'}
+          >
+            {driveViewMode === 'interior' ? '🏎️' : '🎥'}
+          </button>
           <button
             className="w-11 h-11 rounded-xl bg-cyan-950/90 border border-cyan-400/60 text-cyan-300 text-base font-bold flex items-center justify-center shadow-lg active:scale-95"
             onClick={handle360Camera}
@@ -246,6 +312,16 @@ export function ControlsHUD({
           >
             ⚡
           </button>
+          {onOpenKeralaLife && (
+            <button
+              className="px-2.5 h-11 rounded-xl bg-emerald-800/90 border border-amber-400/60 text-amber-300 text-xs font-bold flex items-center justify-center gap-1 shadow-lg active:scale-95"
+              onClick={onOpenKeralaLife}
+              title="Kerala Life"
+            >
+              <span>🌾</span>
+              <span className="font-malayalam">ജീവിതം</span>
+            </button>
+          )}
           {onOpenStadiumTicket && (
             <button
               className="px-2.5 h-11 rounded-xl bg-emerald-900/90 border border-amber-400/60 text-amber-300 text-xs font-bold flex items-center justify-center gap-1 shadow-lg active:scale-95"

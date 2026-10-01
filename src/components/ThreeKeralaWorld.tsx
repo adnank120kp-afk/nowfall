@@ -20,6 +20,11 @@ import {
   buildKeralaTipper,
 } from './VehiclesBuilder';
 import { buildAuthenticKeralaThattukada } from './ThattukadaBuilder';
+import { buildSevensArenaPuthanathani } from './SevensArenaPuthanathaniBuilder';
+import { buildKeralaFarmlands } from './FarmlandBuilder';
+import { buildPlayerHome } from './KeralaHouseBuilder';
+import { buildKeralaPrayerPlaces } from './PrayerPlacesBuilder';
+import { HouseModelType, SIMULATED_ONLINE_PLAYERS } from './KeralaLifeSystem';
 
 interface ThreeKeralaWorldProps {
   weather: WeatherMode;
@@ -34,6 +39,7 @@ interface ThreeKeralaWorldProps {
   teleportTarget?: { x: number; z: number } | null;
   onClearTeleport?: () => void;
   playerModel?: 'unni' | 'babu';
+  playerOutfit?: 'babu' | 'unni' | 'kasavu' | 'driver' | 'sevens';
   onDistrictChange?: (districtName: string, districtObj: DistrictInfo) => void;
 }
 
@@ -50,6 +56,7 @@ export function ThreeKeralaWorld({
   teleportTarget,
   onClearTeleport,
   playerModel = 'unni',
+  playerOutfit = 'babu',
   onDistrictChange,
 }: ThreeKeralaWorldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,6 +74,7 @@ export function ThreeKeralaWorld({
     teleportTo: (x: number, z: number) => void;
     triggerInteract: () => void;
     setPlayerSkin: (model: 'unni' | 'babu') => void;
+    buildHouseStage?: (stage: number, model: HouseModelType) => void;
   } | null>(null);
 
   // Sync weather changes
@@ -126,7 +134,8 @@ export function ThreeKeralaWorld({
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Smooth performance & zero-lag: clamp pixel ratio to 1.5 to eliminate 4K GPU throttling while preserving crispness
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -144,8 +153,9 @@ export function ThreeKeralaWorld({
     const sunLight = new THREE.DirectionalLight(0xfffae6, 1.45);
     sunLight.position.set(90, 160, 60);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
+    // Optimized shadow resolution for fluid 60fps rendering
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
     sunLight.shadow.camera.near = 10;
     sunLight.shadow.camera.far = 750;
     const shadowDist = 260;
@@ -242,6 +252,23 @@ export function ThreeKeralaWorld({
     // 3D. LIVING TRAFFIC & FAUNA SYSTEM (Cars, Lorry, Ambulance, Police Jeep, Scooter, Bicycle, Cows, Dogs, Chickens)
     const livingWorld = buildLivingTrafficAndFauna();
     worldGroup.add(livingWorld.group);
+
+    // 3E. SEVENS ARENA PUTHANATHANI (Puthanathani Turf & Luxury Swimming Pool)
+    const sevensArena = buildSevensArenaPuthanathani(45, -35);
+    worldGroup.add(sevensArena.group);
+    colliders.push({ minX: sevensArena.turfBounds.minX - 2, maxX: sevensArena.turfBounds.maxX + 2, minZ: sevensArena.turfBounds.minZ - 2, maxZ: sevensArena.turfBounds.maxZ + 2 });
+
+    // 3F. KERALA FARMLAND PLOTS (Coconut Grove, Banana Plantation, Rice Paddy)
+    const farmlands = buildKeralaFarmlands();
+    worldGroup.add(farmlands.group);
+
+    // 3G. PLAYER CUSTOM HOME (With real-time 4-stage construction animation & wardrobe)
+    const playerHome = buildPlayerHome(-15, -30);
+    worldGroup.add(playerHome.group);
+
+    // 3H. SPIRITUAL PLACES OF WORSHIP (Grand Masjid, Traditional Temple, Historic Church)
+    const prayerPlaces = buildKeralaPrayerPlaces();
+    worldGroup.add(prayerPlaces.group);
 
     // 4. BRIDGE OVER CANAL (Seamlessly fitted to the 14m Roadway)
     function createBridge(zPos: number) {
@@ -816,7 +843,7 @@ export function ThreeKeralaWorld({
       return bus;
     }
 
-    const playerAuto = createAutoRickshaw(-6, 8, 0, true);
+    const playerAuto = createAutoRickshaw(-76, -340, 0, true);
     createAutoRickshaw(25, -4.5, -Math.PI / 2);
 
     // DRIVABLE MODERN LUXURY COACH BUS (BUS MODE)
@@ -1297,34 +1324,170 @@ export function ThreeKeralaWorld({
       112, -72, 0xffffff, 0x1e3a8a
     );
 
-    // 10. PLAYABLE CHARACTER (Rigged Babu or Rigged Unni with authentic walking locomotion)
-    const player = new THREE.Group();
-    let currentPlayerModel: 'unni' | 'babu' = playerModel;
-    let playerRig: HumanRig = currentPlayerModel === 'babu'
-      ? buildRiggedBabuCharacter()
-      : buildRiggedTraditionalCharacter({
-          shirtColor: 0x1e56a0,
-          munduColor: 0xf5f3e9,
-          kasavuColor: 0xd4af37,
-        });
+    // 9. SIMULATED ONLINE PLAYERS IN KERALA OPEN WORLD (Visible in real-time!)
+    function createPlayerNametag(name: string, subtext: string): THREE.Sprite {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 100;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = 'rgba(6, 24, 17, 0.92)';
+      if (ctx.roundRect) {
+        ctx.roundRect(6, 6, 388, 88, 18);
+      } else {
+        ctx.rect(6, 6, 388, 88);
+      }
+      ctx.fill();
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 4;
+      ctx.stroke();
 
+      ctx.fillStyle = '#34d399';
+      ctx.beginPath();
+      ctx.arc(36, 50, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(name, 58, 44);
+
+      ctx.font = 'bold 17px monospace';
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText(subtext, 58, 72);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(4.0, 1.0, 1.0);
+      return sprite;
+    }
+
+    SIMULATED_ONLINE_PLAYERS.forEach((p, idx) => {
+      let px = 0;
+      let pz = 0;
+      let shirtCol = 0x247ba0;
+      let munduCol = 0xf0ede6;
+      let isSwimmer = false;
+
+      if (p.id === 'p1') {
+        px = 42;
+        pz = -32;
+        shirtCol = 0x16a34a;
+        munduCol = 0xfacc15;
+      } else if (p.id === 'p2') {
+        px = 112;
+        pz = 52;
+        shirtCol = 0xffffff;
+        munduCol = 0xf8fafc;
+      } else if (p.id === 'p3') {
+        px = -82;
+        pz = -122;
+        shirtCol = 0xb49a78;
+        munduCol = 0x8c785b;
+      } else if (p.id === 'p4') {
+        px = -18;
+        pz = -28;
+        shirtCol = 0x1e3a8a;
+        munduCol = 0x334155;
+      } else if (p.id === 'p5') {
+        px = 52;
+        pz = -15;
+        shirtCol = 0x0284c7;
+        munduCol = 0x0369a1;
+        isSwimmer = true;
+      } else {
+        px = -21;
+        pz = -12;
+        shirtCol = 0x991b1b;
+        munduCol = 0xf0ede6;
+      }
+
+      const pRig = buildRiggedTraditionalCharacter({
+        shirtColor: shirtCol,
+        munduColor: munduCol,
+        hasMoustache: idx % 2 === 0,
+        foldedMundu: !isSwimmer,
+      });
+
+      const pGroup = pRig.root;
+      pGroup.position.set(px, isSwimmer ? -0.3 : 0, pz);
+      if (isSwimmer) {
+        pGroup.rotation.x = 0.55;
+      }
+
+      const nametag = createPlayerNametag(p.name, `${p.district} • ${p.vehicle}`);
+      nametag.position.y = 2.45;
+      pGroup.add(nametag);
+
+      worldGroup.add(pGroup);
+
+      npcs.push({
+        entity: {
+          id: p.id,
+          name: p.name,
+          malayalamName: p.name,
+          role: `Live Online Player (${p.district})`,
+          dialogue: `“ഹലോ! ഞാൻ ${p.name}. ഇപ്പോൾ ${p.activity} ആണ്! ഈ കേരള ഓപ്പൺ വേൾഡ് സൂപ്പറാണ്!”`,
+          avatar: '👤',
+          tag: 'ONLINE',
+        },
+        mesh: pGroup,
+        rig: pRig,
+      });
+    });
+
+    // 10. PLAYABLE CHARACTER (Starting in Kasaragod with authentic Kerala Lungi & Banyan!)
+    const player = new THREE.Group();
+    let currentOutfitState: 'babu' | 'unni' | 'kasavu' | 'driver' | 'sevens' = playerOutfit || 'babu';
+
+    function buildOutfitRig(outfit: 'babu' | 'unni' | 'kasavu' | 'driver' | 'sevens'): HumanRig {
+      if (outfit === 'babu') {
+        // Authentic Daily Kerala Lungi & White Cotton Banyan!
+        return buildRiggedTraditionalCharacter({
+          shirtColor: 0xf4f4f5, // White cotton sleeveless banyan
+          munduColor: 0x1e3a8a, // Kerala blue lungi
+          kasavuColor: 0x3b82f6,
+          foldedMundu: true, // Tied up at knee in authentic Kerala daily style!
+          hasMoustache: true,
+        });
+      } else if (outfit === 'kasavu') {
+        // Golden Kasavu Mundu & White Shirt for temple visits
+        return buildRiggedTraditionalCharacter({
+          shirtColor: 0xffffff,
+          munduColor: 0xf5f3e9,
+          kasavuColor: 0xd4af37, // Golden border
+          foldedMundu: false,
+          hasMoustache: true,
+        });
+      } else if (outfit === 'driver') {
+        // Professional Driver Khaki Uniform
+        return buildRiggedTraditionalCharacter({
+          shirtColor: 0xb49a78,
+          munduColor: 0x8c785b,
+          hasMoustache: true,
+        });
+      } else if (outfit === 'sevens') {
+        // Sevens Arena Puthanathani Football Team Jersey
+        return buildRiggedTraditionalCharacter({
+          shirtColor: 0x16a34a,
+          munduColor: 0xfacc15,
+          hasMoustache: false,
+        });
+      } else {
+        // Techie Babu
+        return buildRiggedBabuCharacter();
+      }
+    }
+
+    let playerRig: HumanRig = buildOutfitRig(currentOutfitState);
     player.add(playerRig.root);
-    player.position.set(0, 0, 5);
+    // Initial spawn in Kasaragod (Bekal Fort area)
+    player.position.set(-80, 0, -340);
     scene.add(player);
 
-    function setPlayerSkin(model: 'unni' | 'babu') {
-      if (model === currentPlayerModel) return;
-      currentPlayerModel = model;
+    function setPlayerSkin(outfitName: 'babu' | 'unni' | 'kasavu' | 'driver' | 'sevens') {
+      currentOutfitState = outfitName;
       player.remove(playerRig.root);
-      if (model === 'babu') {
-        playerRig = buildRiggedBabuCharacter();
-      } else {
-        playerRig = buildRiggedTraditionalCharacter({
-          shirtColor: 0x1e56a0,
-          munduColor: 0xf5f3e9,
-          kasavuColor: 0xd4af37,
-        });
-      }
+      playerRig = buildOutfitRig(outfitName);
       player.add(playerRig.root);
     }
 
@@ -1337,7 +1500,7 @@ export function ThreeKeralaWorld({
       vehicleType: 'auto' as 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper',
     };
 
-    // 11. DYNAMIC WEATHER & RAIN / LIGHTNING / RAINBOW SYSTEM
+    // 11. DYNAMIC WEATHER & RAIN / LIGHTNING / RAINBOW / SPLASHES & FOG OVERLAY SYSTEM
     let rainParticles: THREE.Points | null = null;
     let rainFallSpeed = 0.65;
     let rainbowGroup: THREE.Group | null = null;
@@ -1346,21 +1509,31 @@ export function ThreeKeralaWorld({
     let nextLightningTime = 0;
     let isFlashingLightning = false;
 
+    // Ground Rain Splashes & Ripple Bursts Visual Feedback
+    let rainSplashes: THREE.Points | null = null;
+    let splashLifetimes: Float32Array | null = null;
+    let splashOriginalX: Float32Array | null = null;
+    let splashOriginalZ: Float32Array | null = null;
+
+    // Atmospheric Volumetric Fog Overlays Visual Feedback
+    let fogOverlaysGroup: THREE.Group | null = null;
+    const fogPlanes: { mesh: THREE.Mesh; baseSpeed: number; baseY: number; phase: number }[] = [];
+
     function createRain(density: 'light' | 'monsoon' | 'thunderstorm') {
       removeRain();
-      const count = density === 'light' ? 1200 : density === 'monsoon' ? 2800 : 3800;
+      const count = density === 'light' ? 1200 : density === 'monsoon' ? 2600 : 3400;
       rainFallSpeed = density === 'light' ? 0.45 : density === 'monsoon' ? 0.75 : 0.95;
       const rainGeo = new THREE.BufferGeometry();
       const pos = new Float32Array(count * 3);
       for (let i = 0; i < count * 3; i += 3) {
-        pos[i] = (Math.random() - 0.5) * 220;
-        pos[i + 1] = Math.random() * 48;
-        pos[i + 2] = (Math.random() - 0.5) * 220;
+        pos[i] = (Math.random() - 0.5) * 200;
+        pos[i + 1] = Math.random() * 45;
+        pos[i + 2] = (Math.random() - 0.5) * 200;
       }
       rainGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       const rainMat = new THREE.PointsMaterial({
         color: density === 'thunderstorm' ? 0xb0e0e6 : 0xa4d4f2,
-        size: density === 'light' ? 0.22 : 0.36,
+        size: density === 'light' ? 0.22 : 0.35,
         transparent: true,
         opacity: density === 'light' ? 0.55 : 0.8,
       });
@@ -1373,6 +1546,104 @@ export function ThreeKeralaWorld({
         scene.remove(rainParticles);
         rainParticles.geometry.dispose();
         rainParticles = null;
+      }
+    }
+
+    // Creates authentic ground rain droplet splashes and surface ripples
+    function createRainSplashes(density: 'light' | 'monsoon' | 'thunderstorm') {
+      removeRainSplashes();
+      const count = density === 'light' ? 240 : density === 'monsoon' ? 480 : 700;
+      const splashGeo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      splashLifetimes = new Float32Array(count);
+      splashOriginalX = new Float32Array(count);
+      splashOriginalZ = new Float32Array(count);
+
+      for (let i = 0; i < count; i++) {
+        const rx = (Math.random() - 0.5) * 85;
+        const rz = (Math.random() - 0.5) * 85;
+        splashOriginalX[i] = rx;
+        splashOriginalZ[i] = rz;
+        splashLifetimes[i] = Math.random();
+
+        pos[i * 3] = rx;
+        pos[i * 3 + 1] = 0.05 + Math.random() * 0.12;
+        pos[i * 3 + 2] = rz;
+      }
+
+      splashGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const splashMat = new THREE.PointsMaterial({
+        color: density === 'thunderstorm' ? 0xbae6fd : 0xe0f2fe,
+        size: density === 'light' ? 0.32 : 0.52,
+        transparent: true,
+        opacity: density === 'light' ? 0.45 : 0.72,
+        blending: THREE.AdditiveBlending,
+      });
+      rainSplashes = new THREE.Points(splashGeo, splashMat);
+      scene.add(rainSplashes);
+    }
+
+    function removeRainSplashes() {
+      if (rainSplashes) {
+        scene.remove(rainSplashes);
+        rainSplashes.geometry.dispose();
+        rainSplashes = null;
+        splashLifetimes = null;
+        splashOriginalX = null;
+        splashOriginalZ = null;
+      }
+    }
+
+    // Creates horizontal soft atmospheric drifting mist/fog overlays
+    function createFogOverlays() {
+      removeFogOverlays();
+      fogOverlaysGroup = new THREE.Group();
+      fogPlanes.length = 0;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d')!;
+      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0, 'rgba(235, 245, 252, 0.42)');
+      grad.addColorStop(0.5, 'rgba(215, 235, 245, 0.22)');
+      grad.addColorStop(1, 'rgba(200, 225, 240, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+
+      const mistTex = new THREE.CanvasTexture(canvas);
+      const mistMat = new THREE.MeshBasicMaterial({
+        map: mistTex,
+        transparent: true,
+        opacity: 0.36,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      });
+
+      for (let i = 0; i < 16; i++) {
+        const size = 65 + Math.random() * 45;
+        const pMesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mistMat);
+        pMesh.rotation.x = -Math.PI / 2;
+        const py = 1.3 + Math.random() * 3.4;
+        const px = (Math.random() - 0.5) * 320;
+        const pz = (Math.random() - 0.5) * 320;
+        pMesh.position.set(px, py, pz);
+        fogOverlaysGroup.add(pMesh);
+        fogPlanes.push({
+          mesh: pMesh,
+          baseSpeed: 0.8 + Math.random() * 1.6,
+          baseY: py,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+      scene.add(fogOverlaysGroup);
+    }
+
+    function removeFogOverlays() {
+      if (fogOverlaysGroup) {
+        scene.remove(fogOverlaysGroup);
+        fogOverlaysGroup = null;
+        fogPlanes.length = 0;
       }
     }
 
@@ -1424,6 +1695,8 @@ export function ThreeKeralaWorld({
 
       if (mode === 'rainbow') {
         removeRain();
+        removeRainSplashes();
+        removeFogOverlays();
         createRainbow();
         scene.fog = new THREE.FogExp2(0x93c5fd, 0.004);
         scene.background = new THREE.Color(0x60a5fa);
@@ -1437,6 +1710,8 @@ export function ThreeKeralaWorld({
 
       if (mode === 'sunny') {
         removeRain();
+        removeRainSplashes();
+        removeFogOverlays();
         scene.fog = new THREE.FogExp2(0x86efac, 0.0035);
         scene.background = new THREE.Color(0x7dd3fc);
         sunLight.intensity = 1.65;
@@ -1445,6 +1720,8 @@ export function ThreeKeralaWorld({
         windSwayMultiplier = 1.0;
       } else if (mode === 'cloudy') {
         removeRain();
+        removeRainSplashes();
+        removeFogOverlays();
         scene.fog = new THREE.FogExp2(0x93c5fd, 0.006);
         scene.background = new THREE.Color(0x94b4c4);
         sunLight.intensity = 1.3;
@@ -1453,6 +1730,8 @@ export function ThreeKeralaWorld({
         windSwayMultiplier = 1.2;
       } else if (mode === 'overcast') {
         removeRain();
+        removeRainSplashes();
+        removeFogOverlays();
         scene.fog = new THREE.FogExp2(0x64748b, 0.011);
         scene.background = new THREE.Color(0x64748b);
         sunLight.intensity = 0.85;
@@ -1460,7 +1739,9 @@ export function ThreeKeralaWorld({
         ambientLight.color.setHex(0x94a3b8);
         windSwayMultiplier = 1.5;
       } else if (mode === 'light_rain') {
+        removeFogOverlays();
         createRain('light');
+        createRainSplashes('light');
         scene.fog = new THREE.FogExp2(0x52606d, 0.012);
         scene.background = new THREE.Color(0x52606d);
         sunLight.intensity = 0.7;
@@ -1468,7 +1749,9 @@ export function ThreeKeralaWorld({
         ambientLight.color.setHex(0x778899);
         windSwayMultiplier = 1.6;
       } else if (mode === 'monsoon') {
+        removeFogOverlays();
         createRain('monsoon');
+        createRainSplashes('monsoon');
         scene.fog = new THREE.FogExp2(0x3e5258, 0.017);
         scene.background = new THREE.Color(0x3e5258);
         sunLight.intensity = 0.45;
@@ -1476,7 +1759,9 @@ export function ThreeKeralaWorld({
         ambientLight.color.setHex(0x64748b);
         windSwayMultiplier = 2.4;
       } else if (mode === 'thunderstorm') {
+        removeFogOverlays();
         createRain('thunderstorm');
+        createRainSplashes('thunderstorm');
         scene.fog = new THREE.FogExp2(0x1e272c, 0.021);
         scene.background = new THREE.Color(0x1e272c);
         sunLight.intensity = 0.3;
@@ -1486,6 +1771,8 @@ export function ThreeKeralaWorld({
         nextLightningTime = performance.now() + 4000;
       } else if (mode === 'fog') {
         removeRain();
+        removeRainSplashes();
+        createFogOverlays();
         scene.fog = new THREE.FogExp2(0xa8bcc2, 0.022);
         scene.background = new THREE.Color(0xa0b4ba);
         sunLight.intensity = 0.8;
@@ -1494,6 +1781,8 @@ export function ThreeKeralaWorld({
         windSwayMultiplier = 0.8;
       } else if (mode === 'morning') {
         removeRain();
+        removeRainSplashes();
+        createFogOverlays();
         scene.fog = new THREE.FogExp2(0xc4e2e8, 0.009);
         scene.background = new THREE.Color(0xb2dbe2);
         sunLight.intensity = 1.15;
@@ -1502,6 +1791,8 @@ export function ThreeKeralaWorld({
         windSwayMultiplier = 0.9;
       } else if (mode === 'evening') {
         removeRain();
+        removeRainSplashes();
+        removeFogOverlays();
         scene.fog = new THREE.FogExp2(0x995e38, 0.007);
         scene.background = new THREE.Color(0xd67d4b);
         sunLight.intensity = 1.35;
@@ -1543,8 +1834,22 @@ export function ThreeKeralaWorld({
     applyWeather(weather);
     applyTimeOfDay(timeOfDay);
 
-    // 12. CONTROLLER & 360° ROTATION SYSTEM
+    // 12. CONTROLLER & 360° ROTATION & DRIVING VIEW SYSTEM
     const keys: Record<string, boolean> = {};
+
+    // Driving View Mode: 'exterior' (Close Chase Cam) vs 'interior' (First-Person Cockpit / Cabin View)
+    let driveViewMode: 'exterior' | 'interior' = 'exterior';
+    let interiorHeadYaw = 0;
+    let interiorHeadPitch = 0;
+    let camZoomFactor = 1.0; // Interactive mouse wheel zoom
+
+    function toggleDriveViewMode() {
+      driveViewMode = driveViewMode === 'exterior' ? 'interior' : 'exterior';
+      interiorHeadYaw = 0;
+      interiorHeadPitch = 0;
+      soundSynth.playSound('bell');
+      window.dispatchEvent(new CustomEvent('keralaCameraViewChanged', { detail: { mode: driveViewMode } }));
+    }
 
     // 360° Camera Orbit & Vehicle Turn System
     let camAzimuth = 0;
@@ -1586,8 +1891,20 @@ export function ThreeKeralaWorld({
     }
 
     function resetCamera() {
-      camAzimuth = 0;
+      if (playerState.inVehicle) {
+        const curV = vehicles.find(v => v.isPlayerVehicle && v.type === playerState.vehicleType);
+        if (curV) {
+          camAzimuth = curV.mesh.rotation.y + Math.PI;
+        } else {
+          camAzimuth = 0;
+        }
+      } else {
+        camAzimuth = 0;
+      }
       camElevation = 0;
+      interiorHeadYaw = 0;
+      interiorHeadPitch = 0;
+      camZoomFactor = 1.0;
       isSpinning360Cam = false;
       soundSynth.playSound('teaglass');
     }
@@ -1603,6 +1920,9 @@ export function ThreeKeralaWorld({
       } else if (k === 'v') {
         // Toggle vehicle between Auto and Luxury Coach Bus
         toggleVehicleState(playerState.inVehicle ? (playerState.vehicleType === 'bus' ? 'auto' : 'bus') : 'bus');
+      } else if (k === 'c') {
+        // Toggle Driving View between Interior Cockpit and Exterior Chase
+        toggleDriveViewMode();
       } else if (k === 'h') {
         if (playerState.inVehicle && playerState.vehicleType === 'auto') soundSynth.playSound('autohorn');
         else soundSynth.playSound('airhorn');
@@ -1633,20 +1953,22 @@ export function ThreeKeralaWorld({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    // Window listeners for custom 360 events from HUD buttons
+    // Window listeners for custom 360 & camera view events from HUD buttons
     const handle360CamEvent = () => trigger360Camera();
     const handle360TurnEvent = () => trigger360Turn();
     const handleRotateLeftEvent = () => rotateCameraBy(Math.PI / 4);
     const handleRotateRightEvent = () => rotateCameraBy(-Math.PI / 4);
     const handleResetCamEvent = () => resetCamera();
+    const handleToggleCamViewEvent = () => toggleDriveViewMode();
 
     window.addEventListener('kerala360Camera', handle360CamEvent);
     window.addEventListener('kerala360Turn', handle360TurnEvent);
     window.addEventListener('keralaRotateCamLeft', handleRotateLeftEvent);
     window.addEventListener('keralaRotateCamRight', handleRotateRightEvent);
     window.addEventListener('keralaResetCamera', handleResetCamEvent);
+    window.addEventListener('keralaToggleCameraView', handleToggleCamViewEvent);
 
-    // Mouse & Touch 360° Drag Orbit on 3D Viewport
+    // Mouse & Touch 360° Drag Orbit on 3D Viewport / Cockpit Head-Look
     let isPointerDragging = false;
     let lastPointerX = 0;
     let lastPointerY = 0;
@@ -1666,9 +1988,15 @@ export function ThreeKeralaWorld({
       lastPointerX = e.clientX;
       lastPointerY = e.clientY;
 
-      camAzimuth -= dx * 0.007;
-      camElevation = Math.max(-0.15, Math.min(0.75, camElevation + dy * 0.005));
-      isSpinning360Cam = false;
+      if (driveViewMode === 'interior' && playerState.inVehicle) {
+        // Cockpit free head-look (looking left/right at side mirrors and up/down)
+        interiorHeadYaw = Math.max(-1.4, Math.min(1.4, interiorHeadYaw - dx * 0.006));
+        interiorHeadPitch = Math.max(-0.55, Math.min(0.55, interiorHeadPitch - dy * 0.005));
+      } else {
+        camAzimuth -= dx * 0.007;
+        camElevation = Math.max(-0.15, Math.min(0.75, camElevation + dy * 0.005));
+        isSpinning360Cam = false;
+      }
     }
 
     function handlePointerUp() {
@@ -1676,10 +2004,17 @@ export function ThreeKeralaWorld({
       if (container) container.style.cursor = 'grab';
     }
 
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault();
+      // Interactive distance zoom: scroll up gets closer, scroll down zooms out
+      camZoomFactor = Math.max(0.5, Math.min(1.8, camZoomFactor + e.deltaY * 0.0008));
+    }
+
     container.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
     container.addEventListener('dblclick', resetCamera);
+    container.addEventListener('wheel', handleWheel, { passive: false });
     if (container) container.style.cursor = 'grab';
 
     function toggleVehicleState(preferredType?: 'auto' | 'bus' | 'tractor' | 'jeep' | 'boat' | 'mustang' | 'tipper') {
@@ -1728,6 +2063,34 @@ export function ThreeKeralaWorld({
         return;
       }
 
+      // Check if near Farmlands harvest plots
+      for (const p of farmlands.plots) {
+        const d = player.position.distanceTo(new THREE.Vector3(p.coords.x, 0, p.coords.z));
+        if (d < 8.5) {
+          soundSynth.playSound('bell');
+          window.dispatchEvent(new CustomEvent('keralaOpenLifeModal', { detail: { tab: 'farms', plotId: p.id } }));
+          return;
+        }
+      }
+
+      // Check if near Places of Worship (Masjid, Temple, Church)
+      for (const pl of prayerPlaces.places) {
+        const d = player.position.distanceTo(new THREE.Vector3(pl.coords.x, 0, pl.coords.z));
+        if (d < 9.5) {
+          soundSynth.playSound('bell');
+          window.dispatchEvent(new CustomEvent('keralaOpenLifeModal', { detail: { tab: 'faith', placeId: pl.id } }));
+          return;
+        }
+      }
+
+      // Check if near Player House Wardrobe
+      const distToHomeWardrobe = player.position.distanceTo(playerHome.getWardrobePosition());
+      if (distToHomeWardrobe < 6.0) {
+        soundSynth.playSound('bell');
+        window.dispatchEvent(new CustomEvent('keralaOpenLifeModal', { detail: { tab: 'wardrobe' } }));
+        return;
+      }
+
       let nearestNPC: NPCData | null = null;
       let minDist = 7.0;
 
@@ -1747,6 +2110,34 @@ export function ThreeKeralaWorld({
         }
       }
     }
+
+    // Tea Drinking & Food Eating Animation
+    let isEatingOrDrinking = false;
+    let eatDrinkTimer = 0;
+    const teaCupMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.045, 0.16, 8),
+      new THREE.MeshPhongMaterial({ color: 0xd97706, transparent: true, opacity: 0.85 })
+    );
+
+    const handleEatDrinkEvent = () => {
+      if (isEatingOrDrinking) return;
+      isEatingOrDrinking = true;
+      eatDrinkTimer = 2.5;
+      playerRig.elbowR.add(teaCupMesh);
+      teaCupMesh.position.set(0, -0.22, 0.1);
+      soundSynth.playSound('teaglass');
+    };
+    window.addEventListener('keralaEatOrDrink', handleEatDrinkEvent);
+
+    const handleBuildHouseStageEvent = (e: any) => {
+      if (e.detail?.stage !== undefined && e.detail?.model) {
+        playerHome.setConstructionStage(e.detail.stage, e.detail.model);
+        if (e.detail.coords) {
+          playerHome.group.position.set(e.detail.coords.x, 0, e.detail.coords.z);
+        }
+      }
+    };
+    window.addEventListener('keralaBuildHouseStage', handleBuildHouseStageEvent);
 
     // World API Exposure
     worldApiRef.current = {
@@ -1806,7 +2197,10 @@ export function ThreeKeralaWorld({
         checkInteractions();
       },
       triggerInteract: checkInteractions,
-      setPlayerSkin: (model: 'unni' | 'babu') => setPlayerSkin(model),
+      setPlayerSkin: (outfit: 'babu' | 'unni' | 'kasavu' | 'driver' | 'sevens') => setPlayerSkin(outfit),
+      buildHouseStage: (stage: number, model: HouseModelType) => {
+        playerHome.setConstructionStage(stage, model);
+      },
     };
 
     // 13. ANIMATION LOOP
@@ -1830,6 +2224,36 @@ export function ThreeKeralaWorld({
       // Moving highway traffic & living animal behaviors (cows, dogs, chickens)
       livingWorld.update(now, dt);
 
+      // Sevens Arena Puthanathani turf football physics & pool swimming detection
+      const isSwimming = sevensArena.updateAnimation(dt, player.position, keys[' '] || false, () => {
+        soundSynth.playSound('whistle');
+        window.dispatchEvent(new CustomEvent('keralaGoalScored'));
+      });
+
+      if (isSwimming && !playerState.inVehicle) {
+        player.position.y = -0.32 + Math.sin(now * 0.005) * 0.05;
+        playerRig.root.rotation.x = 0.55; // Horizontal swimming stroke posture
+      } else if (playerState.isGrounded && !playerState.inVehicle) {
+        playerRig.root.rotation.x = 0;
+      }
+
+      // Farmlands & Prayer places animations
+      farmlands.updateAnimation(now);
+      prayerPlaces.updateAnimation(now);
+
+      // Tea Drinking / Eating animation
+      if (isEatingOrDrinking) {
+        eatDrinkTimer -= dt;
+        playerRig.shoulderR.rotation.x = -1.5;
+        playerRig.elbowR.rotation.x = -0.8;
+        if (eatDrinkTimer <= 0) {
+          isEatingOrDrinking = false;
+          playerRig.elbowR.remove(teaCupMesh);
+          playerRig.shoulderR.rotation.x = 0;
+          playerRig.elbowR.rotation.x = 0;
+        }
+      }
+
       // Wind sway in foliage with weather multiplier
       animatedFlora.forEach(f => {
         const windSway = Math.sin(now * 0.0018 * f.speed * windSwayMultiplier + f.phase) * windSwayMultiplier;
@@ -1851,11 +2275,46 @@ export function ThreeKeralaWorld({
           pos[i] -= rainFallSpeed;
           pos[i - 1] += drift;
           if (pos[i] < 0) {
-            pos[i] = 48;
-            pos[i - 1] = (Math.random() - 0.5) * 220;
+            pos[i] = 45;
+            pos[i - 1] = (Math.random() - 0.5) * 200;
           }
         }
         rainParticles.geometry.attributes.position.needsUpdate = true;
+      }
+
+      // Ground Rain Splashes & Surface Ripple Bursts Visual Feedback
+      if (rainSplashes && splashLifetimes && splashOriginalX && splashOriginalZ) {
+        const pos = rainSplashes.geometry.attributes.position.array as Float32Array;
+        const centerPos = playerState.inVehicle
+          ? (playerState.vehicleType === 'bus' ? playerBusMesh.position : playerAuto.mesh.position)
+          : player.position;
+        const splashRate = dt * (activeWeatherMode === 'thunderstorm' ? 3.6 : 2.5);
+
+        for (let i = 0; i < splashLifetimes.length; i++) {
+          splashLifetimes[i] += splashRate;
+          if (splashLifetimes[i] > 1.0) {
+            splashLifetimes[i] = 0;
+            splashOriginalX[i] = (Math.random() - 0.5) * 85;
+            splashOriginalZ[i] = (Math.random() - 0.5) * 85;
+          }
+
+          const p = splashLifetimes[i];
+          const yBounce = Math.sin(p * Math.PI) * 0.28;
+          pos[i * 3] = centerPos.x + splashOriginalX[i] + Math.sin(i * 1.5) * p * 0.35;
+          pos[i * 3 + 1] = 0.06 + yBounce;
+          pos[i * 3 + 2] = centerPos.z + splashOriginalZ[i] + Math.cos(i * 1.5) * p * 0.35;
+        }
+        rainSplashes.geometry.attributes.position.needsUpdate = true;
+      }
+
+      // Atmospheric Drifting Volumetric Fog Overlays Visual Feedback
+      if (fogOverlaysGroup && fogPlanes.length > 0) {
+        const windDrift = (activeWeatherMode === 'fog' ? 1.0 : 1.6) * dt;
+        fogPlanes.forEach((fp) => {
+          fp.mesh.position.x += fp.baseSpeed * windDrift;
+          fp.mesh.position.y = fp.baseY + Math.sin(now * 0.001 + fp.phase) * 0.35;
+          if (fp.mesh.position.x > 180) fp.mesh.position.x = -180;
+        });
       }
 
       // Thunderstorm Lightning Flashes & Rumbling Thunder
@@ -2102,57 +2561,165 @@ export function ThreeKeralaWorld({
         }
       }
 
-      // Camera follow (Dynamic 360° Polar Orbit Framing for Walking vs Auto Rickshaw vs 12m Luxury Coach Bus)
-      let focusPos = player.position;
-      let baseDist = 18;
-      let baseHeight = 11;
-      let lookHeight = 2.0;
+      // Reusable scratch vectors to avoid per-frame GC allocations for silky-smooth 60fps
+      const _scratchEye = new THREE.Vector3();
+      const _scratchLook = new THREE.Vector3();
+      const _scratchTargetCam = new THREE.Vector3();
 
-      if (playerState.inVehicle) {
+      if (driveViewMode === 'interior' && playerState.inVehicle) {
+        // =========================================================================
+        // 🏎️ INTERIOR VIEW: REAL FIRST-PERSON DRIVER'S COCKPIT / CABIN VIEW
+        // =========================================================================
+        let activeMesh: THREE.Object3D = playerAuto.mesh;
+        let eyeLocalX = 0;
+        let eyeLocalY = 1.35;
+        let eyeLocalZ = 0.28;
+        let lookTargetDist = 12.0;
+
         if (playerState.vehicleType === 'bus') {
-          focusPos = playerBusMesh.position;
-          baseDist = 26;
-          baseHeight = 15;
-          lookHeight = 3.2;
+          activeMesh = playerBusMesh;
+          // Right Hand Drive (RHD in India): Elevated driver cockpit behind panoramic windshield
+          eyeLocalX = 0.72;
+          eyeLocalY = 2.15;
+          eyeLocalZ = 4.65;
+          lookTargetDist = 18.0;
+        } else if (playerState.vehicleType === 'auto') {
+          activeMesh = playerAuto.mesh;
+          // Center bucket driver seat looking past handlebars & meter console
+          eyeLocalX = 0.0;
+          eyeLocalY = 1.35;
+          eyeLocalZ = 0.28;
+          lookTargetDist = 12.0;
         } else if (playerState.vehicleType === 'tipper') {
-          focusPos = playerTipperMesh.position;
-          baseDist = 18;
-          baseHeight = 10;
-          lookHeight = 1.9;
+          activeMesh = playerTipperMesh;
+          eyeLocalX = 0.72;
+          eyeLocalY = 2.35;
+          eyeLocalZ = 1.65;
+          lookTargetDist = 16.0;
         } else if (playerState.vehicleType === 'mustang') {
-          focusPos = playerMustangMesh.position;
-          baseDist = 16;
-          baseHeight = 8.5;
-          lookHeight = 1.4;
-        } else {
-          focusPos = playerAuto.mesh.position;
-          baseDist = 18;
-          baseHeight = 11;
-          lookHeight = 2.0;
+          activeMesh = playerMustangMesh;
+          eyeLocalX = -0.42;
+          eyeLocalY = 1.15;
+          eyeLocalZ = -0.15;
+          lookTargetDist = 14.0;
+        } else if (playerState.vehicleType === 'tractor') {
+          activeMesh = playerTractorMesh;
+          eyeLocalX = 0.0;
+          eyeLocalY = 1.82;
+          eyeLocalZ = -0.4;
+          lookTargetDist = 12.0;
+        } else if (playerState.vehicleType === 'jeep') {
+          activeMesh = playerJeepMesh;
+          eyeLocalX = 0.48;
+          eyeLocalY = 1.65;
+          eyeLocalZ = 0.1;
+          lookTargetDist = 14.0;
+        } else if (playerState.vehicleType === 'boat') {
+          activeMesh = playerBoatMesh;
+          eyeLocalX = 0.0;
+          eyeLocalY = 1.35;
+          eyeLocalZ = 0.4;
+          lookTargetDist = 14.0;
         }
-      }
 
-      // Smooth cinematic 360° camera orbit animation
-      if (isSpinning360Cam) {
-        spinCamProgress += dt / spinCamDuration;
-        const p = Math.min(1.0, spinCamProgress);
-        // Smooth cubic easeInOut
-        const ease = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-        camAzimuth = spinCamStartAngle + ease * Math.PI * 2;
-        if (p >= 1.0) {
-          isSpinning360Cam = false;
+        _scratchEye.set(eyeLocalX, eyeLocalY, eyeLocalZ);
+        activeMesh.localToWorld(_scratchEye);
+
+        // Realistic engine vibration and road bump physics
+        const isDriving = keys['w'] || keys['s'] || keys['arrowup'] || keys['arrowdown'];
+        const engineHum = Math.sin(now * 0.02) * (isDriving ? 0.012 : 0.003);
+        const engineSway = Math.cos(now * 0.015) * (isDriving ? 0.006 : 0.002);
+        _scratchEye.y += engineHum;
+        _scratchEye.x += engineSway;
+
+        // Interactive cockpit head-look (drag to look around side mirrors & traffic)
+        const forwardZ = Math.cos(interiorHeadYaw) * lookTargetDist;
+        const forwardX = Math.sin(interiorHeadYaw) * lookTargetDist;
+        const forwardY = Math.sin(interiorHeadPitch) * lookTargetDist;
+        _scratchLook.set(eyeLocalX + forwardX, eyeLocalY + forwardY - 0.08, eyeLocalZ + forwardZ);
+        activeMesh.localToWorld(_scratchLook);
+
+        camera.position.copy(_scratchEye);
+        camera.lookAt(_scratchLook.x, _scratchLook.y, _scratchLook.z);
+
+        // Subtle dynamic body roll tilt during steering
+        if (keys['a'] || keys['arrowleft']) {
+          camera.rotateZ(0.025);
+        } else if (keys['d'] || keys['arrowright']) {
+          camera.rotateZ(-0.025);
         }
+      } else {
+        // =========================================================================
+        // 🎥 EXTERIOR VIEW: TIGHT THIRD-PERSON CHASE CAMERA
+        // DECREASED distances for bus, auto, and all vehicles!
+        // =========================================================================
+        let focusPos = player.position;
+        let baseDist = 8.5 * camZoomFactor;
+        let baseHeight = 3.4;
+        let lookHeight = 1.4;
+
+        if (playerState.inVehicle) {
+          if (playerState.vehicleType === 'bus') {
+            focusPos = playerBusMesh.position;
+            // DECREASED from 26m / 15m to tight, cinematic 12.8m / 4.6m!
+            baseDist = 12.8 * camZoomFactor;
+            baseHeight = 4.6;
+            lookHeight = 2.2;
+          } else if (playerState.vehicleType === 'auto') {
+            focusPos = playerAuto.mesh.position;
+            // DECREASED from 18m / 11m to close, responsive 7.5m / 2.9m!
+            baseDist = 7.5 * camZoomFactor;
+            baseHeight = 2.9;
+            lookHeight = 1.3;
+          } else if (playerState.vehicleType === 'tipper') {
+            focusPos = playerTipperMesh.position;
+            baseDist = 10.5 * camZoomFactor;
+            baseHeight = 4.2;
+            lookHeight = 1.8;
+          } else if (playerState.vehicleType === 'mustang') {
+            focusPos = playerMustangMesh.position;
+            baseDist = 7.6 * camZoomFactor;
+            baseHeight = 2.6;
+            lookHeight = 1.1;
+          } else if (playerState.vehicleType === 'tractor') {
+            focusPos = playerTractorMesh.position;
+            baseDist = 8.0 * camZoomFactor;
+            baseHeight = 3.4;
+            lookHeight = 1.4;
+          } else if (playerState.vehicleType === 'jeep') {
+            focusPos = playerJeepMesh.position;
+            baseDist = 8.2 * camZoomFactor;
+            baseHeight = 3.2;
+            lookHeight = 1.4;
+          } else if (playerState.vehicleType === 'boat') {
+            focusPos = playerBoatMesh.position;
+            baseDist = 9.0 * camZoomFactor;
+            baseHeight = 3.6;
+            lookHeight = 1.4;
+          }
+        }
+
+        // Smooth cinematic 360° camera orbit animation
+        if (isSpinning360Cam) {
+          spinCamProgress += dt / spinCamDuration;
+          const p = Math.min(1.0, spinCamProgress);
+          const ease = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+          camAzimuth = spinCamStartAngle + ease * Math.PI * 2;
+          if (p >= 1.0) {
+            isSpinning360Cam = false;
+          }
+        }
+
+        // 360° Spherical/Polar coordinates to Cartesian 3D offset
+        const hDist = baseDist * Math.cos(camElevation);
+        const camX = Math.sin(camAzimuth) * hDist;
+        const camY = baseHeight + Math.sin(camElevation) * (baseDist * 0.7);
+        const camZ = Math.cos(camAzimuth) * hDist;
+
+        _scratchTargetCam.set(focusPos.x + camX, focusPos.y + camY, focusPos.z + camZ);
+        camera.position.lerp(_scratchTargetCam, 0.12);
+        camera.lookAt(focusPos.x, focusPos.y + lookHeight, focusPos.z);
       }
-
-      // 360° Spherical/Polar coordinates to Cartesian 3D offset
-      const hDist = baseDist * Math.cos(camElevation);
-      const camX = Math.sin(camAzimuth) * hDist;
-      const camY = baseHeight + Math.sin(camElevation) * (baseDist * 0.7);
-      const camZ = Math.cos(camAzimuth) * hDist;
-
-      const targetCam = new THREE.Vector3(focusPos.x + camX, focusPos.y + camY, focusPos.z + camZ);
-      camera.position.lerp(targetCam, 0.08);
-      camera.lookAt(focusPos.x, focusPos.y + lookHeight, focusPos.z);
 
       renderer.render(scene, camera);
     }
@@ -2180,10 +2747,18 @@ export function ThreeKeralaWorld({
       window.removeEventListener('keralaRotateCamLeft', handleRotateLeftEvent);
       window.removeEventListener('keralaRotateCamRight', handleRotateRightEvent);
       window.removeEventListener('keralaResetCamera', handleResetCamEvent);
+      window.removeEventListener('keralaToggleCameraView', handleToggleCamViewEvent);
+      window.removeEventListener('keralaEatOrDrink', handleEatDrinkEvent);
+      window.removeEventListener('keralaBuildHouseStage', handleBuildHouseStageEvent);
       container?.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
       container?.removeEventListener('dblclick', resetCamera);
+      container?.removeEventListener('wheel', handleWheel);
+      removeRain();
+      removeRainSplashes();
+      removeFogOverlays();
+      removeRainbow();
       if (renderer.domElement && renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }

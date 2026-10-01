@@ -845,7 +845,69 @@ export function buildLuxuryCoachBus(): THREE.Group {
     bus.add(fogGroup);
   });
 
-  // 6. REAR BLACK STEEL ACCESS LADDER ON LEFT SIDE (Image 3!)
+  // 6. DETAILED DRIVER'S CABIN INTERIOR (RHD Kerala Tourist Bus Cockpit)
+  const cabinGroup = new THREE.Group();
+  const dashMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+  const gaugeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+  const seatFabricMat = new THREE.MeshLambertMaterial({ color: 0x0f172a });
+  const steeringMat = new THREE.MeshLambertMaterial({ color: 0x020617 });
+
+  // Wide Driver Dashboard Console across front
+  const dashboard = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.42, 1.1), dashMat);
+  dashboard.position.set(0, 1.48, length / 2 - 0.7);
+  cabinGroup.add(dashboard);
+
+  // Curved Instrument Binnacle over steering column (Right side)
+  const binnacle = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.22, 0.45), dashMat);
+  binnacle.position.set(0.72, 1.76, length / 2 - 0.75);
+  cabinGroup.add(binnacle);
+
+  // Glowing Speedometer & Digital Display Cluster
+  const gaugeCluster = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.14), gaugeMat);
+  gaugeCluster.position.set(0.72, 1.76, length / 2 - 0.98);
+  gaugeCluster.rotation.y = Math.PI;
+  cabinGroup.add(gaugeCluster);
+
+  // Steering Column & Large 2-Spoke Bus Steering Wheel (Right side)
+  const steerColumn = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.65, 12), steeringMat);
+  steerColumn.position.set(0.72, 1.58, length / 2 - 1.05);
+  steerColumn.rotation.x = 0.55;
+  cabinGroup.add(steerColumn);
+
+  const steerWheel = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.03, 10, 24), steeringMat);
+  steerWheel.position.set(0.72, 1.82, length / 2 - 1.25);
+  steerWheel.rotation.x = -1.0;
+  cabinGroup.add(steerWheel);
+
+  const steerCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.04, 12), steeringMat);
+  steerCenter.position.set(0.72, 1.82, length / 2 - 1.25);
+  steerCenter.rotation.x = -1.0;
+  cabinGroup.add(steerCenter);
+
+  // Ergonomic High-Back Driver Pneumatic Seat with Headrest
+  const dSeatBase = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.35, 0.6), seatFabricMat);
+  dSeatBase.position.set(0.72, 1.05, length / 2 - 1.55);
+  const dSeatBack = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.85, 0.15), seatFabricMat);
+  dSeatBack.position.set(0.72, 1.55, length / 2 - 1.8);
+  const dHeadrest = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.22, 0.12), seatFabricMat);
+  dHeadrest.position.set(0.72, 2.05, length / 2 - 1.82);
+  cabinGroup.add(dSeatBase, dSeatBack, dHeadrest);
+
+  // Gear Shift Lever on Left of Driver
+  const gearStick = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 8), steeringMat);
+  gearStick.position.set(0.32, 1.2, length / 2 - 1.4);
+  const gearKnob = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+  gearKnob.position.set(0.32, 1.42, length / 2 - 1.4);
+  cabinGroup.add(gearStick, gearKnob);
+
+  // Front Passenger Entry Stairs Well on Left side
+  const stairWell = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.4, 1.0), dashMat);
+  stairWell.position.set(-0.85, 0.8, length / 2 - 1.4);
+  cabinGroup.add(stairWell);
+
+  bus.add(cabinGroup);
+
+  // 7. REAR BLACK STEEL ACCESS LADDER ON LEFT SIDE (Image 3!)
   // Full-height ladder mounted on the left side of the rear extending to the roof
   const ladderGroup = new THREE.Group();
   const ladderMat = new THREE.MeshLambertMaterial({ color: 0x09090b });

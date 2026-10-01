@@ -212,14 +212,96 @@ function createGangwayBellowsTexture(): THREE.CanvasTexture {
 
 export interface MetroTrainOptions {
   cars?: number; // 2 or 3 car trainset
+  speed?: number; // Speed multiplier
+  viaductY?: number; // Viaduct height (default 9.5)
+}
+
+export interface TrackPoint {
+  position: THREE.Vector3;
+  tangent: THREE.Vector3;
+  yaw: number;
+  curvature: number; // 0 on straights, >0 on curves (for inward cant banking)
+}
+
+// -----------------------------------------------------------------------------
+// Evaluates exact position, tangent, heading, and curvature on the 734m loop track
+// -----------------------------------------------------------------------------
+export function evaluateMetroTrack(s: number, viaductY: number = 9.5): TrackPoint {
+  const straightL = 320;
+  const curveR = 15;
+  const curveL = Math.PI * curveR; // ~47.1238898m
+  const totalP = straightL * 2 + curveL * 2; // ~734.2477796m
+
+  // Normalize s around closed circuit
+  const normS = ((s % totalP) + totalP) % totalP;
+  const trackY = viaductY + 0.72; // Deck height + rail crown
+
+  let px = 0;
+  let pz = 0;
+  let tx = 0;
+  let tz = 0;
+  let yaw = 0;
+  let curvature = 0;
+
+  if (normS < straightL) {
+    // 1. North Straight Track (cruising East along Z = -15 from X = -160 to +160)
+    px = -160 + normS;
+    pz = -15;
+    tx = 1;
+    tz = 0;
+    yaw = Math.PI / 2;
+    curvature = 0;
+  } else if (normS < straightL + curveL) {
+    // 2. East Sweeping 180° Curve (attaching North track at Z = -15 across to South track at Z = +15)
+    const u = normS - straightL;
+    const phi = -Math.PI / 2 + u / curveR; // sweeps from -PI/2 to +PI/2
+    px = 160 + Math.cos(phi) * curveR;
+    pz = Math.sin(phi) * curveR;
+    tx = -Math.sin(phi);
+    tz = Math.cos(phi);
+    yaw = Math.PI / 2 - u / curveR;
+    curvature = 1 / curveR;
+  } else if (normS < straightL * 2 + curveL) {
+    // 3. South Straight Track on the OTHER SIDE (cruising West along Z = +15 from X = +160 to -160)
+    const u = normS - (straightL + curveL);
+    px = 160 - u;
+    pz = 15;
+    tx = -1;
+    tz = 0;
+    yaw = -Math.PI / 2;
+    curvature = 0;
+  } else {
+    // 4. West Sweeping 180° Curve (attaching South track at Z = +15 back across to North track at Z = -15)
+    const u = normS - (straightL * 2 + curveL);
+    const phi = Math.PI / 2 + u / curveR; // sweeps from +PI/2 to +3PI/2
+    px = -160 + Math.cos(phi) * curveR;
+    pz = Math.sin(phi) * curveR;
+    tx = -Math.sin(phi);
+    tz = Math.cos(phi);
+    yaw = -Math.PI / 2 - u / curveR;
+    curvature = 1 / curveR;
+  }
+
+  return {
+    position: new THREE.Vector3(px, trackY, pz),
+    tangent: new THREE.Vector3(tx, 0, tz),
+    yaw,
+    curvature,
+  };
 }
 
 export function buildPuneMetroTrain(options: MetroTrainOptions = {}): {
   group: THREE.Group;
   leadCar: THREE.Group;
+  trailerCar: THREE.Group;
+  rearCar: THREE.Group;
   update: (time: number) => void;
 } {
   const trainGroup = new THREE.Group();
+  trainGroup.position.set(0, 0, 0);
+  trainGroup.rotation.set(0, 0, 0);
+
+  const viaductY = options.viaductY ?? 9.5;
 
   // -----------------------------------------------------------
   // Materials Palette
@@ -322,11 +404,15 @@ export function buildPuneMetroTrain(options: MetroTrainOptions = {}): {
   const hvacTex = createRoofHVACTexture();
   const hvacMat = new THREE.MeshStandardMaterial({ map: hvacTex, roughness: 0.4, metalness: 0.6 });
 
-  const bellowsTex = createGangwayBellowsTexture();
-  const bellowsMat = new THREE.MeshStandardMaterial({ map: bellowsTex, roughness: 0.8 });
+  const bellowsMat = new THREE.MeshStandardMaterial({
+    color: 0x18181b,
+    roughness: 0.9,
+    metalness: 0.1,
+  });
 
   // -----------------------------------------------------------
   // Helper: Build Metro Wheel Bogie (Two-Axle Running Gear)
+  // Can pivot dynamically relative to car chassis to follow rails!
   // -----------------------------------------------------------
   const createMetroBogie = () => {
     const bogie = new THREE.Group();
@@ -405,7 +491,7 @@ export function buildPuneMetroTrain(options: MetroTrainOptions = {}): {
 
   // -----------------------------------------------------------
   // Helper: Build Full Metro Coach Body (Leading / Trailing / Trailer)
-  // Car length: 24m, Width: 3.1m, Height: 3.6m
+  // Car length: 22.0m, Width: 3.1m, Height: 3.6m
   // -----------------------------------------------------------
   const createMetroCar = (type: 'lead' | 'trailer' | 'rear') => {
     const car = new THREE.Group();
@@ -520,11 +606,14 @@ export function buildPuneMetroTrain(options: MetroTrainOptions = {}): {
     });
 
     // 8. Dual Running Gear Bogies (Z = -6.8m and Z = +6.8m)
-    [-6.8, 6.8].forEach((bz) => {
-      const bogie = createMetroBogie();
-      bogie.position.set(0, 0, bz);
-      car.add(bogie);
-    });
+    // Mounted as independent pivotable assemblies!
+    const bogieFront = createMetroBogie();
+    bogieFront.position.set(0, 0, 6.8);
+    car.add(bogieFront);
+
+    const bogieRear = createMetroBogie();
+    bogieRear.position.set(0, 0, -6.8);
+    car.add(bogieRear);
 
     // 9. Aerodynamic Streamlined Cab Nose (for Leading & Rear Trailing cars)
     if (type === 'lead' || type === 'rear') {
@@ -602,11 +691,24 @@ export function buildPuneMetroTrain(options: MetroTrainOptions = {}): {
       car.add(noseGroup);
     }
 
-    // 10. Inter-Car Flexible Accordion Gangway Bellows (at car rear/connection ends)
-    if (type !== 'lead') {
-      const gangwayFront = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.6, 0.6), bellowsMat);
-      gangwayFront.position.set(0, 2.2, -carLen / 2 - 0.3);
-      car.add(gangwayFront);
+    // 10. Open Gangway Vestibule End Portals (for walk-through connections)
+    const addVestibulePortal = (zPos: number) => {
+      const portalFrame = new THREE.Mesh(new THREE.BoxGeometry(2.35, 2.7, 0.12), blackBeltMat);
+      portalFrame.position.set(0, 2.2, zPos);
+      const portalHole = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.2, 0.14), new THREE.MeshBasicMaterial({ color: 0x09090b }));
+      portalHole.position.set(0, 2.1, zPos);
+      const rubberSeal = new THREE.Mesh(new THREE.BoxGeometry(2.45, 2.8, 0.05), bellowsMat);
+      rubberSeal.position.set(0, 2.2, zPos);
+      car.add(portalFrame, portalHole, rubberSeal);
+    };
+
+    if (type === 'lead') {
+      addVestibulePortal(-carLen / 2);
+    } else if (type === 'trailer') {
+      addVestibulePortal(carLen / 2);
+      addVestibulePortal(-carLen / 2);
+    } else if (type === 'rear') {
+      addVestibulePortal(carLen / 2);
     }
 
     // 11. Low-Profile Aerodynamic Rooftop Pantograph (Mounted strictly on Center Trailer Car)
@@ -646,38 +748,189 @@ export function buildPuneMetroTrain(options: MetroTrainOptions = {}): {
       car.add(pantoGroup);
     }
 
-    return car;
+    return {
+      car,
+      frontBogie: bogieFront,
+      rearBogie: bogieRear,
+      type,
+    };
   };
 
   // -----------------------------------------------------------
-  // Build Complete Metro Trainset (Leading + Trailer + Trailing)
+  // Helper: Build Articulated Accordion Gangway (Vestibule Bellows)
+  // Connects adjacent cars and flexes naturally around curves!
   // -----------------------------------------------------------
-  const carSpacing = 22.8;
+  const createArticulatedGangway = () => {
+    const gw = new THREE.Group();
 
-  // Car 1: Leading Driving Motor Coach (DM)
-  const leadCar = createMetroCar('lead');
-  leadCar.position.set(0, 0, carSpacing);
-  trainGroup.add(leadCar);
+    // 5 Pleated Accordion Bellow Segments
+    const pleatCount = 5;
+    for (let p = 0; p < pleatCount; p++) {
+      const zOffset = (p - (pleatCount - 1) / 2) * 0.16;
+      const pleat = new THREE.Mesh(new THREE.BoxGeometry(2.38, 2.72, 0.11), bellowsMat);
+      pleat.position.set(0, 2.2, zOffset);
+      gw.add(pleat);
+    }
 
-  // Car 2: Center Trailer Coach with Red Z-Pantograph
-  const trailerCar = createMetroCar('trailer');
-  trailerCar.position.set(0, 0, 0);
-  trainGroup.add(trailerCar);
+    // Heavy Underframe Drawbar & Articulated Mechanical Coupler
+    const couplerBar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.2, 0.85), bogieMat);
+    couplerBar.position.set(0, 0.65, 0);
+    const couplerJoint = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.28, 12), chromeMat);
+    couplerJoint.position.set(0, 0.65, 0);
+    gw.add(couplerBar, couplerJoint);
 
-  // Car 3: Trailing Driving Trailer Coach (DT) with Red Marker Lights
-  const rearCar = createMetroCar('rear');
-  rearCar.position.set(0, 0, -carSpacing);
-  trainGroup.add(rearCar);
+    // Gangway treadplate / threshold floor
+    const treadPlate = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 0.8), stainlessSteelMat);
+    treadPlate.position.set(0, 0.85, 0);
+    gw.add(treadPlate);
+
+    return { group: gw };
+  };
+
+  // -----------------------------------------------------------
+  // Build Complete Articulated Metro Trainset
+  // Car 1 (Lead DM) + Gangway 1 + Car 2 (Trailer) + Gangway 2 + Car 3 (Rear DT)
+  // -----------------------------------------------------------
+  const leadCarData = createMetroCar('lead');
+  const trailerCarData = createMetroCar('trailer');
+  const rearCarData = createMetroCar('rear');
+
+  const gangway1 = createArticulatedGangway();
+  const gangway2 = createArticulatedGangway();
+
+  trainGroup.add(leadCarData.car);
+  trainGroup.add(trailerCarData.car);
+  trainGroup.add(rearCarData.car);
+  trainGroup.add(gangway1.group);
+  trainGroup.add(gangway2.group);
+
+  const cars = [leadCarData, trailerCarData, rearCarData];
+  const carLength = 22.0;
+  const carSpacing = 22.8; // Center-to-center distance along track
+  const bogieOffset = 6.8; // Distance from car center to front/rear bogie
+
+  // Helper to update kinematics for all 3 cars and 2 gangways
+  const updateKinematics = (time: number) => {
+    // Metro cruising speed: 16 m/s (~58 km/h)
+    const speed = 0.016;
+    const straightL = 320;
+    const curveR = 15;
+    const curveL = Math.PI * curveR;
+    const totalP = straightL * 2 + curveL * 2;
+
+    const leadS = ((time * speed) % totalP + totalP) % totalP;
+
+    // Evaluate each of the 3 cars independently along the track path!
+    const carPositions: THREE.Vector3[] = [];
+    const carYaws: number[] = [];
+    const carRolls: number[] = [];
+
+    cars.forEach((cData, idx) => {
+      const sCar = leadS - idx * carSpacing;
+
+      // Real train bogie physics: car body sits on two bogies!
+      const pF = evaluateMetroTrack(sCar + bogieOffset, viaductY);
+      const pR = evaluateMetroTrack(sCar - bogieOffset, viaductY);
+
+      // Car body center is midpoint between front and rear bogies
+      const carPos = new THREE.Vector3().addVectors(pF.position, pR.position).multiplyScalar(0.5);
+
+      // Gentle operational rocking sway and suspension float
+      const rockSway = Math.sin(time * 0.003 + idx * 1.6) * 0.0035;
+      const vertFloat = Math.sin(time * 0.006 + idx * 1.2) * 0.012;
+      carPos.y += vertFloat;
+
+      // Chord heading between the two bogies
+      const dx = pF.position.x - pR.position.x;
+      const dz = pF.position.z - pR.position.z;
+      const carYaw = Math.atan2(dx, dz);
+
+      // Superelevation (cant) inward banking: real trains tilt inward into curves!
+      const avgCurv = (pF.curvature + pR.curvature) * 0.5;
+      const cantBank = avgCurv > 0.005 ? -0.045 : 0; // ~2.6° inward banking
+      const carRoll = cantBank + rockSway;
+
+      // Apply transform to this individual car
+      cData.car.position.copy(carPos);
+      cData.car.rotation.set(0, carYaw, 0, 'YXZ');
+      cData.car.rotateZ(carRoll);
+
+      // Bogie rail tracking: bogies pivot to align with the steel rail tangent
+      let dYawF = pF.yaw - carYaw;
+      dYawF = Math.atan2(Math.sin(dYawF), Math.cos(dYawF));
+      cData.frontBogie.rotation.y = dYawF;
+
+      let dYawR = pR.yaw - carYaw;
+      dYawR = Math.atan2(Math.sin(dYawR), Math.cos(dYawR));
+      cData.rearBogie.rotation.y = dYawR;
+
+      carPositions.push(carPos);
+      carYaws.push(carYaw);
+      carRolls.push(carRoll);
+    });
+
+    // Dynamic Articulated Gangway 1 (between Lead Car 0 and Trailer Car 1)
+    {
+      const yaw0 = carYaws[0];
+      const yaw1 = carYaws[1];
+      const u0 = new THREE.Vector3(Math.sin(yaw0), 0, Math.cos(yaw0));
+      const u1 = new THREE.Vector3(Math.sin(yaw1), 0, Math.cos(yaw1));
+
+      // Rear coupling point of Car 0 and Front coupling point of Car 1
+      const rear0 = carPositions[0].clone().sub(u0.clone().multiplyScalar(carLength / 2));
+      const front1 = carPositions[1].clone().add(u1.clone().multiplyScalar(carLength / 2));
+
+      const g1Pos = new THREE.Vector3().addVectors(rear0, front1).multiplyScalar(0.5);
+      const g1Yaw = Math.atan2(
+        Math.sin(yaw0) + Math.sin(yaw1),
+        Math.cos(yaw0) + Math.cos(yaw1)
+      );
+
+      gangway1.group.position.copy(g1Pos);
+      gangway1.group.rotation.set(0, g1Yaw, 0, 'YXZ');
+      gangway1.group.rotateZ((carRolls[0] + carRolls[1]) * 0.5);
+
+      const gapDist1 = rear0.distanceTo(front1);
+      gangway1.group.scale.set(1, 1, Math.max(0.5, Math.min(1.6, gapDist1 / 0.8)));
+    }
+
+    // Dynamic Articulated Gangway 2 (between Trailer Car 1 and Rear Car 2)
+    {
+      const yaw1 = carYaws[1];
+      const yaw2 = carYaws[2];
+      const u1 = new THREE.Vector3(Math.sin(yaw1), 0, Math.cos(yaw1));
+      const u2 = new THREE.Vector3(Math.sin(yaw2), 0, Math.cos(yaw2));
+
+      // Rear coupling point of Car 1 and Front coupling point of Car 2
+      const rear1 = carPositions[1].clone().sub(u1.clone().multiplyScalar(carLength / 2));
+      const front2 = carPositions[2].clone().add(u2.clone().multiplyScalar(carLength / 2));
+
+      const g2Pos = new THREE.Vector3().addVectors(rear1, front2).multiplyScalar(0.5);
+      const g2Yaw = Math.atan2(
+        Math.sin(yaw1) + Math.sin(yaw2),
+        Math.cos(yaw1) + Math.cos(yaw2)
+      );
+
+      gangway2.group.position.copy(g2Pos);
+      gangway2.group.rotation.set(0, g2Yaw, 0, 'YXZ');
+      gangway2.group.rotateZ((carRolls[1] + carRolls[2]) * 0.5);
+
+      const gapDist2 = rear1.distanceTo(front2);
+      gangway2.group.scale.set(1, 1, Math.max(0.5, Math.min(1.6, gapDist2 / 0.8)));
+    }
+  };
+
+  // Initial calculation so cars are immediately on track at time 0
+  updateKinematics(0);
 
   return {
     group: trainGroup,
-    leadCar,
+    leadCar: leadCarData.car,
+    trailerCar: trailerCarData.car,
+    rearCar: rearCarData.car,
     update: (time: number) => {
-      // Gentle operational rocking / suspension float
-      const sway = Math.sin(time * 0.003) * 0.004;
-      leadCar.rotation.z = sway;
-      trailerCar.rotation.z = -sway * 0.8;
-      rearCar.rotation.z = sway * 0.9;
+      updateKinematics(time);
     },
   };
 }
+
